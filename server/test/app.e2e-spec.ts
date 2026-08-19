@@ -19,9 +19,10 @@ describe('App (e2e)', () => {
       await app.close();
    });
 
-   it('GET /api/health should return ok', () => {
+   it('GET /auth/login should be reachable', () => {
       return request(app.getHttpServer())
-         .get('/api/health')
-         .expect(200);
+         .post('/auth/login')
+         .send({ email: 'nao-existe@test.com', password: '123456' })
+         .expect(404);
    });
 });

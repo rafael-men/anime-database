@@ -2,10 +2,55 @@
 
 :root {
    color-scheme: dark;
+   --color-primary: #a82020;
+   --color-primary-light: #c02828;
+   --color-primary-dark: #8b1a1a;
+   --color-bg-dark: #0a0a0a;
+   --color-bg-card: rgba(20, 20, 20, 0.6);
+   --color-text: #f0f0f0;
+   --color-text-muted: rgba(200, 200, 200, 0.65);
 }
 
 body {
    margin: 0;
    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-   background: radial-gradient(circle at 20% 20%, #0f172a 0%, #020617 60%, #000 100%);
+   background-color: #0a0a0a;
+   background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(80, 80, 80, 0.1) 0%, transparent 60%),
+      linear-gradient(to bottom, #0a0a0a 0%, #111111 100%);
+   background-size: cover;
+   background-position: center;
+   background-repeat: no-repeat;
+   background-attachment: fixed;
+   color: var(--color-text);
+   min-height: 100vh;
+}
+
+.auth-background {
+   background-image: url('https://static.crunchyroll.com/cr-acquisition/assets/img/start/hero/us-global/background-desktop.jpg');
+   background-size: cover;
+   background-position: center;
+   background-repeat: no-repeat;
+   background-attachment: fixed;
+}
+
+.auth-background::before {
+   content: '';
+   position: fixed;
+   inset: 0;
+   background: rgba(0, 0, 0, 0.7);
+   pointer-events: none;
+}
+
+.material-symbols-outlined {
+   font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+}
+
+.scrollbar-hide {
+   -ms-overflow-style: none;
+   scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+   display: none;
 }

@@ -1,10 +1,33 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { jikanMiddleware } from './middlewares/jikan.middleware';
 
 async function bootstrap() {
    const app = await NestFactory.create(AppModule);
+   const allowedOrigins = (process.env.FRONTEND_URLS ?? process.env.FRONTEND_URL ?? 'http://localhost:4200')
+      .split(',')
+      .map((origin) => origin.trim())
+      .filter(Boolean);
+
+   app.enableCors({
+      origin: (origin, callback) => {
+         // Allows requests without Origin (e.g. Postman, server-side jobs).
+         if (!origin) {
+            callback(null, true);
+            return;
+         }
+
+         if (allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+         }
+
+         callback(new Error('Origin not allowed by CORS'), false);
+      },
+      methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      optionsSuccessStatus: 204,
+   });
 
    app.useGlobalPipes(new ValidationPipe({
       whitelist: true,
@@ -12,7 +35,6 @@ async function bootstrap() {
       transform: true,
    }));
 
-   app.use('/api', jikanMiddleware);
    await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

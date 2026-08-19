@@ -1,0 +1,33 @@
+@if (isOpen()) {
+  <div
+    class="profile-menu"
+    (mouseleave)="close.emit()">
+
+    <div class="profile-menu-header">
+      <p class="profile-menu-name">{{ username() || 'Usuário' }}</p>
+      <p class="profile-menu-sub">Minha conta</p>
+    </div>
+
+    <button class="profile-menu-item">
+      <span class="material-symbols-outlined text-lg">person</span>
+      Perfil
+    </button>
+    <button class="profile-menu-item">
+      <span class="material-symbols-outlined text-lg">bookmark</span>
+      Minha Lista
+    </button>
+    <button class="profile-menu-item">
+      <span class="material-symbols-outlined text-lg">settings</span>
+      Configurações
+    </button>
+
+    <div class="profile-menu-divider">
+      <button
+        (click)="logout.emit()"
+        class="profile-menu-item logout">
+        <span class="material-symbols-outlined text-lg">logout</span>
+        Sair
+      </button>
+    </div>
+  </div>
+}

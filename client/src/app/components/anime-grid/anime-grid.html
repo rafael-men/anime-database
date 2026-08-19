@@ -1,0 +1,55 @@
+@if (isLoading() && animes().length === 0) {
+  <div class="grid-empty">
+    <div class="loading-spinner"></div>
+    <p class="empty-text">Carregando animes...</p>
+  </div>
+}
+
+
+@if (errorMessage()) {
+  <div class="grid-empty">
+    <span class="material-symbols-outlined error-icon">error</span>
+    <p class="error-text">{{ errorMessage() }}</p>
+    <button
+      (click)="retry.emit()"
+      class="retry-btn">
+      Tentar novamente
+    </button>
+  </div>
+}
+
+
+@if (!isLoading() && !errorMessage() && animes().length === 0) {
+  <div class="grid-empty">
+    <span class="material-symbols-outlined empty-icon">movie_filter</span>
+    <p class="empty-text">Nenhum anime encontrado.</p>
+  </div>
+}
+
+
+@if (animes().length > 0) {
+  <div class="anime-grid">
+    @for (anime of animes(); track anime.mal_id) {
+      <app-anime-card [anime]="anime" />
+    }
+  </div>
+
+  
+  @if (hasNextPage()) {
+    <div class="load-more-wrapper">
+      <button
+        (click)="loadMore.emit()"
+        [disabled]="isLoading()"
+        class="load-more-btn">
+        @if (isLoading()) {
+          <span class="flex items-center gap-2">
+            <div class="loading-spinner-sm"></div>
+            Carregando...
+          </span>
+        } @else {
+          Carregar mais
+        }
+      </button>
+    </div>
+  }
+}

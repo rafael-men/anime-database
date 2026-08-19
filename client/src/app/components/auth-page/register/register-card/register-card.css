@@ -1,0 +1,16 @@
+.auth-wrapper::before {
+   content: '';
+   position: fixed;
+   inset: 0;
+   background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.55) 0%,
+      rgba(0, 0, 0, 0.35) 40%,
+      rgba(0, 0, 0, 0.55) 100%
+   );
+   pointer-events: none;
+}
+
+.input-wrapper:focus-within .input-icon {
+   color: #e05555;
+}

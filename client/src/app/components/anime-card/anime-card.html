@@ -1,0 +1,34 @@
+<div class="anime-card">
+  <div class="anime-card-image">
+    <img
+      [src]="anime().images.jpg.large_image_url || anime().images.jpg.image_url"
+      [alt]="anime().title"
+      class="anime-card-img"
+      loading="lazy" />
+
+    <div class="anime-card-gradient"></div>
+
+    @if (anime().score) {
+      <div class="anime-card-score">
+        <span class="material-symbols-outlined text-[#f5c518] text-sm">star</span>
+        <span class="score-value">{{ formatScore(anime().score) }}</span>
+      </div>
+    }
+
+    <div class="anime-card-hover">
+      <div>
+        <p class="hover-type">{{ anime().type }} · {{ formatEpisodes(anime().episodes) }}</p>
+        @if (anime().year) {
+          <p class="hover-year">{{ anime().year }}</p>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="anime-card-body">
+    <h3 class="anime-card-title">{{ anime().title }}</h3>
+    @if (anime().genres.length > 0) {
+      <p class="anime-card-genres">{{ getGenreNames(anime().genres) }}</p>
+    }
+  </div>
+</div>

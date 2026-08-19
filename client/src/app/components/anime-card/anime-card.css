@@ -1,0 +1,115 @@
+.anime-card {
+  position: relative;
+  background: rgba(20, 20, 20, 0.5);
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.anime-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  transform: translateY(-4px);
+}
+
+.anime-card-image {
+  position: relative;
+  aspect-ratio: 3/4;
+  overflow: hidden;
+}
+
+.anime-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.anime-card:hover .anime-card-img {
+  transform: scale(1.08);
+}
+
+.anime-card-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(10, 10, 10, 0.8), transparent, transparent);
+  opacity: 0.8;
+}
+
+.anime-card-score {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  border-radius: 8px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.score-value {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+.anime-card-hover {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(40, 40, 40, 0.85), rgba(10, 10, 10, 0.3), transparent);
+  opacity: 0;
+  transition: opacity 0.3s;
+  display: flex;
+  align-items: flex-end;
+  padding: 12px;
+}
+
+.anime-card:hover .anime-card-hover {
+  opacity: 1;
+}
+
+.hover-type {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.8);
+  margin-bottom: 4px;
+}
+
+.hover-year {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.anime-card-body {
+  padding: 12px;
+}
+
+.anime-card-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0f0f0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0 0 6px 0;
+  transition: color 0.2s;
+}
+
+.anime-card:hover .anime-card-title {
+  color: #fff;
+}
+
+.anime-card-genres {
+  font-size: 12px;
+  color: rgba(200, 200, 200, 0.5);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}

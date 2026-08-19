@@ -1,0 +1,44 @@
+<app-navbar
+  [activeTab]="activeTab()"
+  [selectedCategory]="selectedCategory()"
+  [searchQuery]="searchQuery"
+  [username]="username()"
+  [userInitial]="userInitial()"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="categories"
+  (tabChange)="switchTab($event)"
+  (search)="onSearch()"
+  (searchQueryChange)="onSearchQueryChange($event)"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()"
+  (categorySelect)="selectCategory($event)" />
+
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" [class]="activeTab() === 'categorias' ? 'pt-36' : 'pt-28'">
+
+
+  @if (isSearching() && searchQuery.trim()) {
+    <div class="mb-6">
+      <p class="text-sm text-[rgba(210,180,180,0.7)]">
+        Resultados para <span class="text-[#f1e8e8] font-semibold">"{{ searchQuery }}"</span>
+      </p>
+    </div>
+  }
+
+
+  @if (selectedCategory()) {
+    <div class="mb-6">
+      <p class="text-sm text-[rgba(210,180,180,0.7)]">
+        Categoria: <span class="text-[#f1e8e8] font-semibold">{{ selectedCategory() }}</span>
+      </p>
+    </div>
+  }
+
+  <app-anime-grid
+    [animes]="animes()"
+    [isLoading]="isLoading()"
+    [errorMessage]="errorMessage()"
+    [hasNextPage]="hasNextPage()"
+    (loadMore)="loadMore()"
+    (retry)="loadAnimes()" />
+</main>

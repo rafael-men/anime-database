@@ -1,0 +1,64 @@
+.profile-menu {
+  position: absolute;
+  right: 0;
+  margin-top: 8px;
+  width: 224px;
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 8px 0;
+  z-index: 50;
+}
+
+.profile-menu-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.profile-menu-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.profile-menu-sub {
+  font-size: 12px;
+  color: rgba(200, 200, 200, 0.5);
+  margin-top: 2px;
+}
+
+.profile-menu-item {
+  width: 100%;
+  padding: 10px 16px;
+  text-align: left;
+  font-size: 14px;
+  color: rgba(200, 200, 200, 0.8);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: all 0.15s;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.profile-menu-item:hover {
+  color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.profile-menu-divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
+.profile-menu-item.logout {
+  color: #e05555;
+}
+
+.profile-menu-item.logout:hover {
+  color: #ff6b6b;
+  background: rgba(255, 50, 50, 0.06);
+}

@@ -1,0 +1,85 @@
+<div class="auth-background relative flex items-center justify-center min-h-[100vh] px-6 py-8 max-sm:px-3 max-sm:py-4">
+   <div
+      class="auth-card flex w-full max-w-[900px] min-h-[560px] rounded-xl overflow-hidden border border-white/[0.06] bg-[#111] backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.3),0_25px_50px_rgba(0,0,0,0.4)] max-sm:flex-col max-sm:max-w-[440px] max-sm:min-h-0">
+      <!-- Left Panel -->
+      <div
+         class="flex-[1_1_50%] flex items-center justify-center bg-[#0d0d0d] border-r border-white/[0.04] min-h-full max-sm:hidden">
+         <div class="flex flex-col items-center gap-3 text-white/15">
+            <span class="material-symbols-outlined text-[4rem]">image</span>
+            <span class="text-[0.85rem] font-medium tracking-[0.1em] uppercase">Imagem</span>
+         </div>
+      </div>
+
+      <div class="flex-[1_1_50%] flex flex-col justify-center py-12 px-14 bg-[#1a1a1a] max-lg:px-10 max-sm:py-9 max-sm:px-6">
+         <div class="mb-8">
+            <h1 class="text-[2.15rem] font-semibold text-[#f0f0f0] tracking-tight mb-2 max-sm:text-[1.8rem]">
+               Bem-vindo de volta
+            </h1>
+            <p class="text-[0.9rem] text-white/45 leading-relaxed m-0">
+               Entre na sua conta para continuar 
+            </p>
+         </div>
+
+         <form class="flex flex-col gap-5" (ngSubmit)="onSubmit()">
+            <div class="flex flex-col gap-[0.35rem]">
+               <label for="email"
+                  class="text-[0.75rem] font-semibold text-white/55 uppercase tracking-[0.06em]">Email</label>
+               <div class="relative flex items-center">
+                  <span
+                     class="material-symbols-outlined absolute left-3 text-[1.15rem] text-white/30 pointer-events-none transition-colors duration-200">mail</span>
+                  <input id="email" type="email"
+                     class="w-full py-[0.82rem] pl-10 pr-[0.85rem] rounded-xl border border-white/[0.08] bg-white/[0.04] text-[#f0f0f0] text-[0.875rem] font-[inherit] outline-none transition-[border-color,box-shadow,background] duration-200 placeholder:text-white/25 focus:border-white/20 focus:bg-white/[0.06] focus:shadow-[0_0_0_3px_rgba(255,255,255,0.04)]"
+                     placeholder="seu&#64;email.com" [(ngModel)]="email" name="email" required />
+               </div>
+            </div>
+
+            <div class="flex flex-col gap-[0.35rem]">
+               <label for="password"
+                  class="text-[0.75rem] font-semibold text-white/55 uppercase tracking-[0.06em]">Senha</label>
+               <div class="relative flex items-center">
+                  <span
+                     class="material-symbols-outlined absolute left-3 text-[1.15rem] text-white/30 pointer-events-none transition-colors duration-200">lock</span>
+                  <input id="password" type="password"
+                     class="w-full py-[0.82rem] pl-10 pr-[0.85rem] rounded-xl border border-white/[0.08] bg-white/[0.04] text-[#f0f0f0] text-[0.875rem] font-[inherit] outline-none transition-[border-color,box-shadow,background] duration-200 placeholder:text-white/25 focus:border-white/20 focus:bg-white/[0.06] focus:shadow-[0_0_0_3px_rgba(255,255,255,0.04)]"
+                     placeholder="Min. 6 caracteres" [(ngModel)]="password" name="password" required minlength="6" />
+               </div>
+            </div>
+
+            <div class="flex justify-end -mt-2">
+               <button type="button"
+                  class="bg-transparent border-none text-[#e05555] text-[0.75rem] font-thin font-[inherit] cursor-pointer p-0 transition-colors duration-200 hover:text-[#ff6b6b]">
+                  Esqueceu a senha?
+               </button>
+            </div>
+
+            @if (errorMessage) {
+            <div
+               class="flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-red-500/10 border border-red-500/20 text-[#f08080] text-[0.8rem]">
+               <span class="material-symbols-outlined text-[1.1rem] shrink-0">error</span>
+               <span>{{ errorMessage }}</span>
+            </div>
+            }
+
+            <button type="submit"
+               class="flex items-center justify-center gap-2 w-full py-3.5 mt-1 rounded-xl border-none bg-gradient-to-br from-[#a82020] to-[#8b1a1a] text-white text-[0.9rem] font-semibold font-[inherit] cursor-pointer tracking-[0.02em] transition-[background,transform,box-shadow] duration-200 hover:from-[#c02828] hover:to-[#a82020] hover:shadow-[0_4px_20px_rgba(160,30,30,0.35)] hover:-translate-y-px active:translate-y-0 disabled:opacity-65 disabled:cursor-not-allowed"
+               [disabled]="isLoading">
+               @if (isLoading) {
+               <span
+                  class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+               <span>Entrando...</span>
+               } @else {
+               <span>Entrar</span>
+               }
+            </button>
+         </form>
+
+         <div class="flex items-center justify-center gap-[0.4rem] mt-5 pt-4 border-t border-white/[0.06]">
+            <span class="text-[0.8rem] text-white/35">Não tem conta?</span>
+            <a routerLink="/register"
+               class="bg-transparent border-none text-[#e05555] text-[0.8rem] font-semibold font-[inherit] cursor-pointer p-0 no-underline transition-colors duration-200 hover:text-[#ff6b6b]">
+               Cadastre-se
+            </a>
+         </div>
+      </div>
+   </div>
+</div>

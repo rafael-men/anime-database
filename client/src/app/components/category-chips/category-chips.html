@@ -1,0 +1,32 @@
+<div class="relative flex items-center gap-1">
+  @if (showLeftArrow) {
+    <button
+      (click)="scrollLeft()"
+      class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer border-none transition-all text-[rgba(200,200,200,0.3)] hover:text-[rgba(200,200,200,0.6)] bg-transparent hover:bg-white/[0.05]"
+      aria-label="Scroll left">
+      <span class="material-symbols-outlined text-base">chevron_left</span>
+    </button>
+  }
+
+  <div #carousel class="flex gap-2 overflow-x-auto scrollbar-hide py-1" (scroll)="onScroll()">
+    @for (cat of categories(); track cat) {
+      <button
+        (click)="categorySelect.emit(cat)"
+        class="shrink-0 px-4 py-2 rounded-md text-xs font-medium transition-all duration-200 border whitespace-nowrap cursor-pointer"
+        [class]="selectedCategory() === cat
+          ? 'bg-[#a82020] border-[#a82020] text-white shadow-lg shadow-red-900/30'
+          : 'bg-white/[0.04] border-white/[0.08] text-[rgba(200,200,200,0.7)] hover:text-[#f0f0f0] hover:border-white/[0.15] hover:bg-white/[0.08]'">
+        {{ cat }}
+      </button>
+    }
+  </div>
+
+  @if (showRightArrow) {
+    <button
+      (click)="scrollRight()"
+      class="shrink-0 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer border-none transition-all text-[rgba(200,200,200,0.3)] hover:text-[rgba(200,200,200,0.6)] bg-transparent hover:bg-white/[0.05]"
+      aria-label="Scroll right">
+      <span class="material-symbols-outlined text-base">chevron_right</span>
+    </button>
+  }
+</div>
