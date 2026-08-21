@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from './application/auth/auth.module';
 import { GroupController } from './application/controllers/group.controller';
+import { ReviewController } from './application/controllers/review.controller';
 import { UserController } from './application/controllers/user.controller';
 import { WatchlistController } from './application/controllers/watchlist.controller';
 import { getDatabaseConfig } from './data/config/database.config';
@@ -25,7 +26,7 @@ import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.ser
       AuthModule,
       UserModule,
    ],
-   controllers: [UserController, GroupController, WatchlistController],
+   controllers: [UserController, ReviewController, GroupController, WatchlistController],
    providers: [UserAnimeActionsService],
 })
 export class AppModule { }

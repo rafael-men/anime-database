@@ -1,0 +1,42 @@
+<app-navbar
+  [activeTab]="'todos'"
+  [selectedCategory]="''"
+  [searchQuery]="searchQuery()"
+  [username]="username()"
+  [userInitial]="userInitial()"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="[]"
+  (tabChange)="goHome()"
+  (searchQueryChange)="onSearchQueryChange($event)"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()" />
+
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-28">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Meus Favoritos</h1>
+      <p class="page-subtitle">
+        {{ filteredAnimes().length }} anime{{ filteredAnimes().length === 1 ? '' : 's' }} na sua lista
+      </p>
+    </div>
+  </div>
+
+  @if (isSearching()) {
+    <div class="mb-6">
+      <p class="text-sm text-[rgba(210,180,180,0.7)]">
+        Resultados para <span class="text-[#f1e8e8] font-semibold">"{{ searchQuery() }}"</span>
+      </p>
+    </div>
+  }
+
+  <app-anime-grid
+    [animes]="filteredAnimes()"
+    [isLoading]="isLoading()"
+    [errorMessage]="errorMessage()"
+    [hasNextPage]="false"
+    [favoriteIds]="favoriteIdSet()"
+    (retry)="retryLoad()"
+    (toggleFavorite)="removeFavorite($event)"
+    (openDetails)="goToDetails($event)" />
+</main>

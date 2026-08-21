@@ -11,6 +11,10 @@ import { AnimeResult } from '../../../api/services/anime.service';
 })
 export class AnimeCard {
   anime = input.required<AnimeResult>();
+  isFavorite = input<boolean>(false);
+
+  toggleFavorite = output<number>();
+  openDetails = output<number>();
 
   formatScore(score: number | null): string {
     if (score === null || score === undefined) return 'N/A';

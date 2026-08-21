@@ -1,9 +1,10 @@
 import { Component, inject, OnInit, signal, computed, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Router } from '@angular/router';
-import { AnimeService, AnimeResult } from '../../../api/services/anime.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AnimeService, AnimeResult, SearchOptions } from '../../../api/services/anime.service';
 import { SessionService } from '../../../api/services/session.service';
-import { Navbar } from '../navbar/navbar';
+import { FavoritesService } from '../../../api/services/favorites.service';
+import { Navbar, NavbarTab } from '../navbar/navbar';
 import { AnimeGrid } from '../anime-grid/anime-grid';
 import { FormsModule } from '@angular/forms';
 
@@ -34,11 +35,13 @@ const CATEGORY_GENRE_EN: Record<string, string> = {
 export class Home implements OnInit {
   private readonly animeService = inject(AnimeService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly sessionService = inject(SessionService);
+  private readonly favoritesService = inject(FavoritesService);
 
   searchQuery = '';
-  activeTab = signal<'todos' | 'categorias'>('todos');
+  activeTab = signal<NavbarTab>('todos');
   selectedCategory = signal<string>('');
   animes = signal<AnimeResult[]>([]);
   isLoading = signal(false);
@@ -47,6 +50,8 @@ export class Home implements OnInit {
   hasNextPage = signal(false);
   showProfileMenu = signal(false);
   isSearching = signal(false);
+  favoriteIds = signal<Set<number>>(new Set<number>());
+  filters = signal<SearchOptions>({});
 
   username = signal('');
   userInitial = computed(() => {
@@ -63,7 +68,15 @@ export class Home implements OnInit {
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
     this.loadUser();
-    this.loadAnimes();
+    this.loadFavorites();
+
+    const queryParam = this.route.snapshot.queryParamMap.get('q');
+    if (queryParam) {
+      this.searchQuery = queryParam;
+      this.onSearch();
+    } else {
+      this.loadAnimes();
+    }
   }
 
   private loadUser(): void {
@@ -71,12 +84,72 @@ export class Home implements OnInit {
     this.username.set(user?.username ?? '');
   }
 
+  private loadFavorites(): void {
+    const user = this.sessionService.getUser();
+    if (!user) return;
+
+    this.favoritesService.getFavorites(user.userId).subscribe({
+      next: (items) => {
+        this.favoriteIds.set(new Set(items.map((i) => Number(i.externalAnimeId))));
+      },
+      error: () => {},
+    });
+  }
+
+  toggleFavorite(animeId: number): void {
+    const user = this.sessionService.getUser();
+    if (!user) return;
+
+    if (this.favoriteIds().has(animeId)) {
+      this.favoriteIds.update((ids) => {
+        const next = new Set(ids);
+        next.delete(animeId);
+        return next;
+      });
+      this.favoritesService.removeFavorite(user.userId, animeId).subscribe({
+        error: () => this.favoriteIds.update((ids) => new Set(ids).add(animeId)),
+      });
+    } else {
+      this.favoriteIds.update((ids) => new Set(ids).add(animeId));
+      this.favoritesService.addFavorite(user.userId, animeId).subscribe({
+        error: () =>
+          this.favoriteIds.update((ids) => {
+            const next = new Set(ids);
+            next.delete(animeId);
+            return next;
+          }),
+      });
+    }
+  }
+
+  private currentFormat(): string | undefined {
+    if (this.activeTab() === 'ovas') return 'OVA';
+    if (this.activeTab() === 'filmes') return 'MOVIE';
+    return undefined;
+  }
+
+  private buildSearchOptions(): SearchOptions {
+    const filters = this.filters();
+    return { ...filters, format: filters.format ?? this.currentFormat() };
+  }
+
+  onFiltersChange(filters: SearchOptions): void {
+    this.filters.set(filters);
+    this.currentPage.set(1);
+
+    if (this.searchQuery.trim()) {
+      this.onSearch();
+    } else {
+      this.loadAnimes();
+    }
+  }
+
   loadAnimes(): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
     this.isSearching.set(false);
 
-    this.animeService.search('', this.currentPage()).subscribe({
+    this.animeService.search('', this.currentPage(), this.buildSearchOptions()).subscribe({
       next: (res) => {
         this.animes.set(res.data);
         this.hasNextPage.set(res.pagination.has_next_page);
@@ -101,7 +174,7 @@ export class Home implements OnInit {
     this.errorMessage.set('');
     this.isSearching.set(true);
 
-    this.animeService.search(this.searchQuery, 1).subscribe({
+    this.animeService.search(this.searchQuery, 1, this.buildSearchOptions()).subscribe({
       next: (res) => {
         this.animes.set(res.data);
         this.hasNextPage.set(res.pagination.has_next_page);
@@ -127,9 +200,9 @@ export class Home implements OnInit {
     this.searchQuery = query;
   }
 
-  switchTab(tab: 'todos' | 'categorias'): void {
+  switchTab(tab: NavbarTab): void {
     this.activeTab.set(tab);
-    if (tab === 'todos') {
+    if (tab !== 'categorias') {
       this.selectedCategory.set('');
       this.currentPage.set(1);
       this.loadAnimes();
@@ -142,17 +215,19 @@ export class Home implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.animeService.searchByGenre(CATEGORY_GENRE_EN[category] ?? category, 1).subscribe({
-      next: (res) => {
-        this.animes.set(res.data);
-        this.hasNextPage.set(res.pagination.has_next_page);
-        this.isLoading.set(false);
-      },
-      error: () => {
-        this.errorMessage.set('Erro ao carregar animes da categoria.');
-        this.isLoading.set(false);
-      },
-    });
+    this.animeService
+      .searchByGenre(CATEGORY_GENRE_EN[category] ?? category, 1, this.buildSearchOptions())
+      .subscribe({
+        next: (res) => {
+          this.animes.set(res.data);
+          this.hasNextPage.set(res.pagination.has_next_page);
+          this.isLoading.set(false);
+        },
+        error: () => {
+          this.errorMessage.set('Erro ao carregar animes da categoria.');
+          this.isLoading.set(false);
+        },
+      });
   }
 
   loadMore(): void {
@@ -163,10 +238,11 @@ export class Home implements OnInit {
 
     const category = this.selectedCategory();
     const query = this.searchQuery.trim();
+    const options = this.buildSearchOptions();
 
     const request$ = category
-      ? this.animeService.searchByGenre(CATEGORY_GENRE_EN[category] ?? category, this.currentPage())
-      : this.animeService.search(query, this.currentPage());
+      ? this.animeService.searchByGenre(CATEGORY_GENRE_EN[category] ?? category, this.currentPage(), options)
+      : this.animeService.search(query, this.currentPage(), options);
 
     request$.subscribe({
       next: (res) => {
@@ -184,6 +260,10 @@ export class Home implements OnInit {
 
   toggleProfileMenu(): void {
     this.showProfileMenu.update((v) => !v);
+  }
+
+  openDetails(animeId: number): void {
+    this.router.navigate(['/anime', animeId]);
   }
 
   closeProfileMenu(): void {

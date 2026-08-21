@@ -1,0 +1,316 @@
+<app-navbar
+  [activeTab]="'todos'"
+  [selectedCategory]="''"
+  [searchQuery]="searchQuery()"
+  [username]="username()"
+  [userInitial]="userInitial()"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="[]"
+  (tabChange)="goBack()"
+  (search)="searchOnHome()"
+  (searchQueryChange)="onSearchQueryChange($event)"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()" />
+
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-24">
+
+  <button
+    type="button"
+    (click)="goBack()"
+    class="inline-flex items-center gap-1.5 mb-6 text-sm font-medium text-[rgba(200,200,200,0.65)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0">
+    <span class="material-symbols-outlined text-xl">arrow_back</span>
+    Voltar
+  </button>
+
+  @if (isLoading()) {
+    <div class="flex flex-col items-center justify-center py-24">
+      <div class="details-spinner"></div>
+      <p class="text-sm text-[rgba(200,200,200,0.5)]">Carregando anime...</p>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="flex flex-col items-center justify-center py-24">
+      <span class="material-symbols-outlined text-5xl text-[#e05555] mb-3">error</span>
+      <p class="text-sm text-[#e05555] mb-4">{{ errorMessage() }}</p>
+      <button
+        type="button"
+        (click)="retry()"
+        class="retry-btn">
+        Tentar novamente
+      </button>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage()) {
+    @if (anime(); as a) {
+
+      <article class="rounded-2xl overflow-hidden border border-white/[0.06] bg-white/[0.03]">
+
+        @if (a.bannerImage) {
+          <img
+            [src]="a.bannerImage"
+            [alt]="'Banner de ' + a.title"
+            class="w-full h-40 sm:h-56 lg:h-64 object-cover" />
+        } @else {
+          <div class="w-full h-28 bg-gradient-to-r from-[#a82020]/25 via-transparent to-transparent"></div>
+        }
+
+        <div class="p-5 sm:p-7 -mt-10 sm:-mt-14 relative">
+
+          <div class="flex flex-col sm:flex-row gap-5 sm:gap-7">
+
+            <img
+              [src]="a.images.jpg.large_image_url || a.images.jpg.image_url"
+              [alt]="a.title"
+              class="w-32 sm:w-44 shrink-0 aspect-[3/4] object-cover rounded-xl border border-white/[0.08] shadow-xl shadow-black/50" />
+
+            <div class="min-w-0 flex-1 pt-2 sm:pt-12 space-y-4">
+
+              <div>
+                <h1 class="text-2xl sm:text-3xl font-bold text-[#f1e8e8] tracking-tight m-0 leading-tight">
+                  {{ a.title }}
+                </h1>
+                @if (a.titleNative) {
+                  <p class="text-sm text-[rgba(200,200,200,0.45)] mt-1 mb-0">{{ a.titleNative }}</p>
+                }
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="inline-flex items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1 text-xs font-medium text-[rgba(230,230,230,0.85)]">
+                  <span class="w-2 h-2 rounded-full {{ statusDotClass(a.status) }}"></span>
+                  {{ statusLabel(a.status) }}
+                </span>
+                @if (a.format) {
+                  <span class="rounded-full bg-white/[0.06] px-3 py-1 text-xs font-medium text-[rgba(230,230,230,0.85)]">
+                    {{ formatLabel(a.format) }}
+                  </span>
+                }
+                @if (a.episodes) {
+                  <span class="rounded-full bg-white/[0.06] px-3 py-1 text-xs font-medium text-[rgba(230,230,230,0.85)]">
+                    {{ a.episodes }} eps
+                  </span>
+                }
+                @if (a.score) {
+                  <span class="inline-flex items-center gap-1 rounded-full bg-black/50 px-3 py-1 text-xs font-bold text-[#f0f0f0]">
+                    <span class="material-symbols-outlined text-sm text-[#f5c518]">star</span>
+                    {{ a.score.toFixed(1) }}
+                  </span>
+                }
+              </div>
+
+              <div class="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  (click)="toggleFavorite()"
+                  class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer border transition-all duration-200"
+                  [class]="isFavorite()
+                    ? 'bg-gradient-to-br from-[#a82020] to-[#8b1a1a] border-transparent text-white shadow-lg shadow-red-900/20 hover:from-[#c02828] hover:to-[#a82020]'
+                    : 'bg-white/[0.05] border-white/[0.12] text-[rgba(230,230,230,0.85)] hover:bg-white/[0.09] hover:border-white/[0.2]'">
+                  <span
+                    class="material-symbols-outlined text-lg"
+                    [class.filled-heart]="isFavorite()">favorite</span>
+                  {{ isFavorite() ? 'Nos favoritos' : 'Adicionar aos favoritos' }}
+                </button>
+
+                @if (a.trailerUrl) {
+                  <a
+                    [href]="a.trailerUrl"
+                    target="_blank"
+                    rel="noopener"
+                    class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold no-underline bg-white/[0.05] border border-white/[0.12] text-[rgba(230,230,230,0.85)] hover:bg-white/[0.09] hover:border-white/[0.2] transition-all duration-200">
+                    <span class="material-symbols-outlined text-lg">play_arrow</span>
+                    Trailer
+                  </a>
+                }
+              </div>
+
+              @if (a.genres.length > 0) {
+                <div class="flex flex-wrap gap-2">
+                  @for (genre of a.genres; track genre.name) {
+                    <span class="rounded-full bg-white/[0.04] border border-white/[0.07] px-3 py-1 text-xs text-[rgba(200,200,200,0.65)]">
+                      {{ genre.name }}
+                    </span>
+                  }
+                </div>
+              }
+
+            </div>
+          </div>
+
+          @if (infoItems().length > 0) {
+            <div class="mt-7 pt-6 border-t border-white/[0.06]">
+              <h2 class="text-sm font-bold uppercase tracking-wider text-[rgba(200,200,200,0.5)] mt-0 mb-3">Informações</h2>
+              <dl class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 m-0">
+                @for (item of infoItems(); track item.label) {
+                  <div class="rounded-xl bg-white/[0.04] border border-white/[0.06] px-4 py-3">
+                    <dt class="text-[11px] uppercase tracking-wide text-[rgba(200,200,200,0.45)] mb-1">{{ item.label }}</dt>
+                    <dd class="text-sm font-semibold text-[#f0f0f0] m-0 break-words">{{ item.value }}</dd>
+                  </div>
+                }
+              </dl>
+            </div>
+          }
+
+        </div>
+      </article>
+
+      @if (a.streamingLinks.length > 0) {
+        <section class="mt-8">
+          <h2 class="text-lg font-bold text-[#f1e8e8] tracking-tight mt-0 mb-3">Onde Assistir</h2>
+          <div class="flex flex-wrap gap-3">
+            @for (link of a.streamingLinks; track link.url) {
+              <a
+                [href]="link.url"
+                target="_blank"
+                rel="noopener"
+                class="inline-flex items-center gap-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] px-4 py-2.5 no-underline transition-all duration-200 hover:bg-white/[0.08] hover:border-white/[0.2] hover:-translate-y-0.5">
+                @if (link.icon) {
+                  <img [src]="link.icon" [alt]="link.site" class="w-6 h-6 object-contain rounded" loading="lazy" />
+                } @else {
+                  <span class="material-symbols-outlined text-xl text-[rgba(230,230,230,0.8)]">play_circle</span>
+                }
+                <span class="text-sm font-medium text-[rgba(235,235,235,0.9)]">{{ link.site }}</span>
+                @if (link.color) {
+                  <span class="w-2 h-2 rounded-full ml-0.5" [style.background]="link.color"></span>
+                }
+              </a>
+            }
+          </div>
+        </section>
+      }
+
+      @if (a.synopsis) {
+        <section class="mt-8">
+          <h2 class="text-lg font-bold text-[#f1e8e8] tracking-tight mt-0 mb-3">Sinopse</h2>
+          <p class="text-sm sm:text-base leading-relaxed text-[rgba(210,210,210,0.75)] m-0">{{ a.synopsis }}</p>
+        </section>
+      }
+
+      <section class="mt-10">
+
+        <div class="flex items-center justify-between gap-4">
+          <h2 class="text-lg font-bold text-[#f1e8e8] tracking-tight m-0">Avaliações</h2>
+          @if (reviews().length > 0) {
+            <span class="text-sm text-[rgba(200,200,200,0.5)]">
+              {{ reviews().length }} avaliação{{ reviews().length === 1 ? '' : 's' }}
+            </span>
+          }
+        </div>
+
+        <div class="mt-4 rounded-2xl border border-white/[0.06] bg-white/[0.03] p-5">
+          <p class="text-sm font-semibold text-[#f0f0f0] mt-0 mb-3">
+            {{ hasExistingReview() ? 'Sua avaliação' : 'Avaliar este anime' }}
+          </p>
+
+          <div
+            class="flex items-center gap-1"
+            (mouseleave)="onHoverRating(0)">
+            @for (star of [1, 2, 3, 4, 5]; track star) {
+              <button
+                type="button"
+                class="bg-transparent border-none p-0 cursor-pointer transition-transform duration-150 hover:scale-110"
+                (mouseenter)="onHoverRating(star)"
+                (click)="setReviewRating(star)"
+                [attr.aria-label]="star + ' estrela' + (star > 1 ? 's' : '')">
+                <span
+                  class="material-symbols-outlined text-3xl"
+                  [class.filled-star]="star <= (hoverRating() || reviewRating())"
+                  [class.dimmed-star]="star > (hoverRating() || reviewRating())">star</span>
+              </button>
+            }
+            @if (reviewRating() > 0) {
+              <span class="ml-2 text-sm font-semibold text-[#f5c518]">{{ reviewRating() * 2 }}/10</span>
+            }
+          </div>
+
+          <textarea
+            class="w-full mt-4 rounded-xl bg-white/[0.05] border border-white/[0.1] px-4 py-3 text-sm text-[#f0f0f0] placeholder-[rgba(200,200,200,0.35)] outline-none focus:border-white/[0.25] focus:bg-white/[0.07] transition-colors resize-y min-h-20 box-border"
+            placeholder="Escreva um comentário (opcional)"
+            maxlength="2000"
+            [value]="reviewComment()"
+            (input)="onReviewCommentInput($any($event.target).value)"></textarea>
+
+          <div class="flex items-center justify-between gap-4 mt-3 flex-wrap">
+            <p class="text-xs m-0"
+              [class]="reviewFeedback().startsWith('Erro') || reviewFeedback().startsWith('Selecione')
+                ? 'text-[#e05555]'
+                : 'text-green-400'">
+              {{ reviewFeedback() }}
+            </p>
+            <button
+              type="button"
+              (click)="submitReview()"
+              [disabled]="isSubmittingReview()"
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold cursor-pointer border-none bg-gradient-to-br from-[#a82020] to-[#8b1a1a] text-white shadow-lg shadow-red-900/20 hover:from-[#c02828] hover:to-[#a82020] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:from-[#a82020] disabled:hover:to-[#8b1a1a]">
+              @if (isSubmittingReview()) {
+                <div class="review-spinner"></div>
+              }
+              {{ hasExistingReview() ? 'Atualizar avaliação' : 'Enviar avaliação' }}
+            </button>
+          </div>
+        </div>
+
+        @if (isLoadingReviews()) {
+          <div class="flex justify-center py-10">
+            <div class="details-spinner details-spinner-sm"></div>
+          </div>
+        } @else if (reviewError()) {
+          <div class="mt-6 flex flex-col items-center py-8">
+            <p class="text-sm text-[#e05555] mt-0 mb-3">{{ reviewError() }}</p>
+            @if (anime(); as current) {
+              <button type="button" (click)="loadReviews(current.mal_id)" class="retry-btn">Tentar novamente</button>
+            }
+          </div>
+        } @else if (reviews().length === 0) {
+          <div class="mt-6 flex flex-col items-center py-8">
+            <span class="material-symbols-outlined text-4xl text-[rgba(200,200,200,0.2)] mb-2">rate_review</span>
+            <p class="text-sm text-[rgba(200,200,200,0.5)] m-0">Nenhuma avaliação ainda. Seja o primeiro!</p>
+          </div>
+        } @else {
+          <div class="mt-4 space-y-3">
+            @for (review of reviews(); track review.id) {
+              <article class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-5">
+                <div class="flex items-start gap-3">
+                  <div class="w-9 h-9 shrink-0 rounded-full bg-gradient-to-br from-[#a82020] to-[#8b1a1a] flex items-center justify-center text-white text-sm font-bold ring-2 ring-white/[0.1]">
+                    {{ review.username.charAt(0).toUpperCase() }}
+                  </div>
+
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-3 flex-wrap">
+                      <p class="text-sm font-semibold text-[#f0f0f0] m-0">{{ review.username }}</p>
+                      <span class="text-xs text-[rgba(200,200,200,0.45)]">{{ formatReviewDate(review.createdAt) }}</span>
+                    </div>
+
+                    <div class="flex items-center gap-0.5 mt-1">
+                      @for (star of [1, 2, 3, 4, 5]; track star) {
+                        <span
+                          class="material-symbols-outlined text-base"
+                          [class.filled-star]="star <= ratingToStars(review.rating)"
+                          [class.dimmed-star]="star > ratingToStars(review.rating)">star</span>
+                      }
+                      <span class="text-xs text-[rgba(200,200,200,0.55)] ml-1.5">{{ review.rating.toFixed(1) }}/10</span>
+                    </div>
+
+                    @if (review.comment) {
+                      <p class="text-sm leading-relaxed text-[rgba(210,210,210,0.75)] mt-2 mb-0 whitespace-pre-line">{{ review.comment }}</p>
+                    }
+                  </div>
+                </div>
+              </article>
+            }
+          </div>
+        }
+
+      </section>
+
+    } @else {
+      <div class="flex flex-col items-center justify-center py-24">
+        <span class="material-symbols-outlined text-5xl text-[rgba(200,200,200,0.2)] mb-3">movie_filter</span>
+        <p class="text-sm text-[rgba(200,200,200,0.5)]">Anime não encontrado.</p>
+      </div>
+    }
+  }
+
+</main>

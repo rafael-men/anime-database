@@ -6,15 +6,17 @@
   [userInitial]="userInitial()"
   [showProfileMenu]="showProfileMenu()"
   [categories]="categories"
+  [filters]="filters()"
   (tabChange)="switchTab($event)"
   (search)="onSearch()"
   (searchQueryChange)="onSearchQueryChange($event)"
   (toggleProfile)="toggleProfileMenu()"
   (closeProfile)="closeProfileMenu()"
   (logout)="logout()"
-  (categorySelect)="selectCategory($event)" />
+  (categorySelect)="selectCategory($event)"
+  (filtersChange)="onFiltersChange($event)" />
 
-<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" [class]="activeTab() === 'categorias' ? 'pt-36' : 'pt-28'">
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto" [class]="activeTab() === 'categorias' ? 'pt-44 sm:pt-36' : 'pt-32 sm:pt-28'">
 
 
   @if (isSearching() && searchQuery.trim()) {
@@ -34,11 +36,22 @@
     </div>
   }
 
+  @if (!isSearching() && !selectedCategory() && activeTab() !== 'todos') {
+    <div class="mb-6">
+      <p class="text-sm text-[rgba(210,180,180,0.7)]">
+        {{ activeTab() === 'ovas' ? 'OVAs' : 'Filmes' }}
+      </p>
+    </div>
+  }
+
   <app-anime-grid
     [animes]="animes()"
     [isLoading]="isLoading()"
     [errorMessage]="errorMessage()"
     [hasNextPage]="hasNextPage()"
+    [favoriteIds]="favoriteIds()"
     (loadMore)="loadMore()"
-    (retry)="loadAnimes()" />
+    (retry)="loadAnimes()"
+    (toggleFavorite)="toggleFavorite($event)"
+    (openDetails)="openDetails($event)" />
 </main>

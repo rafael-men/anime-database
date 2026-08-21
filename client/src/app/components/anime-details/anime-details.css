@@ -1,0 +1,62 @@
+.details-spinner {
+  width: 48px;
+  height: 48px;
+  border: 3px solid rgba(60, 60, 60, 0.4);
+  border-top-color: #a82020;
+  border-radius: 50%;
+  animation: details-spin 0.8s linear infinite;
+  margin-bottom: 16px;
+}
+
+.details-spinner-sm {
+  width: 28px;
+  height: 28px;
+  border-width: 2px;
+  margin-bottom: 0;
+}
+
+.review-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: details-spin 0.8s linear infinite;
+}
+
+@keyframes details-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.retry-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #a82020, #8b1a1a);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(168, 32, 32, 0.25);
+}
+
+.retry-btn:hover {
+  background: linear-gradient(135deg, #c02828, #a82020);
+}
+
+.filled-heart {
+  font-variation-settings: 'FILL' 1;
+}
+
+.filled-star {
+  color: #f5c518;
+  font-variation-settings: 'FILL' 1;
+}
+
+.dimmed-star {
+  color: rgba(200, 200, 200, 0.25);
+  font-variation-settings: 'FILL' 1;
+}

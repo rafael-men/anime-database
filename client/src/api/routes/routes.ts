@@ -15,6 +15,12 @@ export const API_ROUTES = {
    },
    anime: {
       graphql: `${ANILIST_API_BASE}`,
+      translate: (text: string) =>
+         `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=pt&dt=t&q=${encodeURIComponent(text)}`,
+   },
+   reviews: {
+      byAnime: (animeId: number) => `${API_BASE}/reviews/anime/${animeId}`,
+      create: (userId: string) => `${API_ROUTES.users.reviews(userId)}`,
    },
    groups: {
       base: `${API_BASE}/groups`,

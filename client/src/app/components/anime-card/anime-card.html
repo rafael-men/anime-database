@@ -1,4 +1,4 @@
-<div class="anime-card">
+<div class="anime-card" (click)="openDetails.emit(anime().mal_id)">
   <div class="anime-card-image">
     <img
       [src]="anime().images.jpg.large_image_url || anime().images.jpg.image_url"
@@ -7,6 +7,15 @@
       loading="lazy" />
 
     <div class="anime-card-gradient"></div>
+
+    <button
+      type="button"
+      class="favorite-btn"
+      [class.favorite-active]="isFavorite()"
+      [attr.aria-label]="isFavorite() ? 'Remover dos favoritos' : 'Adicionar aos favoritos'"
+      (click)="toggleFavorite.emit(anime().mal_id); $event.stopPropagation()">
+      <span class="material-symbols-outlined">favorite</span>
+    </button>
 
     @if (anime().score) {
       <div class="anime-card-score">

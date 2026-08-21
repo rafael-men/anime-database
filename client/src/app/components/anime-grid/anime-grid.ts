@@ -15,6 +15,9 @@ export class AnimeGrid {
   isLoading = input<boolean>(false);
   errorMessage = input<string>('');
   hasNextPage = input<boolean>(false);
+  favoriteIds = input<Set<number>>(new Set<number>());
   loadMore = output<void>();
   retry = output<void>();
+  toggleFavorite = output<number>();
+  openDetails = output<number>();
 }

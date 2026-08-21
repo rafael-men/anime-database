@@ -10,6 +10,17 @@ import { User } from '../../domain/models/user.model';
 import { ValidationException } from '../exceptions/validation.exception';
 import { ResourceNotFoundException } from '../exceptions/resource-not-found.exception';
 
+export interface AnimeReview {
+   id: string;
+   userId: string;
+   username: string;
+   avatarUrl: string | null;
+   rating: number;
+   comment: string | null;
+   createdAt: Date;
+   updatedAt: Date;
+}
+
 @Injectable()
 export class UserAnimeActionsService {
    constructor(
@@ -20,6 +31,27 @@ export class UserAnimeActionsService {
       @InjectRepository(Review)
       private readonly reviewRepository: Repository<Review>,
    ) { }
+
+   async getAnimeReviews(externalAnimeId: string): Promise<AnimeReview[]> {
+      this.validateAnimeId(externalAnimeId);
+
+      const reviews = await this.reviewRepository.find({
+         where: { externalAnimeId },
+         relations: { user: true },
+         order: { createdAt: 'DESC' },
+      });
+
+      return reviews.map((review) => ({
+         id: review.id,
+         userId: review.userId,
+         username: review.user?.username ?? 'Usuário',
+         avatarUrl: review.user?.avatarUrl ?? null,
+         rating: Number(review.rating),
+         comment: review.comment ?? null,
+         createdAt: review.createdAt,
+         updatedAt: review.updatedAt,
+      }));
+   }
 
    async addAnimeToFavorites(
       userId: string,

@@ -38,6 +38,43 @@
   opacity: 0.8;
 }
 
+.favorite-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.75);
+  transition: all 0.2s;
+}
+
+.favorite-btn:hover {
+  background: rgba(0, 0, 0, 0.85);
+  transform: scale(1.1);
+}
+
+.favorite-btn .material-symbols-outlined {
+  font-size: 18px;
+  font-variation-settings: 'FILL' 0;
+}
+
+.favorite-btn.favorite-active {
+  color: #e05555;
+}
+
+.favorite-btn.favorite-active .material-symbols-outlined {
+  font-variation-settings: 'FILL' 1;
+}
+
 .anime-card-score {
   position: absolute;
   top: 8px;

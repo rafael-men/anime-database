@@ -30,7 +30,11 @@
 @if (animes().length > 0) {
   <div class="anime-grid">
     @for (anime of animes(); track anime.mal_id) {
-      <app-anime-card [anime]="anime" />
+      <app-anime-card
+        [anime]="anime"
+        [isFavorite]="favoriteIds().has(anime.mal_id)"
+        (toggleFavorite)="toggleFavorite.emit($event)"
+        (openDetails)="openDetails.emit($event)" />
     }
   </div>
 
