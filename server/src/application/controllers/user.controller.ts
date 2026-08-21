@@ -1,4 +1,5 @@
 import {
+   BadRequestException,
    Body,
    Controller,
    Delete,
@@ -7,8 +8,11 @@ import {
    HttpStatus,
    Param,
    Post,
+   UploadedFile,
    UseGuards,
+   UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { IsBoolean, IsDateString, IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 import { User } from '../../domain/models/user.model';
 import { WatchlistItem, WatchlistStatus } from '../../domain/models/watchlist-item.model';
@@ -17,6 +21,7 @@ import { UserAnimeActionsService } from '../../use-cases/user/user-anime-actions
 import { UserService } from '../../use-cases/user/user.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { OwnershipGuard } from '../auth/ownership.guard';
+import { avatarUploadOptions } from '../../utils/file-upload';
 
 class UpdateUserDto {
    @IsOptional()
@@ -137,5 +142,20 @@ export class UserController {
       @Body() body: UpdateUserDto,
    ): Promise<User> {
       return this.userService.updateProfile(userId, body);
+   }
+
+   @Post(':id/avatar')
+   @UseInterceptors(FileInterceptor('file', avatarUploadOptions()))
+   async uploadAvatar(
+      @Param('id') userId: string,
+      @UploadedFile() file?: Express.Multer.File,
+   ): Promise<User> {
+      if (!file) {
+         throw new BadRequestException('Nenhum arquivo enviado.');
+      }
+
+      return this.userService.updateProfile(userId, {
+         avatarUrl: `/uploads/${file.filename}`,
+      });
    }
 }

@@ -1,0 +1,222 @@
+<app-navbar
+  [activeTab]="'todos'"
+  [selectedCategory]="''"
+  [searchQuery]="searchQuery()"
+  [username]="username()"
+  [userInitial]="userInitial()"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="[]"
+  (tabChange)="goHome()"
+  (search)="onSearch()"
+  (searchQueryChange)="onSearchQueryChange($event)"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()" />
+
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-28">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Meu Perfil</h1>
+      <p class="page-subtitle">Gerencie suas informações pessoais</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="profile-card flex items-center justify-center py-24">
+      <span class="loading-spinner"></span>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="profile-card flex flex-col items-center justify-center gap-4 py-20 text-center">
+      <span class="material-symbols-outlined text-[3rem] text-[#e05555]">error</span>
+      <p class="text-sm text-[rgba(210,180,180,0.7)] m-0">{{ errorMessage() }}</p>
+      <button type="button" class="retry-btn" (click)="retryLoad()">Tentar novamente</button>
+    </div>
+  } @else if (profile(); as user) {
+    <div class="profile-card p-6 sm:p-10">
+
+      <!-- Cabeçalho -->
+      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-8 border-b border-white/[0.06]">
+        @if (isEditing()) {
+          <div class="flex flex-col items-center gap-2 shrink-0">
+            <button
+              type="button"
+              class="avatar-edit"
+              title="Alterar foto de perfil"
+              (click)="onChooseAvatar(avatarInput)">
+              @if (avatarPreview()) {
+                <img [src]="avatarPreview()" alt="Prévia da nova foto" class="w-full h-full object-cover rounded-full" />
+              } @else if (!avatarRemoved() && user.avatarUrl) {
+                <img [src]="user.avatarUrl" [alt]="user.username" class="w-full h-full object-cover rounded-full" />
+              } @else {
+                <span class="text-[2rem] font-bold">{{ editInitial() }}</span>
+              }
+              <span class="avatar-edit-overlay">
+                <span class="material-symbols-outlined text-white text-[1.4rem]">photo_camera</span>
+              </span>
+            </button>
+            <input
+              #avatarInput
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif"
+              class="hidden"
+              (change)="onAvatarSelected($event)" />
+            @if (!avatarRemoved()) {
+              <button
+                type="button"
+                class="avatar-remove-btn"
+                (click)="removeAvatar()">Remover foto</button>
+            } @else {
+              <span class="text-[0.7rem] text-[rgba(200,200,200,0.4)] italic">Foto removida</span>
+            }
+          </div>
+        } @else if (user.avatarUrl) {
+          <img
+            [src]="user.avatarUrl"
+            [alt]="user.username"
+            class="w-24 h-24 rounded-full object-cover ring-2 ring-white/[0.1] shadow-lg shadow-red-900/20 shrink-0" />
+        } @else {
+          <div class="profile-avatar">{{ userInitial() }}</div>
+        }
+
+        <div class="flex-1 min-w-0 text-center sm:text-left">
+          @if (!isEditing()) {
+            <h2 class="text-[1.6rem] font-bold text-[#f1e8e8] tracking-tight m-0 break-words">{{ user.username }}</h2>
+          }
+          <p class="text-sm text-[rgba(200,200,200,0.55)] mt-1 mb-0 break-all flex items-center gap-1.5 justify-center sm:justify-start">
+            <span class="material-symbols-outlined text-base">mail</span>
+            {{ user.email }}
+          </p>
+          @if (memberSince()) {
+            <p class="text-xs text-[rgba(200,200,200,0.4)] mt-1.5 mb-0 flex items-center gap-1.5 justify-center sm:justify-start">
+              <span class="material-symbols-outlined text-base">calendar_month</span>
+              Membro desde {{ memberSince() }}
+            </p>
+          }
+
+          <div class="flex items-center gap-6 mt-5 justify-center sm:justify-start">
+            <div class="stat-item">
+              <span class="stat-value">{{ favoritesCount() }}</span>
+              <span class="stat-label">Favoritos</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+              <span class="stat-value">{{ reviewsCount() }}</span>
+              <span class="stat-label">Avaliações</span>
+            </div>
+          </div>
+        </div>
+
+        @if (!isEditing()) {
+          <button
+            type="button"
+            class="edit-btn shrink-0"
+            (click)="startEditing()">
+            <span class="material-symbols-outlined text-lg">edit</span>
+            Editar perfil
+          </button>
+        }
+      </div>
+
+      <!-- Mensagens -->
+      @if (successMessage()) {
+        <div class="mt-6 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[#7ddba6] text-[0.8rem]">
+          <span class="material-symbols-outlined text-[1.1rem] shrink-0">check_circle</span>
+          <span>{{ successMessage() }}</span>
+        </div>
+      }
+
+      @if (saveErrorMessage()) {
+        <div class="mt-6 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-red-500/10 border border-red-500/20 text-[#f08080] text-[0.8rem]">
+          <span class="material-symbols-outlined text-[1.1rem] shrink-0">error</span>
+          <span>{{ saveErrorMessage() }}</span>
+        </div>
+      }
+
+      @if (!isEditing()) {
+        <!-- Visualização da bio -->
+        <div class="pt-8">
+          <p class="field-label">Bio</p>
+          @if (user.bio) {
+            <p class="text-sm text-[rgba(220,220,220,0.75)] leading-relaxed m-0 whitespace-pre-line">{{ user.bio }}</p>
+          } @else {
+            <p class="text-sm text-[rgba(200,200,200,0.35)] italic m-0">Nenhuma bio adicionada ainda.</p>
+          }
+        </div>
+      } @else {
+        <!-- Formulário de edição -->
+        <form class="flex flex-col gap-6 pt-8 max-w-xl" (ngSubmit)="saveProfile()">
+          <div class="flex flex-col gap-[0.35rem]">
+            <label for="username" class="field-label">Nome de usuário</label>
+            <div class="relative flex items-center">
+              <span class="material-symbols-outlined absolute left-3 text-[1.15rem] text-white/30 pointer-events-none transition-colors duration-200">person</span>
+              <input
+                id="username"
+                type="text"
+                [(ngModel)]="editUsername"
+                name="username"
+                required
+                maxlength="50"
+                placeholder="Seu nome de usuário"
+                class="form-input" />
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-[0.35rem]">
+            <label for="email" class="field-label">Email</label>
+            <div class="relative flex items-center">
+              <span class="material-symbols-outlined absolute left-3 text-[1.15rem] text-white/30 pointer-events-none transition-colors duration-200">mail</span>
+              <input
+                id="email"
+                type="email"
+                [value]="user.email"
+                name="email"
+                disabled
+                title="O email não pode ser alterado"
+                class="form-input opacity-50 cursor-not-allowed" />
+            </div>
+            <p class="text-[0.7rem] text-[rgba(200,200,200,0.35)] m-0">O email não pode ser alterado.</p>
+          </div>
+
+          <div class="flex flex-col gap-[0.35rem]">
+            <span class="field-label">Foto de perfil</span>
+            <p class="text-[0.8rem] text-[rgba(200,200,200,0.5)] leading-relaxed m-0 flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-base shrink-0">photo_camera</span>
+              Clique na sua foto para enviar uma nova imagem (JPG, PNG, WEBP ou GIF · máx. 2MB).
+            </p>
+          </div>
+
+          <div class="flex flex-col gap-[0.35rem]">
+            <label for="bio" class="field-label">Bio</label>
+            <textarea
+              id="bio"
+              [(ngModel)]="editBio"
+              name="bio"
+              rows="4"
+              maxlength="500"
+              placeholder="Conte um pouco sobre você..."
+              class="form-textarea"></textarea>
+          </div>
+
+          <div class="flex items-center gap-3 pt-2">
+            <button
+              type="submit"
+              class="save-btn"
+              [disabled]="isSaving()">
+              @if (isSaving()) {
+                <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span>Salvando...</span>
+              } @else {
+                <span class="material-symbols-outlined text-lg">check</span>
+                <span>Salvar alterações</span>
+              }
+            </button>
+            <button
+              type="button"
+              class="cancel-btn"
+              (click)="cancelEditing()">Cancelar</button>
+          </div>
+        </form>
+      }
+    </div>
+  }
+</main>

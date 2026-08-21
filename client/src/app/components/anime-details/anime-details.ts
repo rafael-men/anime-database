@@ -57,13 +57,12 @@ export class AnimeDetails implements OnInit {
     const season = this.seasonLabel(a.season, a.seasonYear);
 
     if (a.startDate) items.push({ label: 'Lançamento', value: a.startDate });
-    if (a.endDate) items.push({ label: 'Término', value: a.endDate });
+    if (a.format == "TV" && a.endDate) items.push({ label: 'Término', value: a.endDate });
     if (season) items.push({ label: 'Temporada', value: season });
-    if (a.episodes) items.push({ label: 'Episódios', value: String(a.episodes) });
+    if (a.format == "TV" && a.episodes) items.push({ label: 'Episódios', value: String(a.episodes) });
     if (a.duration) items.push({ label: 'Duração', value: `${a.duration} min` });
     if (a.format) items.push({ label: 'Formato', value: this.formatLabel(a.format) });
     if (a.studios.length > 0) items.push({ label: 'Estúdio', value: a.studios.join(', ') });
-    if (a.source) items.push({ label: 'Fonte', value: this.sourceLabel(a.source) });
     if (a.popularity > 0) items.push({ label: 'Popularidade', value: this.formatNumber(a.popularity) });
     if (a.favourites > 0) items.push({ label: 'Favoritos', value: this.formatNumber(a.favourites) });
 

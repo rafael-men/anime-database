@@ -12,6 +12,7 @@ export const API_ROUTES = {
       favorite: (id: string, animeId: number) => `${API_BASE}/users/${id}/favorites/${animeId}`,
       reviews: (id: string) => `${API_BASE}/users/${id}/reviews`,
       updateProfile: (id: string) => `${API_BASE}/users/${id}/profile`,
+      avatar: (id: string) => `${API_BASE}/users/${id}/avatar`,
    },
    anime: {
       graphql: `${ANILIST_API_BASE}`,

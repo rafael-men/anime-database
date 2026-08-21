@@ -23,6 +23,17 @@ export class SessionService {
       sessionStorage.setItem(this.userKey, JSON.stringify(user));
    }
 
+   updateUser(partial: Partial<SessionUser>): void {
+      const current = this.getUser();
+
+      if (!current || !this.isBrowser()) {
+         return;
+      }
+
+      const next: SessionUser = { ...current, ...partial };
+      sessionStorage.setItem(this.userKey, JSON.stringify(next));
+   }
+
    clearSession(): void {
       if (!this.isBrowser()) {
          return;

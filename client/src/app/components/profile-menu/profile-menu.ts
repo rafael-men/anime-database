@@ -22,4 +22,9 @@ export class ProfileMenu {
     this.close.emit();
     this.router.navigate(['/favourites']);
   }
+
+  goToProfile(): void {
+    this.close.emit();
+    this.router.navigate(['/profile']);
+  }
 }

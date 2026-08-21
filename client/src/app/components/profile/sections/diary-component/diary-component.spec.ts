@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { WatchlistPage } from './watchlist-page';
+import { DiaryComponent } from './diary-component';
 
-describe('WatchlistPage', () => {
-  let component: WatchlistPage;
-  let fixture: ComponentFixture<WatchlistPage>;
+describe('DiaryComponent', () => {
+  let component: DiaryComponent;
+  let fixture: ComponentFixture<DiaryComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [WatchlistPage],
+      imports: [DiaryComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(WatchlistPage);
+    fixture = TestBed.createComponent(DiaryComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });
