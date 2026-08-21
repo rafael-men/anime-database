@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { AnimeService, AnimeResult, SearchOptions } from '../../../api/services/anime.service';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
+import { UsersService } from '../../../api/services/users.service';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { AnimeGrid } from '../anime-grid/anime-grid';
 import { FormsModule } from '@angular/forms';
@@ -39,6 +40,7 @@ export class Home implements OnInit {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly sessionService = inject(SessionService);
   private readonly favoritesService = inject(FavoritesService);
+  private readonly usersService = inject(UsersService);
 
   searchQuery = '';
   activeTab = signal<NavbarTab>('todos');
@@ -54,6 +56,7 @@ export class Home implements OnInit {
   filters = signal<SearchOptions>({});
 
   username = signal('');
+  avatarUrl = signal<string | null>(null);
   userInitial = computed(() => {
     const name = this.username();
     return name ? name.charAt(0).toUpperCase() : 'U';
@@ -82,6 +85,21 @@ export class Home implements OnInit {
   private loadUser(): void {
     const user = this.sessionService.getUser();
     this.username.set(user?.username ?? '');
+    this.avatarUrl.set(user?.avatarUrl ?? null);
+
+    if (!user) return;
+
+    this.usersService.getProfile(user.userId).subscribe({
+      next: (profile) => {
+        this.username.set(profile.username);
+        this.avatarUrl.set(profile.avatarUrl ?? null);
+        this.sessionService.updateUser({
+          username: profile.username,
+          avatarUrl: profile.avatarUrl ?? null,
+        });
+      },
+      error: () => {},
+    });
   }
 
   private loadFavorites(): void {

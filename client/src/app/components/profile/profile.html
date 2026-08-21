@@ -4,6 +4,7 @@
   [searchQuery]="searchQuery()"
   [username]="username()"
   [userInitial]="userInitial()"
+  [avatarUrl]="avatarUrl()"
   [showProfileMenu]="showProfileMenu()"
   [categories]="[]"
   (tabChange)="goHome()"
@@ -46,7 +47,7 @@
               @if (avatarPreview()) {
                 <img [src]="avatarPreview()" alt="Prévia da nova foto" class="w-full h-full object-cover rounded-full" />
               } @else if (!avatarRemoved() && user.avatarUrl) {
-                <img [src]="user.avatarUrl" [alt]="user.username" class="w-full h-full object-cover rounded-full" />
+                <img [src]="resolveAvatar(user.avatarUrl)" [alt]="user.username" class="w-full h-full object-cover rounded-full" />
               } @else {
                 <span class="text-[2rem] font-bold">{{ editInitial() }}</span>
               }
@@ -71,7 +72,7 @@
           </div>
         } @else if (user.avatarUrl) {
           <img
-            [src]="user.avatarUrl"
+            [src]="resolveAvatar(user.avatarUrl)"
             [alt]="user.username"
             class="w-24 h-24 rounded-full object-cover ring-2 ring-white/[0.1] shadow-lg shadow-red-900/20 shrink-0" />
         } @else {

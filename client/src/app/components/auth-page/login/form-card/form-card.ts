@@ -50,6 +50,7 @@ export class FormCard {
       userId: res.userId,
       username: res.username,
       email: res.email,
+      avatarUrl: res.avatarUrl ?? null,
     });
     this.router.navigate(['/home']);
   }

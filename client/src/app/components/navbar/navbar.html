@@ -175,8 +175,12 @@
         <div class="relative shrink-0">
           <button
             (click)="toggleProfile.emit()"
-            class="w-9 h-9 rounded-full bg-gradient-to-br from-[#a82020] to-[#8b1a1a] flex items-center justify-center text-white text-sm font-bold ring-2 ring-white/[0.1] hover:ring-white/[0.2] transition-all duration-200 shadow-lg shadow-red-900/20 border-none cursor-pointer p-0">
-            {{ userInitial() }}
+            class="w-9 h-9 rounded-full bg-gradient-to-br from-[#a82020] to-[#8b1a1a] flex items-center justify-center text-white text-sm font-bold ring-2 ring-white/[0.1] hover:ring-white/[0.2] transition-all duration-200 shadow-lg shadow-red-900/20 border-none cursor-pointer p-0 overflow-hidden">
+            @if (resolvedAvatarUrl(); as avatar) {
+              <img [src]="avatar" [alt]="username() || 'Perfil'" class="w-full h-full object-cover rounded-full" />
+            } @else {
+              {{ userInitial() }}
+            }
           </button>
 
           <app-profile-menu

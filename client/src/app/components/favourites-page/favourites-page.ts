@@ -6,6 +6,7 @@ import { catchError } from 'rxjs/operators';
 import { AnimeService, AnimeResult } from '../../../api/services/anime.service';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
+import { UsersService } from '../../../api/services/users.service';
 import { Navbar } from '../navbar/navbar';
 import { AnimeGrid } from '../anime-grid/anime-grid';
 
@@ -20,6 +21,7 @@ export class FavouritesPage implements OnInit {
   private readonly animeService = inject(AnimeService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly sessionService = inject(SessionService);
+  private readonly usersService = inject(UsersService);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
 
@@ -30,6 +32,7 @@ export class FavouritesPage implements OnInit {
   showProfileMenu = signal(false);
 
   username = signal('');
+  avatarUrl = signal<string | null>(null);
   userInitial = computed(() => {
     const name = this.username();
     return name ? name.charAt(0).toUpperCase() : 'U';
@@ -55,7 +58,20 @@ export class FavouritesPage implements OnInit {
     }
 
     this.username.set(user.username);
+    this.avatarUrl.set(user.avatarUrl ?? null);
     this.loadFavorites(user.userId);
+
+    this.usersService.getProfile(user.userId).subscribe({
+      next: (profile) => {
+        this.username.set(profile.username);
+        this.avatarUrl.set(profile.avatarUrl ?? null);
+        this.sessionService.updateUser({
+          username: profile.username,
+          avatarUrl: profile.avatarUrl ?? null,
+        });
+      },
+      error: () => {},
+    });
   }
 
   loadFavorites(userId: string): void {

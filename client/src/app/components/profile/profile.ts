@@ -6,6 +6,7 @@ import { switchMap } from 'rxjs/operators';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService, FavoriteItem } from '../../../api/services/favorites.service';
 import { UpdateProfilePayload, UserProfile, UsersService } from '../../../api/services/users.service';
+import { resolveAssetUrl } from '../../../api/routes/routes';
 import { Navbar } from '../navbar/navbar';
 
 @Component({
@@ -49,10 +50,15 @@ export class Profile implements OnInit {
   private readonly sessionUserId = signal('');
 
   username = computed(() => this.profile()?.username ?? '');
+  avatarUrl = computed(() => this.profile()?.avatarUrl ?? null);
   userInitial = computed(() => {
     const name = this.username();
     return name ? name.charAt(0).toUpperCase() : 'U';
   });
+
+  resolveAvatar(path: string | null | undefined): string | null {
+    return resolveAssetUrl(path);
+  }
 
   editInitial(): string {
     const name = this.editUsername.trim();
@@ -215,7 +221,10 @@ export class Profile implements OnInit {
     request$.subscribe({
       next: (updated) => {
         this.profile.set(updated);
-        this.sessionService.updateUser({ username: updated.username });
+        this.sessionService.updateUser({
+          username: updated.username,
+          avatarUrl: updated.avatarUrl ?? null,
+        });
         this.isSaving.set(false);
         this.isEditing.set(false);
         this.resetAvatarSelection();

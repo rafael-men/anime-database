@@ -1,4 +1,4 @@
-import { Component, DestroyRef, effect, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,6 +6,7 @@ import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AnimeService, AnimeResult, SearchOptions } from '../../../api/services/anime.service';
+import { resolveAssetUrl } from '../../../api/routes/routes';
 import { ProfileMenu } from '../profile-menu/profile-menu';
 import { CategoryChips } from '../category-chips/category-chips';
 
@@ -25,6 +26,7 @@ export class Navbar {
   searchQuery = input<string>('');
   username = input<string>('');
   userInitial = input<string>('U');
+  avatarUrl = input<string | null>(null);
   showProfileMenu = input<boolean>(false);
   categories = input<string[]>([]);
   filters = input<SearchOptions>({});
@@ -43,6 +45,8 @@ export class Navbar {
   private readonly destroyRef = inject(DestroyRef);
 
   localQuery = '';
+
+  resolvedAvatarUrl = computed(() => resolveAssetUrl(this.avatarUrl()));
 
   suggestions = signal<AnimeResult[]>([]);
   showSuggestions = signal(false);

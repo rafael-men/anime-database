@@ -33,6 +33,7 @@ export class AuthService {
          userId: user.id,
          username: user.username,
          email: user.email,
+         avatarUrl: user.avatarUrl ?? null,
          access_token: token,
       };
    }
@@ -52,6 +53,7 @@ export class AuthService {
          userId: user.id,
          username: user.username,
          email: user.email,
+         avatarUrl: user.avatarUrl ?? null,
          access_token: token,
       };
    }

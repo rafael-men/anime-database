@@ -5,6 +5,7 @@ import { of, throwError } from 'rxjs';
 
 import { AnimeService, AnimeResult } from '../../../api/services/anime.service';
 import { FavoriteItem, FavoritesService } from '../../../api/services/favorites.service';
+import { UsersService } from '../../../api/services/users.service';
 import { FavouritesPage } from './favourites-page';
 
 function makeAnime(malId: number, title: string): AnimeResult {
@@ -69,6 +70,10 @@ describe('FavouritesPage', () => {
         provideRouter([]),
         { provide: FavoritesService, useValue: { getFavorites: getFavoritesMock, removeFavorite: removeFavoriteMock } },
         { provide: AnimeService, useValue: { getById: getByIdMock } },
+        {
+          provide: UsersService,
+          useValue: { getProfile: vi.fn().mockReturnValue(of({ username: 'rafael', avatarUrl: null })) },
+        },
       ],
     }).compileComponents();
 

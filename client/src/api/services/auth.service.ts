@@ -20,6 +20,7 @@ export interface AuthResponse {
   userId: string;
   username: string;
   email: string;
+  avatarUrl?: string | null;
   access_token: string;
 }
 

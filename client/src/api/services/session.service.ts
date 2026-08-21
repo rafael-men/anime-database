@@ -5,6 +5,7 @@ export interface SessionUser {
    userId: string;
    username: string;
    email: string;
+   avatarUrl?: string | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -73,6 +74,7 @@ export class SessionService {
             userId: parsed.userId,
             username: parsed.username,
             email: parsed.email,
+            avatarUrl: parsed.avatarUrl ?? null,
          };
       } catch {
          return null;

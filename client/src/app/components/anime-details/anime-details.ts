@@ -7,6 +7,7 @@ import {
 } from '../../../api/services/anime.service';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
+import { UsersService } from '../../../api/services/users.service';
 import { ReviewsService, AnimeReview } from '../../../api/services/reviews.service';
 import { Navbar } from '../navbar/navbar';
 
@@ -22,6 +23,7 @@ export class AnimeDetails implements OnInit {
   private readonly favoritesService = inject(FavoritesService);
   private readonly reviewsService = inject(ReviewsService);
   private readonly sessionService = inject(SessionService);
+  private readonly usersService = inject(UsersService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
@@ -44,6 +46,7 @@ export class AnimeDetails implements OnInit {
   hasExistingReview = signal(false);
 
   username = signal('');
+  avatarUrl = signal<string | null>(null);
   userInitial = computed(() => {
     const name = this.username();
     return name ? name.charAt(0).toUpperCase() : 'U';
@@ -74,7 +77,22 @@ export class AnimeDetails implements OnInit {
 
     const user = this.sessionService.getUser();
     this.username.set(user?.username ?? '');
+    this.avatarUrl.set(user?.avatarUrl ?? null);
     this.loadDetails(user?.userId ?? null);
+
+    if (!user) return;
+
+    this.usersService.getProfile(user.userId).subscribe({
+      next: (profile) => {
+        this.username.set(profile.username);
+        this.avatarUrl.set(profile.avatarUrl ?? null);
+        this.sessionService.updateUser({
+          username: profile.username,
+          avatarUrl: profile.avatarUrl ?? null,
+        });
+      },
+      error: () => {},
+    });
   }
 
   loadDetails(userId: string | null): void {

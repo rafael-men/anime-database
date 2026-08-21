@@ -1,6 +1,18 @@
 export const API_BASE = 'http://localhost:3000';
 export const ANILIST_API_BASE = 'https://graphql.anilist.co';
 
+export function resolveAssetUrl(path?: string | null): string | null {
+   if (!path) {
+      return null;
+   }
+
+   if (/^(https?:|data:|blob:)/i.test(path)) {
+      return path;
+   }
+
+   return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
 export const API_ROUTES = {
    auth: {
       login: `${API_BASE}/auth/login`,

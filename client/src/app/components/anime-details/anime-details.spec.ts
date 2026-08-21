@@ -1,7 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { vi } from 'vitest';
+import { of } from 'rxjs';
 
 import { AnimeDetails } from './anime-details';
+import { UsersService } from '../../../api/services/users.service';
 
 describe('AnimeDetails', () => {
   let component: AnimeDetails;
@@ -16,7 +19,13 @@ describe('AnimeDetails', () => {
 
     await TestBed.configureTestingModule({
       imports: [AnimeDetails],
-      providers: [provideRouter([])],
+      providers: [
+        provideRouter([]),
+        {
+          provide: UsersService,
+          useValue: { getProfile: vi.fn().mockReturnValue(of({ username: 'tester', avatarUrl: null })) },
+        },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(AnimeDetails);
