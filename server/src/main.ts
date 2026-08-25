@@ -15,7 +15,6 @@ async function bootstrap() {
 
    app.enableCors({
       origin: (origin, callback) => {
-         // Allows requests without Origin (e.g. Postman, server-side jobs).
          if (!origin) {
             callback(null, true);
             return;
