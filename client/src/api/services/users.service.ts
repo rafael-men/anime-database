@@ -19,6 +19,19 @@ export interface UpdateProfilePayload {
    avatarUrl?: string | null;
 }
 
+export interface UserReview {
+   id: string;
+   userId: string;
+   externalAnimeId: string;
+   rating: number;
+   comment: string | null;
+   watchedAt: string;
+   isRewatch: boolean;
+   hasSpoilers: boolean;
+   createdAt: string;
+   updatedAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsersService {
    private readonly http = inject(HttpClient);
@@ -38,7 +51,7 @@ export class UsersService {
       return this.http.post<UserProfile>(API_ROUTES.users.avatar(userId), formData);
    }
 
-   getReviews(userId: string): Observable<unknown[]> {
-      return this.http.get<unknown[]>(API_ROUTES.users.reviews(userId));
+   getReviews(userId: string): Observable<UserReview[]> {
+      return this.http.get<UserReview[]>(API_ROUTES.users.reviews(userId));
    }
 }

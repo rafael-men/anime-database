@@ -219,6 +219,10 @@ export class Home implements OnInit {
   }
 
   switchTab(tab: NavbarTab): void {
+    if (tab === 'personagens') {
+      this.router.navigate(['/characters']);
+      return;
+    }
     this.activeTab.set(tab);
     if (tab !== 'categorias') {
       this.selectedCategory.set('');

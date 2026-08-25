@@ -9,7 +9,8 @@ import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
 import { UsersService } from '../../../api/services/users.service';
 import { ReviewsService, AnimeReview } from '../../../api/services/reviews.service';
-import { Navbar } from '../navbar/navbar';
+import { Navbar, NavbarTab } from '../navbar/navbar';
+import { resolveAssetUrl } from '../../../api/routes/routes';
 
 @Component({
   selector: 'app-anime-details',
@@ -205,6 +206,10 @@ export class AnimeDetails implements OnInit {
     return Math.round(rating / 2);
   }
 
+  resolveAvatar(path: string | null | undefined): string | null {
+    return resolveAssetUrl(path);
+  }
+
   formatReviewDate(date: string): string {
     return new Date(date).toLocaleDateString('pt-BR', {
       day: '2-digit',
@@ -247,6 +252,14 @@ export class AnimeDetails implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/home']);
+  }
+
+  onTabChange(tab: NavbarTab): void {
+    if (tab === 'personagens') {
+      this.router.navigate(['/characters']);
+    } else {
+      this.router.navigate(['/home']);
+    }
   }
 
   onSearchQueryChange(query: string): void {

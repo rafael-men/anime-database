@@ -5,14 +5,15 @@ import { Router } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService, FavoriteItem } from '../../../api/services/favorites.service';
-import { UpdateProfilePayload, UserProfile, UsersService } from '../../../api/services/users.service';
+import { UpdateProfilePayload, UserProfile, UserReview, UsersService } from '../../../api/services/users.service';
 import { resolveAssetUrl } from '../../../api/routes/routes';
-import { Navbar } from '../navbar/navbar';
+import { Navbar, NavbarTab } from '../navbar/navbar';
+import { DiaryComponent } from './sections/diary-component/diary-component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, Navbar],
+  imports: [CommonModule, FormsModule, Navbar, DiaryComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -25,7 +26,7 @@ export class Profile implements OnInit {
 
   profile = signal<UserProfile | null>(null);
   favoriteItems = signal<FavoriteItem[]>([]);
-  reviewsCount = signal(0);
+  userReviews = signal<UserReview[]>([]);
 
   isLoading = signal(true);
   errorMessage = signal('');
@@ -75,6 +76,7 @@ export class Profile implements OnInit {
   });
 
   favoritesCount = computed(() => this.favoriteItems().length);
+  reviewsCount = computed(() => this.userReviews().length);
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -92,7 +94,7 @@ export class Profile implements OnInit {
       error: () => {},
     });
     this.usersService.getReviews(user.userId).subscribe({
-      next: (reviews) => this.reviewsCount.set(reviews.length),
+      next: (reviews) => this.userReviews.set(reviews),
       error: () => {},
     });
   }
@@ -256,6 +258,14 @@ export class Profile implements OnInit {
 
   goHome(): void {
     this.router.navigate(['/home']);
+  }
+
+  onTabChange(tab: NavbarTab): void {
+    if (tab === 'personagens') {
+      this.router.navigate(['/characters']);
+    } else {
+      this.router.navigate(['/home']);
+    }
   }
 
   toggleProfileMenu(): void {

@@ -1,0 +1,23 @@
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+  @include mat.theme(
+    (
+      color: (
+        primary: mat.$red-palette,
+        tertiary: mat.$blue-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+  font-family: 'Archivo', sans-serif;
+}
+
+body {
+  color-scheme: dark;
+  margin: 0;
+  height: 100%;
+  font-family: 'Archivo', sans-serif;
+}

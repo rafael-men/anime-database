@@ -7,7 +7,7 @@
   [avatarUrl]="avatarUrl()"
   [showProfileMenu]="showProfileMenu()"
   [categories]="[]"
-  (tabChange)="goHome()"
+  (tabChange)="onTabChange($event)"
   (searchQueryChange)="onSearchQueryChange($event)"
   (toggleProfile)="toggleProfileMenu()"
   (closeProfile)="closeProfileMenu()"

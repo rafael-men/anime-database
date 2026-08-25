@@ -7,7 +7,7 @@ import { AnimeService, AnimeResult } from '../../../api/services/anime.service';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
 import { UsersService } from '../../../api/services/users.service';
-import { Navbar } from '../navbar/navbar';
+import { Navbar, NavbarTab } from '../navbar/navbar';
 import { AnimeGrid } from '../anime-grid/anime-grid';
 
 @Component({
@@ -133,6 +133,14 @@ export class FavouritesPage implements OnInit {
 
   goHome(): void {
     this.router.navigate(['/home']);
+  }
+
+  onTabChange(tab: NavbarTab): void {
+    if (tab === 'personagens') {
+      this.router.navigate(['/characters']);
+    } else {
+      this.router.navigate(['/home']);
+    }
   }
 
   goToDetails(animeId: number): void {

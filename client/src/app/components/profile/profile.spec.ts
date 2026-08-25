@@ -4,7 +4,7 @@ import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 
 import { FavoriteItem, FavoritesService } from '../../../api/services/favorites.service';
-import { UserProfile, UsersService } from '../../../api/services/users.service';
+import { UserProfile, UserReview, UsersService } from '../../../api/services/users.service';
 import { Profile } from './profile';
 
 function makeProfile(overrides: Partial<UserProfile> = {}): UserProfile {
@@ -27,6 +27,21 @@ function makeFavorite(externalAnimeId: number): FavoriteItem {
     externalAnimeId: String(externalAnimeId),
     status: 'PLANNED',
     addedAt: new Date().toISOString(),
+  };
+}
+
+function makeReview(externalAnimeId: number): UserReview {
+  return {
+    id: `rev-${externalAnimeId}`,
+    userId: 'u1',
+    externalAnimeId: String(externalAnimeId),
+    rating: 8,
+    comment: null,
+    watchedAt: new Date().toISOString(),
+    isRewatch: false,
+    hasSpoilers: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   };
 }
 
@@ -66,7 +81,7 @@ describe('Profile', () => {
       of(makeProfile({ ...payload })),
     );
     uploadAvatarMock = vi.fn(() => of(makeProfile()));
-    getReviewsMock = vi.fn().mockReturnValue(of([{}, {}, {}]));
+    getReviewsMock = vi.fn().mockReturnValue(of([makeReview(1), makeReview(2), makeReview(3)]));
     getFavoritesMock = vi.fn().mockReturnValue(of([makeFavorite(1), makeFavorite(2)]));
 
     await TestBed.configureTestingModule({

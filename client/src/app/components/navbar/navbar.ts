@@ -5,17 +5,19 @@ import { Router } from '@angular/router';
 import { Subject, of } from 'rxjs';
 import { catchError, debounceTime, distinctUntilChanged, finalize, switchMap, tap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
 import { AnimeService, AnimeResult, SearchOptions } from '../../../api/services/anime.service';
 import { resolveAssetUrl } from '../../../api/routes/routes';
 import { ProfileMenu } from '../profile-menu/profile-menu';
 import { CategoryChips } from '../category-chips/category-chips';
 
-export type NavbarTab = 'todos' | 'categorias' | 'ovas' | 'filmes';
+export type NavbarTab = 'todos' | 'categorias' | 'ovas' | 'filmes' | 'personagens';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProfileMenu, CategoryChips],
+  imports: [CommonModule, FormsModule, ProfileMenu, CategoryChips, MatSelectModule, MatFormFieldModule],
   templateUrl: './navbar.html',
   styleUrl: './navbar.css',
   host: { ngSkipHydration: 'true' },
@@ -59,6 +61,7 @@ export class Navbar {
     { id: 'categorias', label: 'Explorar', icon: 'explore' },
     { id: 'ovas', label: 'OVAs', icon: 'video_library' },
     { id: 'filmes', label: 'Filmes', icon: 'movie' },
+    { id: 'personagens', label: 'Personagens', icon: 'group' },
   ];
 
   readonly formatOptions = [

@@ -1,17 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { GroupsComponent } from './groups-component';
+import { FavCharactersComponent } from './fav-characters-component';
 
-describe('GroupsComponent', () => {
-  let component: GroupsComponent;
-  let fixture: ComponentFixture<GroupsComponent>;
+describe('FavCharactersComponent', () => {
+  let component: FavCharactersComponent;
+  let fixture: ComponentFixture<FavCharactersComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [GroupsComponent],
+      imports: [FavCharactersComponent],
     }).compileComponents();
 
-    fixture = TestBed.createComponent(GroupsComponent);
+    fixture = TestBed.createComponent(FavCharactersComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

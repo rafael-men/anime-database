@@ -1,0 +1,113 @@
+<app-navbar
+  [activeTab]="'personagens'"
+  [selectedCategory]="''"
+  [searchQuery]="''"
+  [username]="username()"
+  [userInitial]="userInitial()"
+  [avatarUrl]="avatarUrl()"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="[]"
+  (tabChange)="onTabChange($event)"
+  (searchQueryChange)="noop()"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()" />
+
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-28">
+
+  <div class="mb-6 mt-6">
+    <h1 class="text-2xl sm:text-3xl font-bold text-[#f1e8e8] tracking-tight">Personagens</h1>
+    <p class="text-sm text-[rgba(210,180,180,0.7)] mt-1">Explore os personagens dos seus animes favoritos</p>
+  </div>
+
+  <div class="mb-6">
+    <div class="flex items-center gap-3 bg-[rgba(255,255,255,0.04)] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 focus-within:border-[rgba(255,255,255,0.18)] focus-within:bg-[rgba(255,255,255,0.06)] transition-all">
+      <span class="material-symbols-outlined text-[1.15rem] text-[rgba(200,200,200,0.4)] shrink-0">search</span>
+      <input
+        type="text"
+        [(ngModel)]="searchInput"
+        (ngModelChange)="onSearchInput()"
+        placeholder="Buscar personagem..."
+        class="flex-1 bg-transparent border-none outline-none text-[#f0f0f0] text-sm font-[inherit] py-2.5 min-w-0 placeholder:text-[rgba(255,255,255,0.25)]" />
+      @if (searchInput) {
+        <button
+          type="button"
+          (click)="searchInput = ''; onSearchInput()"
+          class="bg-transparent border-none cursor-pointer text-[rgba(200,200,200,0.45)] p-1 flex items-center hover:text-[#f0f0f0] transition-colors">
+          <span class="material-symbols-outlined text-base">close</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  @if (isLoading() && characters().length === 0) {
+    <div class="flex justify-center py-16">
+      <span class="w-9 h-9 border-[3px] border-[rgba(255,255,255,0.08)] border-t-[#a82020] rounded-full animate-[spin_0.8s_linear_infinite]"></span>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="flex flex-col items-center gap-3 py-16 text-center">
+      <span class="material-symbols-outlined text-[2.5rem] text-[rgba(224,85,85,0.7)]">error</span>
+      <p class="text-[0.85rem] text-[rgba(210,180,180,0.7)] m-0">{{ errorMessage() }}</p>
+      <button type="button" (click)="loadCharacters()" class="px-5 py-2.5 rounded-[10px] cursor-pointer text-sm font-semibold font-[inherit] text-white bg-gradient-to-br from-[#a82020] to-[#8b1a1a] border-none transition-all hover:from-[#c02828] hover:to-[#a82020] hover:-translate-y-0.5">Tentar novamente</button>
+    </div>
+  } @else if (characters().length === 0) {
+    <div class="flex flex-col items-center gap-2 py-16">
+      <span class="material-symbols-outlined text-[3rem] text-[rgba(200,200,200,0.12)]">person_off</span>
+      <p class="text-[0.85rem] text-[rgba(200,200,200,0.45)] m-0">Nenhum personagem encontrado.</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+      @for (char of characters(); track char.id) {
+        <article
+          class="bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.06)] rounded-xl overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-[rgba(168,32,32,0.3)] hover:shadow-[0_8px_24px_rgba(160,30,30,0.15)]"
+          (click)="openCharacterAnime(char.animeId)">
+          <div class="relative aspect-[3/4] overflow-hidden bg-[rgba(255,255,255,0.02)]">
+            @if (char.image) {
+              <img [src]="char.image" [alt]="char.name" class="w-full h-full object-cover block" loading="lazy" />
+            } @else {
+              <div class="w-full h-full flex items-center justify-center bg-[rgba(255,255,255,0.03)] text-[rgba(200,200,200,0.2)] text-[2.5rem]">
+                <span class="material-symbols-outlined">person</span>
+              </div>
+            }
+          </div>
+
+          <div class="p-2.5 sm:p-3">
+            <h3 class="text-[0.82rem] font-semibold text-[#f0f0f0] m-0 mb-0.5 leading-tight line-clamp-1">{{ char.name }}</h3>
+            @if (char.nameNative) {
+              <p class="text-[0.7rem] text-[rgba(200,200,200,0.4)] m-0 mb-1.5 line-clamp-1">{{ char.nameNative }}</p>
+            }
+            @if (char.animeTitle) {
+              <p class="flex items-center gap-1 text-[0.68rem] text-[rgba(200,200,200,0.5)] m-0 mb-1.5 line-clamp-1" [class]="char.animeId ? 'hover:text-[rgba(168,32,32,0.9)] cursor-pointer transition-colors' : ''">
+                <span class="material-symbols-outlined text-xs">movie</span>
+                {{ char.animeTitle }}
+              </p>
+            }
+            <div class="flex flex-wrap gap-1">
+              @if (char.gender) {
+                <span class="text-[0.6rem] px-[7px] py-0.5 rounded-md bg-[rgba(255,255,255,0.06)] text-[rgba(200,200,200,0.55)] uppercase tracking-wider">{{ char.gender }}</span>
+              }
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+
+    @if (hasNextPage()) {
+      <div class="flex justify-center py-8 px-2">
+        <button
+          type="button"
+          (click)="loadMore()"
+          class="inline-flex items-center gap-2 px-7 py-3 rounded-xl cursor-pointer text-sm font-semibold font-[inherit] text-[#f0f0f0] bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.08)] transition-all hover:bg-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.14)] disabled:opacity-60 disabled:cursor-not-allowed"
+          [disabled]="isLoading()">
+          @if (isLoading()) {
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>Carregando...</span>
+          } @else {
+            <span class="material-symbols-outlined text-lg">expand_more</span>
+            <span>Carregar mais</span>
+          }
+        </button>
+      </div>
+    }
+  }
+</main>

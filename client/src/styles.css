@@ -13,7 +13,7 @@
 
 body {
    margin: 0;
-   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   font-family: 'Archivo', sans-serif;
    background-color: #0a0a0a;
    background-image:
       radial-gradient(ellipse 80% 50% at 50% -10%, rgba(80, 80, 80, 0.1) 0%, transparent 60%),
@@ -53,4 +53,83 @@ body {
 
 .scrollbar-hide::-webkit-scrollbar {
    display: none;
+}
+
+/* Mat Select dark theme */
+.mat-mdc-select-panel {
+  background: #1a1a1a !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  font-family: 'Archivo', sans-serif !important;
+  overflow: hidden;
+}
+
+.mat-mdc-select-panel .mdc-list-item {
+  font-family: 'Archivo', sans-serif !important;
+  min-height: 40px !important;
+}
+
+.mat-mdc-option {
+  font-family: 'Archivo', sans-serif !important;
+  color: #f0f0f0 !important;
+}
+
+.mat-mdc-option:hover {
+  background: rgba(255, 255, 255, 0.06) !important;
+}
+
+.mat-mdc-option.mdc-list-item--selected {
+  background: rgba(168, 32, 32, 0.15) !important;
+}
+
+.mat-mdc-form-field {
+  font-family: 'Archivo', sans-serif !important;
+}
+
+.mdc-text-field--outlined .mdc-notched-outline__leading,
+.mdc-text-field--outlined .mdc-notched-outline__notch,
+.mdc-text-field--outlined .mdc-notched-outline__trailing {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+.mat-mdc-form-field-focus-within .mdc-notched-outline__leading,
+.mat-mdc-form-field-focus-within .mdc-notched-outline__notch,
+.mat-mdc-form-field-focus-within .mdc-notched-outline__trailing {
+  border-color: rgba(168, 32, 32, 0.6) !important;
+}
+
+.mat-mdc-select-value {
+  color: #f0f0f0 !important;
+  font-family: 'Archivo', sans-serif !important;
+}
+
+.mat-mdc-floating-label {
+  color: rgba(200, 200, 200, 0.5) !important;
+  font-family: 'Archivo', sans-serif !important;
+}
+
+.mat-mdc-form-field.focused .mat-mdc-floating-label {
+  color: #a82020 !important;
+}
+
+.mat-mdc-select-arrow {
+  color: rgba(200, 200, 200, 0.4) !important;
+}
+
+.mat-mdc-text-field-wrapper {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.mat-mdc-select-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.mat-mdc-select-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.mat-mdc-select-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
 }

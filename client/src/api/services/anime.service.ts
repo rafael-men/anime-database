@@ -34,6 +34,22 @@ query ($id: Int) {
   }
 }`;
 
+const MEDIA_BY_IDS_QUERY = `
+query ($ids: [Int]) {
+  Page(perPage: 50) {
+    media(id_in: $ids, type: ANIME) {
+      id
+      title { romaji english }
+      coverImage { large }
+      genres
+      averageScore
+      episodes
+      status
+      startDate { year }
+    }
+  }
+}`;
+
 const MEDIA_DETAILS_QUERY = `
 query ($id: Int) {
   Media(id: $id, type: ANIME) {
@@ -258,6 +274,16 @@ export class AnimeService {
         variables: { id },
       })
       .pipe(map((res) => this.mapAnime(res.data.Media)));
+  }
+
+  getByIds(ids: number[]): Observable<AnimeResult[]> {
+    if (!ids.length) return of([]);
+    return this.http
+      .post<{ data: { Page: { media: AniListMedia[] } } }>(
+        API_ROUTES.anime.graphql,
+        { query: MEDIA_BY_IDS_QUERY, variables: { ids } },
+      )
+      .pipe(map((res) => res.data.Page.media.map((m) => this.mapAnime(m))));
   }
 
   getDetails(id: number): Observable<AnimeDetailsData> {

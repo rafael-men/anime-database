@@ -106,67 +106,137 @@
           }
 
           @if (showFilters()) {
+            <div class="sm:hidden fixed inset-x-0 top-16 z-50 px-4 pt-2 pb-4 bg-black/50" (click)="showFilters.set(false)">
+              <div class="rounded-2xl bg-[#111111] border border-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.6)] overflow-hidden"
+                (click)="$event.stopPropagation()">
+                <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                  <p class="text-sm font-bold text-[#f0f0f0] m-0 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-base text-[rgba(200,200,200,0.5)]">tune</span>
+                    Filtros
+                  </p>
+                  <button
+                    type="button"
+                    (click)="clearFilters()"
+                    class="text-xs text-[rgba(200,200,200,0.5)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0">
+                    Limpar
+                  </button>
+                </div>
+
+                <div class="h-px bg-white/[0.06] mx-4"></div>
+
+                <div class="p-4 space-y-1">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Formato</mat-label>
+                    <mat-select
+                      [value]="filters().format ?? ''"
+                      (selectionChange)="setFilter('format', $event.value)">
+                      @for (opt of formatOptions; track opt.value) {
+                        <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Ano</mat-label>
+                    <mat-select
+                      [value]="filters().year ?? ''"
+                      (selectionChange)="setFilter('year', $any($event.value))">
+                      <mat-option value="">Qualquer ano</mat-option>
+                      @for (year of yearOptions; track year) {
+                        <mat-option [value]="year">{{ year }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Status</mat-label>
+                    <mat-select
+                      [value]="filters().status ?? ''"
+                      (selectionChange)="setFilter('status', $event.value)">
+                      @for (opt of statusOptions; track opt.value) {
+                        <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Ordenar por</mat-label>
+                    <mat-select
+                      [value]="filters().sort ?? ''"
+                      (selectionChange)="setFilter('sort', $event.value)">
+                      @for (opt of sortOptions; track opt.value) {
+                        <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                      }
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+            </div>
+
             <div
-              class="absolute right-0 top-full mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl bg-[#141414]/95 backdrop-blur-xl border border-white/[0.08] shadow-2xl p-4 z-50"
+              class="hidden sm:block absolute right-0 top-full mt-2 w-80 rounded-2xl bg-[#111111] border border-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.6)] z-50 overflow-hidden"
               (mouseleave)="showFilters.set(false)">
-              <div class="flex items-center justify-between mb-3">
-                <p class="text-sm font-bold text-[#f0f0f0] m-0">Filtros</p>
+              <div class="flex items-center justify-between px-4 pt-4 pb-2">
+                <p class="text-sm font-bold text-[#f0f0f0] m-0 flex items-center gap-2">
+                  <span class="material-symbols-outlined text-base text-[rgba(200,200,200,0.5)]">tune</span>
+                  Filtros
+                </p>
                 <button
                   type="button"
                   (click)="clearFilters()"
-                  class="text-xs text-[rgba(200,200,200,0.6)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0">
+                  class="text-xs text-[rgba(200,200,200,0.5)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0">
                   Limpar
                 </button>
               </div>
 
-              <label class="block mb-3">
-                <span class="block text-xs uppercase tracking-wide text-[rgba(200,200,200,0.5)] mb-1.5">Formato</span>
-                <select
-                  class="filter-select"
-                  [value]="filters().format ?? ''"
-                  (change)="setFilter('format', $any($event.target).value)">
-                  @for (opt of formatOptions; track opt.value) {
-                    <option [value]="opt.value">{{ opt.label }}</option>
-                  }
-                </select>
-              </label>
+              <div class="h-px bg-white/[0.06] mx-4"></div>
 
-              <label class="block mb-3">
-                <span class="block text-xs uppercase tracking-wide text-[rgba(200,200,200,0.5)] mb-1.5">Ano</span>
-                <select
-                  class="filter-select"
-                  [value]="filters().year ?? ''"
-                  (change)="setFilter('year', $any($event.target).value)">
-                  <option value="">Qualquer ano</option>
-                  @for (year of yearOptions; track year) {
-                    <option [value]="year">{{ year }}</option>
-                  }
-                </select>
-              </label>
+              <div class="p-4 space-y-1">
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Formato</mat-label>
+                  <mat-select
+                    [value]="filters().format ?? ''"
+                    (selectionChange)="setFilter('format', $event.value)">
+                    @for (opt of formatOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
 
-              <label class="block mb-3">
-                <span class="block text-xs uppercase tracking-wide text-[rgba(200,200,200,0.5)] mb-1.5">Status</span>
-                <select
-                  class="filter-select"
-                  [value]="filters().status ?? ''"
-                  (change)="setFilter('status', $any($event.target).value)">
-                  @for (opt of statusOptions; track opt.value) {
-                    <option [value]="opt.value">{{ opt.label }}</option>
-                  }
-                </select>
-              </label>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Ano</mat-label>
+                  <mat-select
+                    [value]="filters().year ?? ''"
+                    (selectionChange)="setFilter('year', $any($event.value))">
+                    <mat-option value="">Qualquer ano</mat-option>
+                    @for (year of yearOptions; track year) {
+                      <mat-option [value]="year">{{ year }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
 
-              <label class="block">
-                <span class="block text-xs uppercase tracking-wide text-[rgba(200,200,200,0.5)] mb-1.5">Ordenar por</span>
-                <select
-                  class="filter-select"
-                  [value]="filters().sort ?? ''"
-                  (change)="setFilter('sort', $any($event.target).value)">
-                  @for (opt of sortOptions; track opt.value) {
-                    <option [value]="opt.value">{{ opt.label }}</option>
-                  }
-                </select>
-              </label>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Status</mat-label>
+                  <mat-select
+                    [value]="filters().status ?? ''"
+                    (selectionChange)="setFilter('status', $event.value)">
+                    @for (opt of statusOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Ordenar por</mat-label>
+                  <mat-select
+                    [value]="filters().sort ?? ''"
+                    (selectionChange)="setFilter('sort', $event.value)">
+                    @for (opt of sortOptions; track opt.value) {
+                      <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+              </div>
             </div>
           }
         </div>

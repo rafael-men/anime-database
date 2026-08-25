@@ -224,10 +224,16 @@ export class UserAnimeActionsService {
    async getUserReviews(userId: string): Promise<Review[]> {
       await this.validateUser(userId);
 
-      return this.reviewRepository.find({
+      const reviews = await this.reviewRepository.find({
          where: { userId },
          order: { createdAt: 'DESC' },
       });
+
+      for (const r of reviews) {
+         r.rating = Number(r.rating);
+      }
+
+      return reviews;
    }
 
    private async validateUser(userId: string): Promise<User> {

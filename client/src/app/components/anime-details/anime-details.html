@@ -7,7 +7,7 @@
   [avatarUrl]="avatarUrl()"
   [showProfileMenu]="showProfileMenu()"
   [categories]="[]"
-  (tabChange)="goBack()"
+  (tabChange)="onTabChange($event)"
   (search)="searchOnHome()"
   (searchQueryChange)="onSearchQueryChange($event)"
   (toggleProfile)="toggleProfileMenu()"
@@ -274,8 +274,14 @@
             @for (review of reviews(); track review.id) {
               <article class="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4 sm:p-5">
                 <div class="flex items-start gap-3">
-                  <div class="w-9 h-9 shrink-0 rounded-full bg-gradient-to-br from-[#a82020] to-[#8b1a1a] flex items-center justify-center text-white text-sm font-bold ring-2 ring-white/[0.1]">
-                    {{ review.username.charAt(0).toUpperCase() }}
+                  <div class="w-9 h-9 shrink-0 rounded-full flex items-center justify-center text-white text-sm font-bold ring-2 ring-white/[0.1] overflow-hidden">
+                    @if (resolveAvatar(review.avatarUrl)) {
+                      <img [src]="resolveAvatar(review.avatarUrl)" [alt]="review.username" class="w-full h-full object-cover" />
+                    } @else {
+                      <div class="w-full h-full bg-gradient-to-br from-[#a82020] to-[#8b1a1a] flex items-center justify-center">
+                        {{ review.username.charAt(0).toUpperCase() }}
+                      </div>
+                    }
                   </div>
 
                   <div class="min-w-0 flex-1">
@@ -291,7 +297,7 @@
                           [class.filled-star]="star <= ratingToStars(review.rating)"
                           [class.dimmed-star]="star > ratingToStars(review.rating)">star</span>
                       }
-                      <span class="text-xs text-[rgba(200,200,200,0.55)] ml-1.5">{{ review.rating.toFixed(1) }}/10</span>
+                      <span class="text-xs text-[rgba(200,200,200,0.55)] ml-1.5">{{ +review.rating }}/10</span>
                     </div>
 
                     @if (review.comment) {
