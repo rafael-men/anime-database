@@ -48,30 +48,36 @@
           </div>
 
           @if (showSuggestions()) {
-            <div class="absolute left-0 right-0 top-full rounded-b-xl bg-[#141414]/95 backdrop-blur-xl border border-white/[0.08] border-t-0 shadow-2xl overflow-hidden z-50">
+            <div #suggestionsList class="absolute left-0 right-0 top-full rounded-b-xl bg-[#141414]/95 backdrop-blur-xl border border-white/[0.08] border-t-0 shadow-2xl overflow-hidden z-50 max-h-[70vh] overflow-y-auto">
               @if (isSuggesting() && suggestions().length === 0) {
                 <div class="flex items-center gap-2 px-4 py-3">
                   <div class="suggestion-spinner"></div>
                   <span class="text-sm text-[rgba(200,200,200,0.5)]">Buscando...</span>
                 </div>
               } @else if (suggestions().length === 0) {
-                <p class="px-4 py-3 text-sm text-[rgba(200,200,200,0.5)] m-0">Nenhum resultado.</p>
+                <div class="flex flex-col items-center gap-1.5 px-4 py-5">
+                  <span class="material-symbols-outlined text-[1.5rem] text-[rgba(200,200,200,0.2)]">search_off</span>
+                  <p class="text-sm text-[rgba(200,200,200,0.45)] m-0">Nenhum resultado para "{{ localQuery }}"</p>
+                </div>
               } @else {
                 @for (s of suggestions(); track s.mal_id; let i = $index) {
                   <button
                     type="button"
                     (mousedown)="selectSuggestion(s)"
-                    class="w-full flex items-center gap-3 px-3 py-2 text-left cursor-pointer border-none bg-transparent transition-colors duration-100"
+                    class="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-pointer border-none bg-transparent transition-colors duration-100"
                     [class]="selectedIndex() === i ? 'bg-white/[0.09]' : 'hover:bg-white/[0.06]'">
                     <img
                       [src]="s.images.jpg.image_url"
                       [alt]="s.title"
-                      class="w-9 h-12 object-cover rounded-md shrink-0"
+                      class="w-10 h-14 object-cover rounded-md shrink-0"
                       loading="lazy" />
                     <span class="min-w-0 flex-1">
-                      <span class="block text-sm font-medium text-[#f0f0f0] truncate">{{ s.title }}</span>
+                      <span class="block text-sm font-medium text-[#f0f0f0] truncate" [innerHTML]="highlight(s.title, localQuery)"></span>
+                      @if (s.titleNative && s.titleNative !== s.title) {
+                        <span class="block text-xs text-[rgba(200,200,200,0.4)] truncate">{{ s.titleNative }}</span>
+                      }
                       @if (suggestionMeta(s)) {
-                        <span class="block text-xs text-[rgba(200,200,200,0.5)] truncate">{{ suggestionMeta(s) }}</span>
+                        <span class="block text-xs text-[rgba(200,200,200,0.5)] truncate mt-0.5">{{ suggestionMeta(s) }}</span>
                       }
                     </span>
                     @if (s.score) {

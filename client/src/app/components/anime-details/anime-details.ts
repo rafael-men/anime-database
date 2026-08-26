@@ -11,11 +11,12 @@ import { UsersService } from '../../../api/services/users.service';
 import { ReviewsService, AnimeReview } from '../../../api/services/reviews.service';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { resolveAssetUrl } from '../../../api/routes/routes';
+import { TranslatePipe } from '../../../utils/translate-pipe';
 
 @Component({
   selector: 'app-anime-details',
   standalone: true,
-  imports: [CommonModule, Navbar],
+  imports: [CommonModule, Navbar, TranslatePipe],
   templateUrl: './anime-details.html',
   styleUrl: './anime-details.css',
 })
@@ -113,24 +114,12 @@ export class AnimeDetails implements OnInit {
         this.anime.set(details);
         this.isLoading.set(false);
 
-        this.translateSynopsis();
         this.loadReviews(animeId);
         if (userId) this.loadFavoriteState(userId, animeId);
       },
       error: () => {
         this.errorMessage.set('Erro ao carregar o anime. Tente novamente.');
         this.isLoading.set(false);
-      },
-    });
-  }
-
-  private translateSynopsis(): void {
-    const current = this.anime();
-    if (!current?.synopsis) return;
-
-    this.animeService.translateSynopsis(current.synopsis).subscribe({
-      next: (translated) => {
-        this.anime.update((a) => (a ? { ...a, synopsis: translated } : a));
       },
     });
   }

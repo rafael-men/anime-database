@@ -1,1 +1,114 @@
-<p>fav-characters-component works!</p>
+<section class="kins-section">
+  <div class="kins-header">
+    <span class="material-symbols-outlined kins-icon">favorite</span>
+    <h2 class="kins-title">Meus Kins</h2>
+  </div>
+
+  @if (isLoading()) {
+    <div class="kins-loading">
+      <span class="kins-spinner"></span>
+    </div>
+  } @else {
+    <div class="kins-grid">
+      @for (character of kins(); track character.id) {
+        <div class="kin-card">
+          <button type="button" class="kin-remove" (click)="removeCharacter(character.id)" title="Remover">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+          @if (character.image) {
+            <img [src]="character.image" [alt]="character.name" class="kin-img" loading="lazy" />
+          } @else {
+            <div class="kin-img-fallback">
+              <span class="material-symbols-outlined">person</span>
+            </div>
+          }
+          <div class="kin-info">
+            <span class="kin-name">{{ character.name }}</span>
+            @if (character.animeTitle) {
+              <span class="kin-anime">{{ character.animeTitle }}</span>
+            }
+          </div>
+        </div>
+      }
+
+      @if (hasEmptySlots) {
+        <button type="button" class="kin-add" (click)="openModal()">
+          <span class="material-symbols-outlined kin-add-icon">add</span>
+          <span class="kin-add-text">Adicionar kin</span>
+        </button>
+      }
+    </div>
+  }
+
+  @if (showModal()) {
+    <div class="kins-modal-overlay" (click)="closeModal()">
+      <div class="kins-modal" (click)="$event.stopPropagation()">
+        <div class="kins-modal-header">
+          <h3 class="kins-modal-title">Escolha seu kin</h3>
+          <button type="button" class="kins-modal-close" (click)="closeModal()">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <div class="kins-modal-search">
+          <span class="material-symbols-outlined kins-modal-search-icon">search</span>
+          <input
+            type="text"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+            (keyup.enter)="onSearchCharacters()"
+            placeholder="Buscar personagem..."
+            class="kins-modal-input"
+            autofocus />
+          @if (searchQuery()) {
+            <button type="button" class="kins-modal-clear" (click)="searchQuery.set(''); searchResults.set([])">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          }
+        </div>
+
+        <div class="kins-modal-results">
+          @if (isSearching()) {
+            <div class="kins-modal-loading">
+              <span class="kins-spinner"></span>
+            </div>
+          } @else if (searchResults().length === 0) {
+            @if (searchQuery().trim()) {
+              <div class="kins-modal-empty">
+                <span class="material-symbols-outlined kins-modal-empty-icon">person_off</span>
+                <p class="kins-modal-empty-text">Nenhum personagem encontrado.</p>
+              </div>
+            } @else {
+              <div class="kins-modal-empty">
+                <span class="material-symbols-outlined kins-modal-empty-icon">search</span>
+                <p class="kins-modal-empty-text">Pesquise pelo nome do personagem.</p>
+              </div>
+            }
+          } @else {
+            @for (char of searchResults(); track char.id) {
+              <button type="button" class="kins-result" (click)="selectCharacter(char)">
+                @if (char.image) {
+                  <img [src]="char.image" [alt]="char.name" class="kins-result-img" loading="lazy" />
+                } @else {
+                  <div class="kins-result-img-fallback">
+                    <span class="material-symbols-outlined">person</span>
+                  </div>
+                }
+                <div class="kins-result-info">
+                  <span class="kins-result-name">{{ char.name }}</span>
+                  @if (char.nameNative) {
+                    <span class="kins-result-native">{{ char.nameNative }}</span>
+                  }
+                  @if (char.animeTitle) {
+                    <span class="kins-result-anime">{{ char.animeTitle }}</span>
+                  }
+                </div>
+                <span class="material-symbols-outlined kins-result-add">add_circle</span>
+              </button>
+            }
+          }
+        </div>
+      </div>
+    </div>
+  }
+</section>

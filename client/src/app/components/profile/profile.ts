@@ -9,11 +9,12 @@ import { UpdateProfilePayload, UserProfile, UserReview, UsersService } from '../
 import { resolveAssetUrl } from '../../../api/routes/routes';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { DiaryComponent } from './sections/diary-component/diary-component';
+import { FavCharactersComponent } from './sections/fav-characters-component/fav-characters-component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, Navbar, DiaryComponent],
+  imports: [CommonModule, FormsModule, Navbar, DiaryComponent, FavCharactersComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -27,6 +28,7 @@ export class Profile implements OnInit {
   profile = signal<UserProfile | null>(null);
   favoriteItems = signal<FavoriteItem[]>([]);
   userReviews = signal<UserReview[]>([]);
+  favoriteCharacterIds = signal<number[]>([]);
 
   isLoading = signal(true);
   errorMessage = signal('');
@@ -106,6 +108,7 @@ export class Profile implements OnInit {
     this.usersService.getProfile(userId).subscribe({
       next: (profile) => {
         this.profile.set(profile);
+        this.favoriteCharacterIds.set(profile.favoriteCharacterIds ?? []);
         this.isLoading.set(false);
       },
       error: () => {
@@ -245,6 +248,23 @@ export class Profile implements OnInit {
     if (err.status === 409) return 'Este nome de usuário já está em uso.';
     if (err.error?.message) return err.error.message;
     return 'Erro ao salvar o perfil. Tente novamente.';
+  }
+
+  onCharacterIdsChange(ids: number[]): void {
+    const profile = this.profile();
+    if (!profile) return;
+
+    this.favoriteCharacterIds.set(ids);
+
+    this.usersService.updateProfile(profile.id, { favoriteCharacterIds: ids }).subscribe({
+      next: (updated) => {
+        this.profile.set(updated);
+      },
+      error: (err) => {
+        console.error('Erro ao salvar kins:', err);
+        this.favoriteCharacterIds.set(profile.favoriteCharacterIds ?? []);
+      },
+    });
   }
 
   onSearchQueryChange(query: string): void {

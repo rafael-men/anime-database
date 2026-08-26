@@ -35,7 +35,7 @@
   } @else if (profile(); as user) {
     <div class="profile-card p-6 sm:p-10">
 
-      <!-- Cabeçalho -->
+   
       <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-8 border-b border-white/[0.06]">
         @if (isEditing()) {
           <div class="flex flex-col items-center gap-2 shrink-0">
@@ -117,8 +117,6 @@
           </button>
         }
       </div>
-
-      <!-- Mensagens -->
       @if (successMessage()) {
         <div class="mt-6 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[#7ddba6] text-[0.8rem]">
           <span class="material-symbols-outlined text-[1.1rem] shrink-0">check_circle</span>
@@ -134,7 +132,6 @@
       }
 
       @if (!isEditing()) {
-        <!-- Visualização da bio -->
         <div class="pt-8">
           <p class="field-label">Bio</p>
           @if (user.bio) {
@@ -144,7 +141,6 @@
           }
         </div>
       } @else {
-        <!-- Formulário de edição -->
         <form class="flex flex-col gap-6 pt-8 max-w-xl" (ngSubmit)="saveProfile()">
           <div class="flex flex-col gap-[0.35rem]">
             <label for="username" class="field-label">Nome de usuário</label>
@@ -221,5 +217,6 @@
     </div>
 
     <app-diary-component [reviews]="userReviews()" />
+    <app-fav-characters-component [characterIds]="favoriteCharacterIds()" (characterIdsChange)="onCharacterIdsChange($event)" />
   }
 </main>

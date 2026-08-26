@@ -7,8 +7,8 @@ import { UserService } from './user.service';
 import { UserAnimeActionsService } from './user-anime-actions.service';
 
 @Module({
-   imports: [TypeOrmModule.forFeature([User, Review, WatchlistItem])],
-   providers: [UserService, UserAnimeActionsService],
-   exports: [UserService],
+  imports: [TypeOrmModule.forFeature([User, Review, WatchlistItem])],
+  providers: [UserService, UserAnimeActionsService],
+  exports: [UserService],
 })
 export class UserModule {}

@@ -12,6 +12,7 @@ describe('DiaryComponent', () => {
     }).compileComponents();
 
     fixture = TestBed.createComponent(DiaryComponent);
+    fixture.componentRef.setInput('reviews', []);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

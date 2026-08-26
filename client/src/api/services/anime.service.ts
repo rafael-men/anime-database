@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, of, catchError } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { API_ROUTES } from '../routes/routes';
 
 const MEDIA_QUERY = `
@@ -84,19 +84,21 @@ query ($search: String, $perPage: Int) {
   Page(page: 1, perPage: $perPage) {
     media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
       id
-      title { romaji english }
+      title { romaji english native }
       coverImage { large }
       averageScore
       episodes
       format
       seasonYear
+      status
+      popularity
     }
   }
 }`;
 
 interface AniListMedia {
   id: number;
-  title?: { romaji?: string; english?: string };
+  title?: { romaji?: string; english?: string; native?: string };
   coverImage?: { large?: string };
   genres?: string[];
   averageScore?: number | null;
@@ -105,6 +107,7 @@ interface AniListMedia {
   startDate?: { year?: number | null };
   format?: string | null;
   seasonYear?: number | null;
+  popularity?: number | null;
 }
 
 export interface SearchOptions {
@@ -209,6 +212,7 @@ export interface AnimeDetailsData {
 export interface AnimeResult {
   mal_id: number;
   title: string;
+  titleNative?: string;
   images: {
     jpg: {
       image_url: string;
@@ -254,7 +258,7 @@ export class AnimeService {
     return this.http
       .post<AniListPageResponse>(API_ROUTES.anime.graphql, {
         query: SUGGESTIONS_QUERY,
-        variables: { search: term, perPage: 6 },
+        variables: { search: term, perPage: 8 },
       })
       .pipe(map((res) => res.data.Page.media.map((m) => this.mapAnime(m))));
   }
@@ -293,19 +297,6 @@ export class AnimeService {
         variables: { id },
       })
       .pipe(map((res) => this.mapDetails(res.data.Media)));
-  }
-
-  translateSynopsis(text: string): Observable<string> {
-    const trimmed = text.trim();
-    if (!trimmed) return of('');
-
-    return this.http
-      .get<string[][][]>(API_ROUTES.anime.translate(trimmed))
-      .pipe(
-        map((res) => (res[0] ?? []).map((seg) => seg?.[0] ?? '').join('')),
-        map((translated) => translated.trim() || trimmed),
-        catchError(() => of(trimmed)),
-      );
   }
 
   private mapDetails(m: AniListMediaDetails): AnimeDetailsData {
@@ -388,6 +379,7 @@ export class AnimeService {
     return {
       mal_id: m.id,
       title: m.title?.english || m.title?.romaji || 'Sem título',
+      titleNative: m.title?.native ?? '',
       images: { jpg: { image_url: imageUrl, large_image_url: imageUrl } },
       score: m.averageScore != null ? m.averageScore / 10 : null,
       genres: (m.genres ?? []).map((g) => ({ name: g })),

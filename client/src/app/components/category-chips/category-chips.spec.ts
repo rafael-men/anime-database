@@ -45,9 +45,11 @@ describe('CategoryChips', () => {
     let selected = '';
     component.categorySelect.subscribe((category) => (selected = category));
 
-    const carousel = fixture.nativeElement.querySelector('#carousel') as HTMLElement;
-    const chips = carousel.querySelectorAll('button');
-    (chips[1] as HTMLElement).click();
+    const chips = fixture.nativeElement.querySelectorAll('button');
+    const categoryButtons = Array.from(chips).filter(
+      (btn) => !(btn as Element).getAttribute('aria-label'),
+    );
+    (categoryButtons[1] as HTMLElement).click();
 
     expect(selected).toBe('Aventura');
   });

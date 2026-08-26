@@ -1,10 +1,10 @@
 import {
-   Column,
-   CreateDateColumn,
-   Entity,
-   OneToMany,
-   PrimaryGeneratedColumn,
-   UpdateDateColumn,
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Group } from './group.model';
 import { Review } from './review.model';
@@ -12,76 +12,79 @@ import { WatchlistItem } from './watchlist-item.model';
 
 @Entity({ name: 'users' })
 export class User {
-   @PrimaryGeneratedColumn('uuid')
-   id!: string;
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
-   @Column({ type: 'varchar', length: 50, unique: true })
-   username!: string;
+  @Column({ type: 'varchar', length: 50, unique: true })
+  username!: string;
 
-   @Column({ type: 'varchar', length: 255, unique: true })
-   email!: string;
+  @Column({ type: 'varchar', length: 255, unique: true })
+  email!: string;
 
-   @Column({ type: 'varchar', length: 255 })
-   passwordHash!: string;
+  @Column({ type: 'varchar', length: 255 })
+  passwordHash!: string;
 
-   @Column({ type: 'varchar', length: 255, nullable: true })
-   avatarUrl?: string | null;
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  avatarUrl?: string | null;
 
-   @Column({ type: 'text', nullable: true })
-   bio?: string | null;
+  @Column({ type: 'text', nullable: true })
+  bio?: string | null;
 
-   @CreateDateColumn({ type: 'datetime' })
-   createdAt!: Date;
+  @Column({ type: 'simple-json', nullable: true })
+  favoriteCharacterIds?: number[] | null;
 
-   @UpdateDateColumn({ type: 'datetime', nullable: true })
-   updatedAt?: Date | null;
+  @CreateDateColumn({ type: 'datetime' })
+  createdAt!: Date;
 
-   @OneToMany(() => Review, (review) => review.user)
-   reviews!: Review[];
+  @UpdateDateColumn({ type: 'datetime', nullable: true })
+  updatedAt?: Date | null;
 
-   @OneToMany(() => WatchlistItem, (item) => item.user)
-   watchlistItems!: WatchlistItem[];
+  @OneToMany(() => Review, (review) => review.user)
+  reviews!: Review[];
 
-   @OneToMany(() => Group, (group) => group.owner)
-   groups!: Group[];
+  @OneToMany(() => WatchlistItem, (item) => item.user)
+  watchlistItems!: WatchlistItem[];
 
-   constructor(data: Partial<User> = {}) {
-      Object.assign(this, data);
-      this.username ??= '';
-      this.email ??= '';
-      this.passwordHash ??= '';
-      this.createdAt ??= new Date();
-   }
+  @OneToMany(() => Group, (group) => group.owner)
+  groups!: Group[];
 
-   getUsername(): string {
-      return this.username;
-   }
+  constructor(data: Partial<User> = {}) {
+    Object.assign(this, data);
+    this.username ??= '';
+    this.email ??= '';
+    this.passwordHash ??= '';
+    this.createdAt ??= new Date();
+  }
 
-   setUsername(username: string): void {
-      this.username = username;
-   }
+  getUsername(): string {
+    return this.username;
+  }
 
-   getEmail(): string {
-      return this.email;
-   }
+  setUsername(username: string): void {
+    this.username = username;
+  }
 
-   setEmail(email: string): void {
-      this.email = email;
-   }
+  getEmail(): string {
+    return this.email;
+  }
 
-   getPasswordHash(): string {
-      return this.passwordHash;
-   }
+  setEmail(email: string): void {
+    this.email = email;
+  }
 
-   setPasswordHash(passwordHash: string): void {
-      this.passwordHash = passwordHash;
-   }
+  getPasswordHash(): string {
+    return this.passwordHash;
+  }
 
-   getBio(): string | null | undefined {
-      return this.bio;
-   }
+  setPasswordHash(passwordHash: string): void {
+    this.passwordHash = passwordHash;
+  }
 
-   setBio(bio?: string | null): void {
-      this.bio = bio ?? null;
-   }
+  getBio(): string | null | undefined {
+    return this.bio;
+  }
+
+  setBio(bio?: string | null): void {
+    this.bio = bio ?? null;
+  }
 }

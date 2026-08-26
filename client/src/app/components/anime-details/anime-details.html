@@ -185,7 +185,7 @@
       @if (a.synopsis) {
         <section class="mt-8">
           <h2 class="text-lg font-bold text-[#f1e8e8] tracking-tight mt-0 mb-3">Sinopse</h2>
-          <p class="text-sm sm:text-base leading-relaxed text-[rgba(210,210,210,0.75)] m-0">{{ a.synopsis }}</p>
+          <p class="text-sm sm:text-base leading-relaxed text-[rgba(210,210,210,0.75)] m-0">{{ a.synopsis | bioTranslate | async }}</p>
         </section>
       }
 

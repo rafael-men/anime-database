@@ -25,11 +25,10 @@ export const API_ROUTES = {
       reviews: (id: string) => `${API_BASE}/users/${id}/reviews`,
       updateProfile: (id: string) => `${API_BASE}/users/${id}/profile`,
       avatar: (id: string) => `${API_BASE}/users/${id}/avatar`,
+      kinCount: (characterId: number) => `${API_BASE}/users/kin-count/${characterId}`,
    },
    anime: {
       graphql: `${ANILIST_API_BASE}`,
-      translate: (text: string) =>
-         `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=pt&dt=t&q=${encodeURIComponent(text)}`,
    },
    reviews: {
       byAnime: (animeId: number) => `${API_BASE}/reviews/anime/${animeId}`,

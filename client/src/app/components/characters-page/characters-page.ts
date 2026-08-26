@@ -106,6 +106,10 @@ export class CharactersPage implements OnInit {
     });
   }
 
+  openCharacterDetails(charId: number): void {
+    this.router.navigate(['/character', charId]);
+  }
+
   openCharacterAnime(animeId: number | null): void {
     if (animeId) this.router.navigate(['/anime', animeId]);
   }

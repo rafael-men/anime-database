@@ -16,17 +16,22 @@ import { UserModule } from './use-cases/user/user.module';
 import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.service';
 
 @Module({
-   imports: [
-      ConfigModule.forRoot({
-         isGlobal: true,
-         envFilePath: '.env',
-      }),
-      TypeOrmModule.forRoot(getDatabaseConfig()),
-      TypeOrmModule.forFeature([User, Review, WatchlistItem, Group, GroupItem]),
-      AuthModule,
-      UserModule,
-   ],
-   controllers: [UserController, ReviewController, GroupController, WatchlistController],
-   providers: [UserAnimeActionsService],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    TypeOrmModule.forRoot(getDatabaseConfig()),
+    TypeOrmModule.forFeature([User, Review, WatchlistItem, Group, GroupItem]),
+    AuthModule,
+    UserModule,
+  ],
+  controllers: [
+    UserController,
+    ReviewController,
+    GroupController,
+    WatchlistController,
+  ],
+  providers: [UserAnimeActionsService],
 })
-export class AppModule { }
+export class AppModule {}

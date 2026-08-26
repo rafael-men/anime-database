@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -94,10 +94,12 @@ export class Navbar {
 
   private readonly suggestionsSubject = new Subject<string>();
 
+  readonly suggestionsContainer = viewChild<ElementRef<HTMLElement>>('suggestionsList');
+
   constructor() {
     this.suggestionsSubject
       .pipe(
-        debounceTime(300),
+        debounceTime(250),
         distinctUntilChanged(),
         tap(() => this.isSuggesting.set(true)),
         switchMap((term) =>
@@ -176,6 +178,23 @@ export class Navbar {
   closeSuggestions(): void {
     this.showSuggestions.set(false);
     this.selectedIndex.set(-1);
+  }
+
+  highlight(text: string, query: string): string {
+    const trimmed = query.trim();
+    if (!trimmed || !text) return this.escapeHtml(text);
+
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+  }
+
+  private escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
   }
 
   onSearch(): void {

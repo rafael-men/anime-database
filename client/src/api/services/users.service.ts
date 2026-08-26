@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { API_ROUTES } from '../routes/routes';
 
 export interface UserProfile {
@@ -9,6 +10,7 @@ export interface UserProfile {
    email: string;
    avatarUrl?: string | null;
    bio?: string | null;
+   favoriteCharacterIds?: number[] | null;
    createdAt: string;
    updatedAt?: string | null;
 }
@@ -17,6 +19,7 @@ export interface UpdateProfilePayload {
    username?: string;
    bio?: string | null;
    avatarUrl?: string | null;
+   favoriteCharacterIds?: number[] | null;
 }
 
 export interface UserReview {
@@ -53,5 +56,11 @@ export class UsersService {
 
    getReviews(userId: string): Observable<UserReview[]> {
       return this.http.get<UserReview[]>(API_ROUTES.users.reviews(userId));
+   }
+
+   getKinCount(characterId: number): Observable<number> {
+      return this.http.get<{ count: number }>(API_ROUTES.users.kinCount(characterId)).pipe(
+         map((res) => res.count),
+      );
    }
 }
