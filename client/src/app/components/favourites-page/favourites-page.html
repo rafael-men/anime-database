@@ -13,7 +13,7 @@
   (closeProfile)="closeProfileMenu()"
   (logout)="logout()" />
 
-<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-28">
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-7 pt-28">
   <div class="page-header">
     <div>
       <h1 class="page-title">Meus Favoritos</h1>
@@ -31,13 +31,73 @@
     </div>
   }
 
-  <app-anime-grid
-    [animes]="filteredAnimes()"
-    [isLoading]="isLoading()"
-    [errorMessage]="errorMessage()"
-    [hasNextPage]="false"
-    [favoriteIds]="favoriteIdSet()"
-    (retry)="retryLoad()"
-    (toggleFavorite)="removeFavorite($event)"
-    (openDetails)="goToDetails($event)" />
+  @if (isLoading() && favorites().length === 0) {
+    <div class="fav-empty">
+      <div class="loading-spinner"></div>
+      <p class="empty-text">Carregando favoritos...</p>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="fav-empty">
+      <span class="material-symbols-outlined error-icon">error</span>
+      <p class="error-text">{{ errorMessage() }}</p>
+      <button
+        type="button"
+        (click)="retryLoad()"
+        class="retry-btn">
+        Tentar novamente
+      </button>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage() && filteredAnimes().length === 0) {
+    <div class="fav-empty">
+      <span class="material-symbols-outlined empty-icon">movie_filter</span>
+      <p class="empty-text">
+        @if (isSearching()) {
+          Nenhum anime encontrado para "{{ searchQuery() }}".
+        } @else {
+          Você ainda não adicionou nenhum anime aos favoritos.
+        }
+      </p>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage() && filteredAnimes().length > 0) {
+    <div class="carousel-shell">
+      <button
+        type="button"
+        class="carousel-btn carousel-btn-prev"
+        [class.disabled]="!canScrollPrev()"
+        (click)="scrollByCards(-1)"
+        aria-label="Animes anteriores">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
+
+      <div
+        #carouselTrack
+        class="carousel-track scrollbar-hide"
+        (scroll)="onCarouselScroll()">
+        @for (anime of filteredAnimes(); track anime.mal_id) {
+          <div class="carousel-item">
+            <app-anime-card
+              [anime]="anime"
+              [isFavorite]="favoriteIdSet().has(anime.mal_id)"
+              (toggleFavorite)="removeFavorite($event)"
+              (openDetails)="goToDetails($event)" />
+          </div>
+        }
+      </div>
+
+      <button
+        type="button"
+        class="carousel-btn carousel-btn-next"
+        [class.disabled]="!canScrollNext()"
+        (click)="scrollByCards(1)"
+        aria-label="Próximos animes">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
+    </div>
+  }
 </main>

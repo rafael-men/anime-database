@@ -1,8 +1,10 @@
-import { Component, computed, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { debounceTime, map, switchMap } from 'rxjs/operators';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService, FavoriteItem } from '../../../api/services/favorites.service';
 import { UpdateProfilePayload, UserProfile, UserReview, UsersService } from '../../../api/services/users.service';
@@ -37,6 +39,24 @@ export class Profile implements OnInit {
   isSaving = signal(false);
   successMessage = signal('');
   saveErrorMessage = signal('');
+
+  readonly usernameChangeIntervalMonths = 4;
+  usernameChecking = signal(false);
+  usernameAvailable = signal<boolean | null>(null);
+  private readonly usernameCheck$ = new Subject<string>();
+  private readonly destroyRef = inject(DestroyRef);
+
+  canChangeUsername = computed(() => {
+    const profile = this.profile();
+    if (!profile) return true;
+
+    const base = profile.usernameUpdatedAt ?? profile.createdAt;
+    if (!base) return true;
+
+    const nextAllowed = new Date(base);
+    nextAllowed.setMonth(nextAllowed.getMonth() + this.usernameChangeIntervalMonths);
+    return Date.now() >= nextAllowed.getTime();
+  });
 
   editUsername = '';
   editBio = '';
@@ -91,6 +111,26 @@ export class Profile implements OnInit {
 
     this.sessionUserId.set(user.userId);
     this.loadProfile(user.userId);
+    this.usernameCheck$
+      .pipe(
+        debounceTime(500),
+        switchMap((name) =>
+          this.usersService
+            .checkUsername(this.sessionUserId(), name)
+            .pipe(map((res) => res.available)),
+        ),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe({
+        next: (available) => {
+          this.usernameChecking.set(false);
+          this.usernameAvailable.set(available);
+        },
+        error: () => {
+          this.usernameChecking.set(false);
+          this.usernameAvailable.set(null);
+        },
+      });
     this.favoritesService.getFavorites(user.userId).subscribe({
       next: (items) => this.favoriteItems.set(items),
       error: () => {},
@@ -132,12 +172,43 @@ export class Profile implements OnInit {
     this.resetAvatarSelection();
     this.successMessage.set('');
     this.saveErrorMessage.set('');
+    this.usernameChecking.set(false);
+    this.usernameAvailable.set(null);
     this.isEditing.set(true);
+  }
+
+  onEditUsernameChange(username: string): void {
+    const current = this.profile()?.username?.trim() ?? '';
+    const value = username.trim();
+
+    this.usernameChecking.set(false);
+    this.usernameAvailable.set(null);
+
+    if (!value || value === current) {
+      return;
+    }
+
+    this.usernameChecking.set(true);
+    this.usernameCheck$.next(value);
+  }
+
+  nextUsernameChangeAllowed(): string {
+    const profile = this.profile();
+    if (!profile) return '';
+
+    const base = profile.usernameUpdatedAt ?? profile.createdAt;
+    if (!base) return '';
+
+    const nextAllowed = new Date(base);
+    nextAllowed.setMonth(nextAllowed.getMonth() + this.usernameChangeIntervalMonths);
+    return nextAllowed.toLocaleDateString('pt-BR');
   }
 
   cancelEditing(): void {
     this.isEditing.set(false);
     this.saveErrorMessage.set('');
+    this.usernameChecking.set(false);
+    this.usernameAvailable.set(null);
     this.resetAvatarSelection();
   }
 
@@ -194,13 +265,23 @@ export class Profile implements OnInit {
     this.avatarPreview.set(null);
   }
 
-  saveProfile(): void {
+  async saveProfile(): Promise<void> {
     const profile = this.profile();
     if (!profile || this.isSaving()) return;
 
     const username = this.editUsername.trim();
     if (!username) {
       this.saveErrorMessage.set('O nome de usuário não pode ficar vazio.');
+      return;
+    }
+
+    if (username !== profile.username && !this.canChangeUsername()) {
+      this.saveErrorMessage.set('Você só pode mudar seu nome de usuário a cada 4 meses.');
+      return;
+    }
+
+    if (username !== profile.username && this.usernameAvailable() === false) {
+      this.saveErrorMessage.set('Este nome de usuário já está em uso.');
       return;
     }
 
@@ -242,11 +323,14 @@ export class Profile implements OnInit {
     });
   }
 
-  private resolveSaveError(err: { status?: number; error?: { message?: string } }): string {
-    if (err.status === 400) return 'Imagem inválida. Use JPG, PNG, WEBP ou GIF de até 2MB.';
-    if (err.status === 401) return 'Sua sessão expirou. Faça login novamente.';
-    if (err.status === 409) return 'Este nome de usuário já está em uso.';
-    if (err.error?.message) return err.error.message;
+  private resolveSaveError(err?: { status?: number; error?: { message?: string; error?: string } }): string {
+    if (err?.status === 400 && err.error?.error === 'USERNAME_CHANGE_LIMIT') {
+      return 'Você só pode mudar seu nome de usuário a cada 4 meses.';
+    }
+    if (err?.status === 400) return 'Imagem inválida. Use JPG, PNG, WEBP ou GIF de até 2MB.';
+    if (err?.status === 401) return 'Sua sessão expirou. Faça login novamente.';
+    if (err?.status === 409) return 'Este nome de usuário já está em uso.';
+    if (err?.error?.message) return err.error.message;
     return 'Erro ao salvar o perfil. Tente novamente.';
   }
 

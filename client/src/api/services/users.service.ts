@@ -13,6 +13,7 @@ export interface UserProfile {
    favoriteCharacterIds?: number[] | null;
    createdAt: string;
    updatedAt?: string | null;
+   usernameUpdatedAt?: string | null;
 }
 
 export interface UpdateProfilePayload {
@@ -62,5 +63,11 @@ export class UsersService {
       return this.http.get<{ count: number }>(API_ROUTES.users.kinCount(characterId)).pipe(
          map((res) => res.count),
       );
+   }
+
+   checkUsername(userId: string, username: string): Observable<{ available: boolean }> {
+      return this.http.get<{ available: boolean }>(API_ROUTES.users.usernameAvailability(userId), {
+         params: { username },
+      });
    }
 }

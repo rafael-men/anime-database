@@ -8,6 +8,8 @@ import { ResourceNotFoundException } from '../exceptions/resource-not-found.exce
 
 @Injectable()
 export class UserService {
+  private readonly usernameChangeIntervalMonths = 4;
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -112,7 +114,13 @@ export class UserService {
           'USERNAME_EMPTY',
         );
       }
-      user.username = username;
+
+      if (username !== user.username) {
+        this.assertUsernameChangeAllowed(user);
+        await this.assertUsernameAvailable(username, user.id);
+        user.username = username;
+        user.usernameUpdatedAt = new Date();
+      }
     }
 
     if (data.bio !== undefined) {
@@ -140,5 +148,56 @@ export class UserService {
          const ids = u.favoriteCharacterIds;
          return Array.isArray(ids) && ids.includes(characterId);
       }).length;
+   }
+
+   async isUsernameAvailable(
+      username: string,
+      excludeUserId?: string,
+   ): Promise<boolean> {
+      const normalized = username?.trim();
+      if (!normalized) {
+         return true;
+      }
+
+      const existing = await this.userRepository.findOne({
+         where: { username: normalized },
+      });
+
+      return !existing || existing.id === excludeUserId;
+   }
+
+   private assertUsernameChangeAllowed(user: User): void {
+      const lastChange = user.usernameUpdatedAt ?? user.createdAt;
+      if (!lastChange) {
+         return;
+      }
+
+      const nextAllowed = new Date(lastChange);
+      nextAllowed.setMonth(
+         nextAllowed.getMonth() + this.usernameChangeIntervalMonths,
+      );
+
+      if (Date.now() < nextAllowed.getTime()) {
+         throw new ValidationException(
+            'Username can only be changed every 4 months.',
+            'USERNAME_CHANGE_LIMIT',
+         );
+      }
+   }
+
+   private async assertUsernameAvailable(
+      username: string,
+      currentUserId: string,
+   ): Promise<void> {
+      const existing = await this.userRepository.findOne({
+         where: { username },
+      });
+
+      if (existing && existing.id !== currentUserId) {
+         throw new DuplicateResourceException(
+            'This username is already in use.',
+            'USERNAME_TAKEN',
+         );
+      }
    }
 }

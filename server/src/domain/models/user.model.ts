@@ -39,6 +39,9 @@ export class User {
   @UpdateDateColumn({ type: 'datetime', nullable: true })
   updatedAt?: Date | null;
 
+  @Column({ type: 'datetime', nullable: true })
+  usernameUpdatedAt?: Date | null;
+
   @OneToMany(() => Review, (review) => review.user)
   reviews!: Review[];
 

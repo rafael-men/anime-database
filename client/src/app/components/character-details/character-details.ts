@@ -6,11 +6,12 @@ import { UsersService } from '../../../api/services/users.service';
 import { SessionService } from '../../../api/services/session.service';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { TranslatePipe } from '../../../utils/translate-pipe';
+import { CharBioFormatPipe } from '../../../utils/char-bio-format-pipe';
 
 @Component({
   selector: 'app-character-details',
   standalone: true,
-  imports: [CommonModule, Navbar, TranslatePipe],
+  imports: [CommonModule, Navbar, TranslatePipe, CharBioFormatPipe],
   templateUrl: './character-details.html',
   styleUrl: './character-details.css',
 })

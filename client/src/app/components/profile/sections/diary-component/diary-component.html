@@ -14,45 +14,70 @@
       <p class="diary-empty-text">Nenhuma avaliação registrada ainda.</p>
     </div>
   } @else {
-    <div class="diary-grid">
-      @for (entry of entries(); track entry.review.id) {
-        <article
-          class="diary-card"
-          (click)="navigateToAnime(entry.review.externalAnimeId)">
-          <div class="diary-card-cover">
-            @if (entry.anime?.images?.jpg?.image_url) {
-              <img
-                [src]="$any(entry.anime).images.jpg.image_url"
-                [alt]="$any(entry.anime).title"
-                class="diary-card-img"
-                loading="lazy" />
-            } @else {
-              <div class="diary-card-cover-fallback">
-                <span class="material-symbols-outlined">movie</span>
-              </div>
-            }
-            <div class="diary-card-rating-badge">
-              @for (star of [1,2,3,4,5]; track star) {
-                <span
-                  class="material-symbols-outlined diary-star"
-                  [class.star-filled]="star <= ratingToStars(entry.review.rating)"
-                  [class.star-empty]="star > ratingToStars(entry.review.rating)">star</span>
-              }
-            </div>
-          </div>
+    <div class="diary-carousel-shell">
+      <button
+        type="button"
+        class="diary-carousel-btn diary-carousel-btn-prev"
+        [class.disabled]="!canScrollPrev()"
+        (click)="scrollByCards(-1)"
+        aria-label="Avaliações anteriores">
+        <span class="material-symbols-outlined">chevron_left</span>
+      </button>
 
-          <div class="diary-card-body">
-            <h3 class="diary-card-title">{{ entry.anime?.title ?? 'Anime desconhecido' }}</h3>
-            <div class="diary-card-meta">
-              <span class="diary-card-score">{{ +entry.review.rating }}/10</span>
-              <span class="diary-card-date">{{ formatDate(entry.review.createdAt) }}</span>
-            </div>
-            @if (entry.review.comment) {
-              <p class="diary-card-comment">{{ entry.review.comment }}</p>
-            }
+      <div
+        #diaryTrack
+        class="diary-carousel-track scrollbar-hide"
+        (scroll)="onDiaryScroll()">
+        @for (entry of entries(); track entry.review.id) {
+          <div class="diary-carousel-item">
+            <article
+              class="diary-card"
+              (click)="navigateToAnime(entry.review.externalAnimeId)">
+              <div class="diary-card-cover">
+                @if (entry.anime?.images?.jpg?.image_url) {
+                  <img
+                    [src]="$any(entry.anime).images.jpg.image_url"
+                    [alt]="$any(entry.anime).title"
+                    class="diary-card-img"
+                    loading="lazy" />
+                } @else {
+                  <div class="diary-card-cover-fallback">
+                    <span class="material-symbols-outlined">movie</span>
+                  </div>
+                }
+                <div class="diary-card-rating-badge">
+                  @for (star of [1,2,3,4,5]; track star) {
+                    <span
+                      class="material-symbols-outlined diary-star"
+                      [class.star-filled]="star <= ratingToStars(entry.review.rating)"
+                      [class.star-empty]="star > ratingToStars(entry.review.rating)">star</span>
+                  }
+                </div>
+              </div>
+
+              <div class="diary-card-body">
+                <h3 class="diary-card-title">{{ entry.anime?.title ?? 'Anime desconhecido' }}</h3>
+                <div class="diary-card-meta">
+                  <span class="diary-card-score">{{ +entry.review.rating }}/10</span>
+                  <span class="diary-card-date">{{ formatDate(entry.review.createdAt) }}</span>
+                </div>
+                @if (entry.review.comment) {
+                  <p class="diary-card-comment">{{ entry.review.comment }}</p>
+                }
+              </div>
+            </article>
           </div>
-        </article>
-      }
+        }
+      </div>
+
+      <button
+        type="button"
+        class="diary-carousel-btn diary-carousel-btn-next"
+        [class.disabled]="!canScrollNext()"
+        (click)="scrollByCards(1)"
+        aria-label="Próximas avaliações">
+        <span class="material-symbols-outlined">chevron_right</span>
+      </button>
     </div>
   }
 </section>

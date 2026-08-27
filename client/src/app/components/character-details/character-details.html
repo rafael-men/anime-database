@@ -75,13 +75,16 @@
     </div>
 
     @if (char.description) {
-    <div class="border-t border-white/10 p-4 sm:p-6 lg:p-8">
-      <h2 class="flex flex-wrap items-center gap-2 text-base sm:text-lg font-semibold mb-3 text-white">
-        <span class="material-symbols-outlined text-red-500">article</span>
-        Sobre
-      </h2>
-      <p class="text-sm sm:text-base leading-relaxed text-neutral-300">{{ char.description | bioTranslate | async }}</p>
+  <div class="border-t border-white/10 p-4 sm:p-6 lg:p-8">
+    <h2 class="flex flex-wrap items-center gap-2 text-base sm:text-lg font-semibold mb-3 text-white">
+      <span class="material-symbols-outlined text-red-500">article</span>
+      Sobre
+    </h2>
+    <div
+      class="text-sm sm:text-base leading-relaxed text-neutral-300"
+      [innerHTML]="char.description | bioTranslate | async | bioFormat">
     </div>
+  </div>
     }
   </div>
 

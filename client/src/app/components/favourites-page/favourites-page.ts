@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed, PLATFORM_ID } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, inject, OnInit, signal, computed, PLATFORM_ID, ViewChild } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
@@ -8,16 +8,16 @@ import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
 import { UsersService } from '../../../api/services/users.service';
 import { Navbar, NavbarTab } from '../navbar/navbar';
-import { AnimeGrid } from '../anime-grid/anime-grid';
+import { AnimeCard } from '../anime-card/anime-card';
 
 @Component({
   selector: 'app-favourites-page',
   standalone: true,
-  imports: [CommonModule, Navbar, AnimeGrid],
+  imports: [CommonModule, Navbar, AnimeCard],
   templateUrl: './favourites-page.html',
   styleUrl: './favourites-page.css',
 })
-export class FavouritesPage implements OnInit {
+export class FavouritesPage implements OnInit, AfterViewInit {
   private readonly animeService = inject(AnimeService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly sessionService = inject(SessionService);
@@ -30,6 +30,11 @@ export class FavouritesPage implements OnInit {
   errorMessage = signal('');
   searchQuery = signal('');
   showProfileMenu = signal(false);
+
+  canScrollPrev = signal(false);
+  canScrollNext = signal(false);
+
+  @ViewChild('carouselTrack') carouselTrack?: ElementRef<HTMLDivElement>;
 
   username = signal('');
   avatarUrl = signal<string | null>(null);
@@ -96,6 +101,7 @@ export class FavouritesPage implements OnInit {
           next: (animes) => {
             this.favorites.set(animes.filter((a): a is AnimeResult => a !== null));
             this.isLoading.set(false);
+            this.scheduleScrollButtonUpdate();
           },
           error: () => {
             this.errorMessage.set('Erro ao carregar seus favoritos. Tente novamente.');
@@ -108,6 +114,36 @@ export class FavouritesPage implements OnInit {
         this.isLoading.set(false);
       },
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.scheduleScrollButtonUpdate();
+  }
+
+  onCarouselScroll(): void {
+    this.updateScrollButtons();
+  }
+
+  scrollByCards(direction: number): void {
+    const track = this.carouselTrack?.nativeElement;
+    if (!track) return;
+
+    const card = track.querySelector<HTMLElement>('.carousel-item');
+    const step = card ? card.offsetWidth + 16 : track.clientWidth * 0.8;
+
+    track.scrollBy({ left: direction * step, behavior: 'smooth' });
+  }
+
+  private updateScrollButtons(): void {
+    const track = this.carouselTrack?.nativeElement;
+    if (!track) return;
+
+    this.canScrollPrev.set(track.scrollLeft > 4);
+    this.canScrollNext.set(track.scrollLeft + track.clientWidth < track.scrollWidth - 4);
+  }
+
+  private scheduleScrollButtonUpdate(): void {
+    setTimeout(() => this.updateScrollButtons(), 0);
   }
 
   retryLoad(): void {
@@ -129,6 +165,7 @@ export class FavouritesPage implements OnInit {
 
   onSearchQueryChange(query: string): void {
     this.searchQuery.set(query);
+    this.scheduleScrollButtonUpdate();
   }
 
   goHome(): void {

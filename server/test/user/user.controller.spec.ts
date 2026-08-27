@@ -20,6 +20,7 @@ describe('UserController', () => {
   const userServiceMock = {
     findById: jest.fn(),
     updateProfile: jest.fn(),
+    isUsernameAvailable: jest.fn(),
   };
 
   const userAnimeActionsServiceMock = {
@@ -57,6 +58,29 @@ describe('UserController', () => {
   afterEach(async () => {
     jest.clearAllMocks();
     await app.close();
+  });
+
+  it('GET /users/:id/check-username returns availability', async () => {
+    userServiceMock.isUsernameAvailable.mockResolvedValue(true);
+
+    const response = await request(app.getHttpServer())
+      .get('/users/user-1/check-username')
+      .query({ username: 'rafa' })
+      .expect(200);
+
+    expect(userServiceMock.isUsernameAvailable).toHaveBeenCalledWith('rafa', 'user-1');
+    expect(response.body).toEqual({ available: true });
+  });
+
+  it('GET /users/:id/check-username returns taken when username is in use', async () => {
+    userServiceMock.isUsernameAvailable.mockResolvedValue(false);
+
+    const response = await request(app.getHttpServer())
+      .get('/users/user-1/check-username')
+      .query({ username: 'rafael' })
+      .expect(200);
+
+    expect(response.body).toEqual({ available: false });
   });
 
   it('GET /users/:id should return a user', async () => {

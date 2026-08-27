@@ -26,6 +26,7 @@ export const API_ROUTES = {
       updateProfile: (id: string) => `${API_BASE}/users/${id}/profile`,
       avatar: (id: string) => `${API_BASE}/users/${id}/avatar`,
       kinCount: (characterId: number) => `${API_BASE}/users/kin-count/${characterId}`,
+      usernameAvailability: (id: string) => `${API_BASE}/users/${id}/check-username`,
    },
    anime: {
       graphql: `${ANILIST_API_BASE}`,

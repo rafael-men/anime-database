@@ -8,6 +8,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -109,6 +110,18 @@ export class UserController {
     }
     const count = await this.userService.getKinCount(id);
     return { count };
+  }
+
+  @Get(':id/check-username')
+  async checkUsernameAvailability(
+    @Param('id') userId: string,
+    @Query('username') username: string,
+  ): Promise<{ available: boolean }> {
+    const available = await this.userService.isUsernameAvailable(
+      username,
+      userId,
+    );
+    return { available };
   }
 
   @Get(':id')

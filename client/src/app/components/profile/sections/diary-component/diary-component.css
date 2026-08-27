@@ -59,16 +59,93 @@
   margin: 0;
 }
 
-.diary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+.diary-carousel-shell {
+  position: relative;
+  padding: 0 56px;
 }
 
-@media (max-width: 480px) {
-  .diary-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+.diary-carousel-track {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scroll-snap-type: x proximity;
+  padding: 4px 2px;
+}
+
+.diary-carousel-item {
+  flex: 0 0 auto;
+  width: 180px;
+  scroll-snap-align: start;
+}
+
+.diary-carousel-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(20, 20, 20, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #f0f0f0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  backdrop-filter: blur(4px);
+}
+
+.diary-carousel-btn .material-symbols-outlined {
+  font-size: 22px;
+}
+
+.diary-carousel-btn:hover:not(.disabled) {
+  background: rgba(120, 30, 30, 0.9);
+  border-color: rgba(168, 32, 32, 0.6);
+}
+
+.diary-carousel-btn.disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+.diary-carousel-btn-prev {
+  left: 0;
+}
+
+.diary-carousel-btn-next {
+  right: 0;
+}
+
+@media (max-width: 1024px) {
+  .diary-carousel-shell {
+    padding: 0 44px;
+  }
+}
+
+@media (max-width: 640px) {
+  .diary-carousel-shell {
+    padding: 0;
+  }
+
+  .diary-carousel-item {
+    width: 148px;
+  }
+
+  .diary-carousel-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .diary-carousel-btn-prev {
+    left: -8px;
+  }
+
+  .diary-carousel-btn-next {
+    right: -8px;
   }
 }
 

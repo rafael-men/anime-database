@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, signal } from '@angular/core';
+import { AfterViewInit, Component, effect, ElementRef, inject, input, signal, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { UserReview } from '../../../../../api/services/users.service';
@@ -17,7 +17,7 @@ interface DiaryEntry {
   templateUrl: './diary-component.html',
   styleUrl: './diary-component.css',
 })
-export class DiaryComponent {
+export class DiaryComponent implements AfterViewInit {
   private readonly animeService = inject(AnimeService);
   private readonly router = inject(Router);
 
@@ -25,6 +25,11 @@ export class DiaryComponent {
 
   entries = signal<DiaryEntry[]>([]);
   isLoading = signal(false);
+
+  canScrollPrev = signal(false);
+  canScrollNext = signal(false);
+
+  @ViewChild('diaryTrack') diaryTrack?: ElementRef<HTMLDivElement>;
 
   private fetchedIds = new Set<number>();
   private animeCache = new Map<number, AnimeResult>();
@@ -95,5 +100,35 @@ export class DiaryComponent {
       month: 'short',
       year: 'numeric',
     });
+  }
+
+  ngAfterViewInit(): void {
+    this.scheduleScrollButtonUpdate();
+  }
+
+  onDiaryScroll(): void {
+    this.updateScrollButtons();
+  }
+
+  scrollByCards(direction: number): void {
+    const track = this.diaryTrack?.nativeElement;
+    if (!track) return;
+
+    const card = track.querySelector<HTMLElement>('.diary-carousel-item');
+    const step = card ? card.offsetWidth + 16 : track.clientWidth * 0.8;
+
+    track.scrollBy({ left: direction * step, behavior: 'smooth' });
+  }
+
+  private updateScrollButtons(): void {
+    const track = this.diaryTrack?.nativeElement;
+    if (!track) return;
+
+    this.canScrollPrev.set(track.scrollLeft > 4);
+    this.canScrollNext.set(track.scrollLeft + track.clientWidth < track.scrollWidth - 4);
+  }
+
+  private scheduleScrollButtonUpdate(): void {
+    setTimeout(() => this.updateScrollButtons(), 0);
   }
 }
