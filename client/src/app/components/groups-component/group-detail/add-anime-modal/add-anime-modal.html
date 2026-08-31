@@ -1,0 +1,104 @@
+<div class="modal-backdrop" (click)="close()">
+  <div
+    class="modal-panel"
+    (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Adicionar animes</h2>
+        <p class="modal-subtitle">Busque e adicione animes ao grupo.</p>
+      </div>
+      <button
+        type="button"
+        (click)="close()"
+        class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[rgba(210,180,180,0.7)] hover:text-[#f1e8e8] hover:bg-white/5 transition-colors"
+        aria-label="Fechar">
+        <span class="material-symbols-outlined text-[20px]">close</span>
+      </button>
+    </div>
+
+    <form class="modal-search" (ngSubmit)="search()">
+      <div class="flex gap-2">
+        <div class="relative flex-1">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input
+            type="text"
+            name="query"
+            [(ngModel)]="query"
+            (input)="onQueryChange($any($event.target).value)"
+            placeholder="Buscar anime..."
+            class="w-full pl-11 pr-4 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] border border-white/10 text-[#f1e8e8] placeholder-[rgba(200,200,200,0.35)] outline-none transition-colors focus:border-[rgba(168,32,32,0.6)]" />
+        </div>
+        <button
+          type="submit"
+          class="shrink-0 px-5 py-3 rounded-xl text-sm font-semibold text-white transition-all shadow-[0_2px_8px_rgba(168,32,32,0.25)] bg-[linear-gradient(135deg,#a82020,#8b1a1a)] hover:bg-[linear-gradient(135deg,#c02828,#a82020)]">
+          Buscar
+        </button>
+      </div>
+    </form>
+
+    @if (errorMessage()) {
+      <p class="text-sm text-[#e05555] mt-3">{{ errorMessage() }}</p>
+    }
+
+    <div class="modal-results">
+      @if (isSearching()) {
+        <div class="modal-state">
+          <div class="loading-spinner"></div>
+          <p class="empty-text">Buscando animes...</p>
+        </div>
+      }
+
+      @if (!isSearching() && searched() && results().length === 0) {
+        <div class="modal-state">
+          <span class="material-symbols-outlined empty-icon">search_off</span>
+          <p class="empty-text">Nenhum anime encontrado para "{{ query }}".</p>
+        </div>
+      }
+
+      @if (!isSearching() && results().length > 0) {
+        <div class="results-list">
+          @for (anime of results(); track anime.mal_id) {
+            <div class="result-item">
+              <img
+                [src]="anime.images.jpg.large_image_url || anime.images.jpg.image_url"
+                [alt]="anime.title"
+                class="result-thumb"
+                loading="lazy" />
+              <div class="result-info">
+                <h3 class="result-title">{{ anime.title }}</h3>
+                <p class="result-meta">
+                  {{ anime.type }} · {{ anime.episodes ?? '?' }} eps
+                  @if (anime.score) {
+                    · <span class="text-[#f5c518]">★ {{ anime.score.toFixed(1) }}</span>
+                  }
+                </p>
+              </div>
+              @if (isAlreadyAdded(anime.mal_id)) {
+                <span class="added-badge">Adicionado</span>
+              } @else {
+                <button
+                  type="button"
+                  (click)="addAnime(anime.mal_id)"
+                  [disabled]="addingId() === anime.mal_id"
+                  class="add-btn">
+                  @if (addingId() === anime.mal_id) {
+                    <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  } @else {
+                    <span class="material-symbols-outlined text-[18px]">add</span>
+                  }
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (!isSearching() && !searched()) {
+        <div class="modal-state">
+          <span class="material-symbols-outlined empty-icon">search</span>
+          <p class="empty-text">Busque um anime para adicionar ao grupo.</p>
+        </div>
+      }
+    </div>
+  </div>
+</div>

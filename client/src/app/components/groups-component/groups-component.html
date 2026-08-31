@@ -1,1 +1,98 @@
-<p>groups-component works!</p>
+<section class="mt-10">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Meus Grupos</h1>
+      <p class="page-subtitle">
+        {{ groups().length }} grupo{{ groups().length === 1 ? '' : 's' }} criado{{ groups().length === 1 ? '' : 's' }}
+      </p>
+    </div>
+    <button
+      type="button"
+      (click)="showCreateForm() ? closeCreateForm() : openCreateForm()"
+      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-[0_2px_8px_rgba(168,32,32,0.25)] bg-[linear-gradient(135deg,#a82020,#8b1a1a)] hover:bg-[linear-gradient(135deg,#c02828,#a82020)]">
+      <span class="material-symbols-outlined text-[18px]">
+        {{ showCreateForm() ? 'close' : 'add' }}
+      </span>
+      {{ showCreateForm() ? 'Cancelar' : 'Criar grupo' }}
+    </button>
+  </div>
+
+  @if (showCreateForm()) {
+    <div class="mb-8">
+      <app-create-group
+        (saved)="onGroupCreated()"
+        (cancel)="closeCreateForm()" />
+    </div>
+  }
+
+  @if (isLoading()) {
+    <div class="fav-empty">
+      <div class="loading-spinner"></div>
+      <p class="empty-text">Carregando grupos...</p>
+    </div>
+  }
+
+  @if (errorMessage()) {
+    <div class="fav-empty">
+      <span class="material-symbols-outlined error-icon">error</span>
+      <p class="error-text">{{ errorMessage() }}</p>
+      <button
+        type="button"
+        (click)="retryLoad()"
+        class="retry-btn">
+        Tentar novamente
+      </button>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage() && groups().length === 0) {
+    <div class="fav-empty">
+      <span class="material-symbols-outlined empty-icon">groups</span>
+      <p class="empty-text">Você ainda não criou nenhum grupo.</p>
+      <button
+        type="button"
+        (click)="openCreateForm()"
+        class="retry-btn mt-4">
+        Criar seu primeiro grupo
+      </button>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage() && groups().length > 0) {
+    <div class="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+      @for (group of groups(); track group.id) {
+        <div
+          class="group-card"
+          role="button"
+          tabindex="0"
+          (click)="openGroup(group.id)"
+          (keydown.enter)="openGroup(group.id)">
+          <div class="group-cover">
+            @if (coverUrl(group)) {
+              <img [src]="coverUrl(group)" [alt]="group.name" class="w-full h-full object-cover" />
+            } @else {
+              <div class="w-full h-full flex items-center justify-center bg-[linear-gradient(135deg,rgba(168,32,32,0.55),rgba(30,30,30,0.9))]">
+                <span class="text-4xl font-bold text-white/70">{{ getInitial(group.name) }}</span>
+              </div>
+            }
+            @if (!group.isPublic) {
+              <span class="absolute top-2 right-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide bg-black/60 text-[rgba(210,180,180,0.8)]">
+                <span class="material-symbols-outlined text-[12px]">lock</span>
+                Privado
+              </span>
+            }
+          </div>
+          <div class="p-4">
+            <h3 class="font-semibold text-[#f1e8e8] truncate">{{ group.name }}</h3>
+            <p class="text-xs text-[rgba(210,180,180,0.6)] mt-1 line-clamp-2 h-8">
+              {{ group.description || 'Sem descrição.' }}
+            </p>
+            <p class="text-xs text-[rgba(200,200,200,0.4)] mt-2">
+              {{ group.groupItems?.length ?? 0 }} item{{ (group.groupItems?.length ?? 0) === 1 ? '' : 's' }}
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</section>

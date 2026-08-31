@@ -38,6 +38,7 @@ export const API_ROUTES = {
    groups: {
       base: `${API_BASE}/groups`,
       byId: (id: string) => `${API_BASE}/groups/${id}`,
+      byOwner: (ownerId: string) => `${API_BASE}/groups/owner/${ownerId}`,
       items: (id: string) => `${API_BASE}/groups/${id}/items`,
    },
    watchlist: {

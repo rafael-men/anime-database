@@ -7,6 +7,7 @@ import { AnimeDetails } from './components/anime-details/anime-details';
 import { CharacterDetails } from './components/character-details/character-details';
 import { Profile } from './components/profile/profile';
 import { CharactersPage } from './components/characters-page/characters-page';
+import { GroupDetail } from './components/groups-component/group-detail/group-detail';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -15,6 +16,7 @@ export const routes: Routes = [
   { path: 'home', component: Home, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
   { path: 'favourites', component: FavouritesPage, canActivate: [authGuard] },
+  { path: 'groups/:id', component: GroupDetail, canActivate: [authGuard] },
   { path: 'characters', component: CharactersPage, canActivate: [authGuard] },
   { path: 'character/:id', component: CharacterDetails, canActivate: [authGuard] },
   { path: 'anime/:id', component: AnimeDetails, canActivate: [authGuard] },

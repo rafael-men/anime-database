@@ -1,1 +1,114 @@
-<p>create-group works!</p>
+<form
+  class="bg-[#161616] border border-white/10 rounded-2xl p-6 sm:p-8 space-y-6"
+  (ngSubmit)="submit()"
+  #groupForm="ngForm">
+  <div class="flex items-start justify-between gap-4">
+    <div>
+      <h2 class="text-xl font-bold text-[#f1e8e8]">
+        {{ isEditMode ? 'Editar grupo' : 'Criar novo grupo' }}
+      </h2>
+      <p class="text-sm text-[rgba(210,180,180,0.7)] mt-1">
+        {{ isEditMode
+          ? 'Atualize as informações do seu grupo.'
+          : 'Organize seus animes em grupos personalizados.' }}
+      </p>
+    </div>
+    <button
+      type="button"
+      (click)="cancelCreate()"
+      class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-[rgba(210,180,180,0.7)] hover:text-[#f1e8e8] hover:bg-white/5 transition-colors"
+      aria-label="Fechar">
+      <span class="material-symbols-outlined text-[20px]">close</span>
+    </button>
+  </div>
+
+  <div class="space-y-2">
+    <label for="group-name" class="block text-sm font-medium text-[#f1e8e8]">
+      Nome do grupo <span class="text-[#e05555]">*</span>
+    </label>
+    <input
+      id="group-name"
+      type="text"
+      name="name"
+      [(ngModel)]="name"
+      required
+      maxlength="120"
+      placeholder="Ex.: Meus animes favoritos"
+      class="w-full px-4 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] border border-white/10 text-[#f1e8e8] placeholder-[rgba(200,200,200,0.35)] outline-none transition-colors focus:border-[rgba(168,32,32,0.6)]" />
+    <div class="text-right text-xs text-[rgba(200,200,200,0.4)]">{{ name.length }}/120</div>
+  </div>
+
+  <div class="space-y-2">
+    <label for="group-description" class="block text-sm font-medium text-[#f1e8e8]">
+      Descrição
+    </label>
+    <textarea
+      id="group-description"
+      name="description"
+      [(ngModel)]="description"
+      rows="3"
+      maxlength="500"
+      placeholder="Descreva o propósito do grupo (opcional)"
+      class="w-full px-4 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] border border-white/10 text-[#f1e8e8] placeholder-[rgba(200,200,200,0.35)] outline-none transition-colors focus:border-[rgba(168,32,32,0.6)] resize-none"></textarea>
+    <div class="text-right text-xs text-[rgba(200,200,200,0.4)]">{{ descriptionCharCount }}/500</div>
+  </div>
+
+  <div class="space-y-2">
+    <label for="group-cover" class="block text-sm font-medium text-[#f1e8e8]">
+      URL da capa
+    </label>
+    <input
+      id="group-cover"
+      type="url"
+      name="coverImageUrl"
+      [(ngModel)]="coverImageUrl"
+      placeholder="https://exemplo.com/capa.jpg (opcional)"
+      class="w-full px-4 py-3 rounded-xl bg-[rgba(255,255,255,0.05)] border border-white/10 text-[#f1e8e8] placeholder-[rgba(200,200,200,0.35)] outline-none transition-colors focus:border-[rgba(168,32,32,0.6)]" />
+  </div>
+
+  <div class="flex items-center justify-between p-4 rounded-xl bg-[rgba(255,255,255,0.04)] border border-white/5">
+    <div>
+      <p class="text-sm font-medium text-[#f1e8e8]">Grupo público</p>
+      <p class="text-xs text-[rgba(210,180,180,0.6)] mt-0.5">
+        Qualquer pessoa pode visualizar este grupo.
+      </p>
+    </div>
+    <button
+       type="button"
+       role="switch"
+       [attr.aria-checked]="isPublic"
+       (click)="isPublic = !isPublic"
+       [ngClass]="isPublic
+       ? 'bg-[linear-gradient(135deg,#a82020,#8b1a1a)] justify-end'
+       : 'bg-[rgba(255,255,255,0.12)] justify-start'"
+       class="shrink-0 inline-flex items-center w-12 h-7 p-1 rounded-full border-0 outline-none transition-colors">
+    <span class="w-5 h-5 rounded-full bg-white shadow-sm transition-transform"></span>
+</button>
+  </div>
+
+  @if (errorMessage()) {
+    <p class="text-sm text-[#e05555]">{{ errorMessage() }}</p>
+  }
+
+  <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-3 pt-2">
+    <button
+      type="button"
+      (click)="cancelCreate()"
+      class="px-5 py-2.5 rounded-xl text-sm font-medium text-[rgba(210,180,180,0.8)] hover:text-[#f1e8e8] hover:bg-white/5 transition-colors">
+      Cancelar
+    </button>
+    <button
+      type="submit"
+      [disabled]="isSubmitting()"
+      class="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-[0_2px_8px_rgba(168,32,32,0.25)] bg-[linear-gradient(135deg,#a82020,#8b1a1a)] hover:bg-[linear-gradient(135deg,#c02828,#a82020)] disabled:opacity-50 disabled:cursor-not-allowed">
+      @if (isSubmitting()) {
+        <span class="inline-flex items-center gap-2">
+          <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+          {{ isEditMode ? 'Salvando...' : 'Criando...' }}
+        </span>
+      } @else {
+        {{ isEditMode ? 'Salvar alterações' : 'Criar grupo' }}
+      }
+    </button>
+  </div>
+</form>

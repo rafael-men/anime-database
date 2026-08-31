@@ -8,9 +8,12 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { Group } from '../../domain/models/group.model';
 import { GroupItem } from '../../domain/models/group-item.model';
+import { GroupService } from '../../use-cases/group/group.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
   AddGroupItemDto,
   CreateGroupDto,
@@ -18,31 +21,29 @@ import {
 } from './dto/group.dto';
 
 @Controller('groups')
+@UseGuards(JwtAuthGuard)
 export class GroupController {
-  constructor() {}
+  constructor(private readonly groupService: GroupService) {}
 
   @Post()
   async createGroup(@Body() body: CreateGroupDto): Promise<Group> {
-    const group = new Group({
+    return this.groupService.createGroup({
       ownerId: body.ownerId,
       name: body.name,
       description: body.description ?? null,
       coverImageUrl: body.coverImageUrl ?? null,
       isPublic: body.isPublic ?? true,
     });
+  }
 
-    return group;
+  @Get('owner/:ownerId')
+  async findByOwner(@Param('ownerId') ownerId: string): Promise<Group[]> {
+    return this.groupService.findByOwner(ownerId);
   }
 
   @Get(':id')
   async findGroupById(@Param('id') id: string): Promise<Group> {
-    const group = new Group({
-      id,
-      ownerId: '00000000-0000-0000-0000-000000000000',
-      name: 'Sample group',
-    });
-
-    return group;
+    return this.groupService.findById(id);
   }
 
   @Patch(':id')
@@ -50,22 +51,18 @@ export class GroupController {
     @Param('id') id: string,
     @Body() body: UpdateGroupDto,
   ): Promise<Group> {
-    const group = new Group({
-      id,
-      ownerId: '00000000-0000-0000-0000-000000000000',
-      name: body.name ?? 'Sample group',
-      description: body.description ?? null,
-      coverImageUrl: body.coverImageUrl ?? null,
-      isPublic: body.isPublic ?? true,
+    return this.groupService.updateGroup(id, {
+      name: body.name,
+      description: body.description,
+      coverImageUrl: body.coverImageUrl,
+      isPublic: body.isPublic,
     });
-
-    return group;
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteGroup(@Param('id') id: string): Promise<void> {
-    return;
+    await this.groupService.deleteGroup(id);
   }
 
   @Post(':id/items')
@@ -73,14 +70,11 @@ export class GroupController {
     @Param('id') groupId: string,
     @Body() body: AddGroupItemDto,
   ): Promise<GroupItem> {
-    const item = new GroupItem({
-      groupId,
+    return this.groupService.addItem(groupId, {
       externalAnimeId: body.externalAnimeId,
-      order: body.order ?? 0,
-      note: body.note ?? null,
+      order: body.order,
+      note: body.note,
     });
-
-    return item;
   }
 
   @Delete(':id/items/:animeId')
@@ -89,6 +83,6 @@ export class GroupController {
     @Param('id') groupId: string,
     @Param('animeId') animeId: string,
   ): Promise<void> {
-    return;
+    await this.groupService.removeItem(groupId, animeId);
   }
 }

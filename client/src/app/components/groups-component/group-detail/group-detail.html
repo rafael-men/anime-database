@@ -1,0 +1,175 @@
+<app-navbar
+  [activeTab]="'todos'"
+  [selectedCategory]="''"
+  [searchQuery]="''"
+  [username]="username()"
+  [userInitial]="userInitial()"
+  [avatarUrl]="avatarUrl()"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="[]"
+  (tabChange)="onTabChange($event)"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()" />
+
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto mt-7 pt-28">
+  <button
+    type="button"
+    (click)="goBack()"
+    class="inline-flex items-center gap-1.5 text-sm text-[rgba(210,180,180,0.7)] hover:text-[#f1e8e8] transition-colors mb-6">
+    <span class="material-symbols-outlined text-[18px]">arrow_back</span>
+    Voltar para favoritos
+  </button>
+
+  @if (isLoading()) {
+    <div class="fav-empty">
+      <div class="loading-spinner"></div>
+      <p class="empty-text">Carregando grupo...</p>
+    </div>
+  }
+
+  @if (errorMessage() && !isLoading()) {
+    <div class="fav-empty">
+      <span class="material-symbols-outlined error-icon">error</span>
+      <p class="error-text">{{ errorMessage() }}</p>
+      <button
+        type="button"
+        (click)="retryLoad()"
+        class="retry-btn">
+        Tentar novamente
+      </button>
+    </div>
+  }
+
+  @if (group() && !isLoading() && !errorMessage()) {
+    <section class="group-hero">
+      <div class="group-hero-cover">
+        @if (coverUrl()) {
+          <img [src]="coverUrl()" [alt]="group()!.name" class="w-full h-full object-cover" />
+        } @else {
+          <div class="w-full h-full flex items-center justify-center bg-[linear-gradient(135deg,rgba(168,32,32,0.55),rgba(30,30,30,0.9))]">
+            <span class="text-6xl font-bold text-white/70">{{ getInitial(group()!.name) }}</span>
+          </div>
+        }
+        <div class="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/40 to-transparent"></div>
+      </div>
+
+      <div class="group-hero-info">
+        <div class="flex flex-wrap items-center gap-2">
+          @if (!group()!.isPublic) {
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide bg-black/60 text-[rgba(210,180,180,0.8)] border border-white/10">
+              <span class="material-symbols-outlined text-[12px]">lock</span>
+              Privado
+            </span>
+          } @else {
+            <span class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide bg-black/40 text-[rgba(200,200,200,0.7)] border border-white/10">
+              <span class="material-symbols-outlined text-[12px]">public</span>
+              Público
+            </span>
+          }
+        </div>
+
+        <h1 class="group-title">{{ group()!.name }}</h1>
+        <p class="group-subtitle">
+          {{ animes().length }} anime{{ animes().length === 1 ? '' : 's' }} no grupo
+        </p>
+        @if (group()!.description) {
+          <p class="group-description">{{ group()!.description }}</p>
+        }
+      </div>
+
+      @if (isOwner()) {
+        <div class="group-actions">
+          <button
+            type="button"
+            (click)="openAddModal()"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all shadow-[0_2px_8px_rgba(168,32,32,0.25)] bg-[linear-gradient(135deg,#a82020,#8b1a1a)] hover:bg-[linear-gradient(135deg,#c02828,#a82020)]">
+            <span class="material-symbols-outlined text-[18px]">add</span>
+            Adicionar anime
+          </button>
+          <button
+            type="button"
+            (click)="openEdit()"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-[#f1e8e8] bg-white/5 border border-white/10 hover:bg-white/10 transition-all">
+            <span class="material-symbols-outlined text-[18px]">edit</span>
+            Editar
+          </button>
+          <button
+            type="button"
+            (click)="deleteGroup()"
+            class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-[#e05555] hover:bg-[rgba(224,85,85,0.1)] transition-all"
+            aria-label="Excluir grupo">
+            <span class="material-symbols-outlined text-[18px]">delete</span>
+            Excluir
+          </button>
+        </div>
+      }
+    </section>
+
+    @if (showEditForm()) {
+      <div class="my-8">
+        <app-create-group
+          [group]="group()"
+          (saved)="onGroupUpdated()"
+          (cancel)="closeEdit()" />
+      </div>
+    }
+
+    @if (showAddModal()) {
+      <app-add-anime-modal
+        [groupId]="groupId"
+        [alreadyAddedIds]="itemMap()"
+        (added)="onAnimeAdded()"
+        (cancel)="closeAddModal()" />
+    }
+
+    <div class="mt-10">
+      <div class="page-header">
+        <h2 class="page-title">Animes no grupo</h2>
+      </div>
+
+      @if (isItemsLoading() && animes().length === 0) {
+        <div class="fav-empty">
+          <div class="loading-spinner"></div>
+          <p class="empty-text">Carregando animes...</p>
+        </div>
+      }
+
+      @if (!isItemsLoading() && animes().length === 0) {
+        <div class="fav-empty">
+          <span class="material-symbols-outlined empty-icon">movie_filter</span>
+          <p class="empty-text">Este grupo ainda não possui animes.</p>
+          @if (isOwner()) {
+            <button
+              type="button"
+              (click)="openAddModal()"
+              class="retry-btn mt-4">
+              Adicionar animes
+            </button>
+          }
+        </div>
+      }
+
+      @if (animes().length > 0) {
+        <div class="anime-grid">
+          @for (anime of animes(); track anime.mal_id) {
+            <div class="group-item-card">
+              <app-anime-card
+                [anime]="anime"
+                (openDetails)="goToAnime($event)" />
+              @if (isOwner()) {
+                <button
+                  type="button"
+                  (click)="removeAnime(anime.mal_id)"
+                  class="remove-btn"
+                  [attr.aria-label]="'Remover ' + anime.title + ' do grupo'">
+                  <span class="material-symbols-outlined text-[18px]">close</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</main>

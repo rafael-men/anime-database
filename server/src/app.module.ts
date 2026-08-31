@@ -13,6 +13,7 @@ import { Review } from './domain/models/review.model';
 import { User } from './domain/models/user.model';
 import { WatchlistItem } from './domain/models/watchlist-item.model';
 import { UserModule } from './use-cases/user/user.module';
+import { GroupModule } from './use-cases/group/group.module';
 import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.service';
 
 @Module({
@@ -25,6 +26,7 @@ import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.ser
     TypeOrmModule.forFeature([User, Review, WatchlistItem, Group, GroupItem]),
     AuthModule,
     UserModule,
+    GroupModule,
   ],
   controllers: [
     UserController,
