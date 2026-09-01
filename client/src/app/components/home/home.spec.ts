@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { vi } from 'vitest';
 import { of } from 'rxjs';
 
@@ -15,6 +16,7 @@ describe('Home', () => {
       imports: [Home],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
         {
           provide: UsersService,
           useValue: { getProfile: vi.fn().mockReturnValue(of({ username: 'tester', avatarUrl: null })) },

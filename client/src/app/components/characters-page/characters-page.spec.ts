@@ -15,7 +15,7 @@ describe('CharactersPage', () => {
 
   let characterServiceSpy: { getCharacters: Mock };
   let routerSpy: { navigate: Mock };
-  let sessionServiceSpy: { getUser: Mock; updateUser: Mock; clearSession: Mock };
+  let sessionServiceSpy: { getUser: Mock; updateUser: Mock; logout: Mock };
   let usersServiceSpy: { getProfile: Mock };
 
   const mockCharacters = [
@@ -51,7 +51,7 @@ describe('CharactersPage', () => {
   beforeEach(async () => {
     characterServiceSpy = { getCharacters: vi.fn() };
     routerSpy = { navigate: vi.fn() };
-    sessionServiceSpy = { getUser: vi.fn(), updateUser: vi.fn(), clearSession: vi.fn() };
+    sessionServiceSpy = { getUser: vi.fn(), updateUser: vi.fn(), logout: vi.fn() };
     usersServiceSpy = { getProfile: vi.fn() };
 
     sessionServiceSpy.getUser.mockReturnValue(mockUser as any);
@@ -256,7 +256,7 @@ describe('CharactersPage', () => {
 
       component.logout();
 
-      expect(sessionServiceSpy.clearSession).toHaveBeenCalled();
+      expect(sessionServiceSpy.logout).toHaveBeenCalled();
       expect(routerSpy.navigate).toHaveBeenCalledWith(['/login']);
     });
   });

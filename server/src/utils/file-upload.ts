@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { existsSync, mkdirSync } from 'fs';
 import { randomUUID } from 'crypto';
-import { extname, join } from 'path';
+import { join } from 'path';
 import { diskStorage } from 'multer';
 
 const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
@@ -23,6 +23,14 @@ export function resolveUploadsDir(): string {
   return uploadsDir;
 }
 
+export function generateUploadFilename(mimetype: string): string | null {
+  const extension = ALLOWED_MIME_EXTENSIONS[mimetype];
+  if (!extension) {
+    return null;
+  }
+  return `${randomUUID()}${extension}`;
+}
+
 export function avatarUploadOptions() {
   return {
     storage: diskStorage({
@@ -39,13 +47,21 @@ export function avatarUploadOptions() {
       },
       filename: (
         _req: unknown,
-        file: { mimetype?: string; originalname?: string },
+        file: { mimetype?: string },
         callback: (error: Error | null, filename: string) => void,
       ) => {
-        const extension =
-          ALLOWED_MIME_EXTENSIONS[file.mimetype ?? ''] ??
-          extname(file.originalname ?? '').toLowerCase();
-        callback(null, `${randomUUID()}${extension}`);
+        const filename = generateUploadFilename(file.mimetype ?? '');
+        if (!filename) {
+          callback(
+            new BadRequestException(
+              'Formato de imagem inválido. Use JPG, PNG, WEBP ou GIF.',
+            ),
+            '',
+          );
+          return;
+        }
+
+        callback(null, filename);
       },
     }),
     fileFilter: (

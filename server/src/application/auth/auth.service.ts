@@ -1,17 +1,29 @@
 import {
   Injectable,
   UnauthorizedException,
-  ConflictException,
 } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../../use-cases/user/user.service';
+import { SessionsService } from '../sessions/sessions.service';
+
+export interface SessionUserResult {
+  id: string;
+  username: string;
+  email: string;
+  avatarUrl?: string | null;
+}
+
+export interface SessionResult {
+  sessionToken: string;
+  csrfToken: string;
+  user: SessionUserResult;
+}
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
-    private readonly jwtService: JwtService,
+    private readonly sessionsService: SessionsService,
   ) {}
 
   async register(data: {
@@ -20,7 +32,7 @@ export class AuthService {
     password: string;
     avatarUrl?: string | null;
     bio?: string | null;
-  }) {
+  }): Promise<SessionResult> {
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const user = await this.userService.createUser({
@@ -31,18 +43,10 @@ export class AuthService {
       bio: data.bio,
     });
 
-    const token = this.generateToken(user.id, user.email);
-
-    return {
-      userId: user.id,
-      username: user.username,
-      email: user.email,
-      avatarUrl: user.avatarUrl ?? null,
-      access_token: token,
-    };
+    return this.buildSessionResult(user.id, user.username, user.email, user.avatarUrl);
   }
 
-  async login(email: string, password: string) {
+  async login(email: string, password: string): Promise<SessionResult> {
     const user = await this.userService.findByEmail(email);
 
     const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
@@ -51,21 +55,31 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials.');
     }
 
-    const token = this.generateToken(user.id, user.email);
-
-    return {
-      userId: user.id,
-      username: user.username,
-      email: user.email,
-      avatarUrl: user.avatarUrl ?? null,
-      access_token: token,
-    };
+    return this.buildSessionResult(user.id, user.username, user.email, user.avatarUrl);
   }
 
-  private generateToken(userId: string, email: string): string {
-    return this.jwtService.sign({
-      sub: userId,
+  private async buildSessionResult(
+    userId: string,
+    username: string,
+    email: string,
+    avatarUrl?: string | null,
+  ): Promise<SessionResult> {
+    const { token: sessionToken, csrfToken } = await this.sessionsService.createSession({
+      userId,
+      username,
       email,
+      avatarUrl: avatarUrl ?? null,
     });
+
+    return {
+      sessionToken,
+      csrfToken,
+      user: {
+        id: userId,
+        username,
+        email,
+        avatarUrl: avatarUrl ?? null,
+      },
+    };
   }
 }

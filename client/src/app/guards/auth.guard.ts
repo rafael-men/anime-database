@@ -3,7 +3,7 @@ import { CanActivateFn, Router } from '@angular/router';
 import { isPlatformBrowser } from '@angular/common';
 import { SessionService } from '../../api/services/session.service';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = async () => {
   const router = inject(Router);
   const platformId = inject(PLATFORM_ID);
   const sessionService = inject(SessionService);
@@ -12,7 +12,9 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  if (sessionService.isAuthenticated()) {
+  const restored = await sessionService.restoreSession();
+
+  if (restored) {
     return true;
   }
 

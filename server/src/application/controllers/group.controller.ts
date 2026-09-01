@@ -13,7 +13,7 @@ import {
 import { Group } from '../../domain/models/group.model';
 import { GroupItem } from '../../domain/models/group-item.model';
 import { GroupService } from '../../use-cases/group/group.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SessionAuthGuard } from '../auth/session-auth.guard';
 import {
   AddGroupItemDto,
   CreateGroupDto,
@@ -21,7 +21,7 @@ import {
 } from './dto/group.dto';
 
 @Controller('groups')
-@UseGuards(JwtAuthGuard)
+@UseGuards(SessionAuthGuard)
 export class GroupController {
   constructor(private readonly groupService: GroupService) {}
 

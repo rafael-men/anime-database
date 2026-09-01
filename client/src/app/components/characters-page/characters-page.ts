@@ -134,7 +134,7 @@ export class CharactersPage implements OnInit {
   }
 
   logout(): void {
-    this.sessionService.clearSession();
+    this.sessionService.logout();
     this.router.navigate(['/login']);
   }
 }

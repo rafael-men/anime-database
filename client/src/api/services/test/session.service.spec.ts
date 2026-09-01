@@ -1,16 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { of, throwError } from 'rxjs';
 import { SessionService, SessionUser } from '../session.service';
-
-function toBase64Url(value: string): string {
-  return btoa(value).replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
-}
-
-function createToken(exp?: number): string {
-  const header = toBase64Url(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const payload = toBase64Url(JSON.stringify(exp !== undefined ? { exp } : { sub: 'u1' }));
-  return `${header}.${payload}.assinatura`;
-}
+import { AuthService, AuthResponse } from '../auth.service';
 
 const user: SessionUser = {
   userId: 'u1',
@@ -19,12 +11,29 @@ const user: SessionUser = {
   avatarUrl: '/avatars/rafael.png',
 };
 
+const authResponse: AuthResponse = {
+  userId: 'u1',
+  username: 'rafael',
+  email: 'rafael@test.com',
+  avatarUrl: '/avatars/rafael.png',
+  csrfToken: 'csrf-token',
+};
+
 describe('SessionService', () => {
   let service: SessionService;
+  let authServiceMock: { logout: ReturnType<typeof vi.fn>; getSession: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
+    authServiceMock = {
+      logout: vi.fn().mockReturnValue(of(undefined)),
+      getSession: vi.fn().mockReturnValue(of(authResponse)),
+    };
+
+    TestBed.configureTestingModule({
+      providers: [{ provide: AuthService, useValue: authServiceMock }],
+    });
     service = TestBed.inject(SessionService);
+    localStorage.clear();
     sessionStorage.clear();
   });
 
@@ -32,22 +41,20 @@ describe('SessionService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('setSession grava token e usuário no sessionStorage', () => {
-    service.setSession('jwt-token', user);
+  it('setSession grava o usuário no localStorage', () => {
+    service.setSession(user);
 
-    expect(sessionStorage.getItem('access_token')).toBe('jwt-token');
-    expect(sessionStorage.getItem('user')).toBe(JSON.stringify(user));
+    expect(service.getUser()).toEqual(user);
   });
 
-  it('getToken e getUser recuperam os valores gravados', () => {
-    service.setSession('jwt-token', user);
+  it('setUser e getUser recuperam o usuário gravado', () => {
+    service.setUser(user);
 
-    expect(service.getToken()).toBe('jwt-token');
     expect(service.getUser()).toEqual(user);
   });
 
   it('updateUser mescla os campos informados', () => {
-    service.setSession('jwt-token', user);
+    service.setUser(user);
 
     service.updateUser({ username: 'rafa', avatarUrl: null });
 
@@ -64,24 +71,40 @@ describe('SessionService', () => {
     expect(service.getUser()).toBeNull();
   });
 
-  it('clearSession remove token e usuário', () => {
-    service.setSession('jwt-token', user);
+  it('setCsrfToken e getCsrfToken usam o sessionStorage', () => {
+    service.setCsrfToken('csrf-token');
+
+    expect(sessionStorage.getItem('csrf_token')).toBe('csrf-token');
+    expect(service.getCsrfToken()).toBe('csrf-token');
+  });
+
+  it('isAuthenticated retorna true quando há usuário e false quando não há', () => {
+    expect(service.isAuthenticated()).toBe(false);
+
+    service.setUser(user);
+
+    expect(service.isAuthenticated()).toBe(true);
+  });
+
+  it('clearSession remove usuário e token csrf', () => {
+    service.setUser(user);
+    service.setCsrfToken('csrf-token');
 
     service.clearSession();
 
-    expect(service.getToken()).toBeNull();
     expect(service.getUser()).toBeNull();
+    expect(service.getCsrfToken()).toBeNull();
     expect(service.isAuthenticated()).toBe(false);
   });
 
   it('getUser retorna null quando o JSON é inválido', () => {
-    sessionStorage.setItem('user', 'não é json');
+    localStorage.setItem('user', 'não é json');
 
     expect(service.getUser()).toBeNull();
   });
 
   it('getUser retorna null quando faltam campos obrigatórios', () => {
-    sessionStorage.setItem('user', JSON.stringify({ userId: 'u1' }));
+    localStorage.setItem('user', JSON.stringify({ userId: 'u1' }));
 
     expect(service.getUser()).toBeNull();
   });
@@ -90,24 +113,35 @@ describe('SessionService', () => {
     expect(service.getUser()).toBeNull();
   });
 
-  it('isAuthenticated retorna true com token válido e não expirado', () => {
-    const exp = Math.floor(Date.now() / 1000) + 3600;
-    service.setSession(createToken(exp), user);
+  it('restoreSession popula usuário e csrf quando o servidor responde', async () => {
+    const ok = await service.restoreSession();
 
-    expect(service.isAuthenticated()).toBe(true);
+    expect(ok).toBe(true);
+    expect(authServiceMock.getSession).toHaveBeenCalled();
+    expect(service.getUser()).toEqual(user);
+    expect(service.getCsrfToken()).toBe('csrf-token');
   });
 
-  it('isAuthenticated limpa a sessão quando o token expirou', () => {
-    const exp = Math.floor(Date.now() / 1000) - 10;
-    service.setSession(createToken(exp), user);
+  it('restoreSession limpa a sessão quando o servidor responde 401', async () => {
+    authServiceMock.getSession.mockReturnValue(throwError(() => new Error('unauthorized')));
+    service.setUser(user);
+    service.setCsrfToken('csrf-token');
 
-    expect(service.isAuthenticated()).toBe(false);
-    expect(service.getToken()).toBeNull();
+    const ok = await service.restoreSession();
+
+    expect(ok).toBe(false);
+    expect(service.getUser()).toBeNull();
+    expect(service.getCsrfToken()).toBeNull();
   });
 
-  it('isAuthenticated retorna false para token malformado', () => {
-    service.setSession('token-sem-tres-partes', user);
+  it('logout revoga a sessão no servidor e limpa o armazenamento local', () => {
+    service.setUser(user);
+    service.setCsrfToken('csrf-token');
 
-    expect(service.isAuthenticated()).toBe(false);
+    service.logout();
+
+    expect(authServiceMock.logout).toHaveBeenCalled();
+    expect(service.getUser()).toBeNull();
+    expect(service.getCsrfToken()).toBeNull();
   });
 });

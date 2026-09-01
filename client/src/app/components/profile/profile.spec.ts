@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 
@@ -62,8 +63,7 @@ describe('Profile', () => {
   let navigateSpy: ReturnType<typeof vi.spyOn>;
 
   function seedSession(): void {
-    sessionStorage.setItem('access_token', 'token');
-    sessionStorage.setItem(
+    localStorage.setItem(
       'user',
       JSON.stringify({ userId: 'u1', username: 'rafael', email: 'rafael@test.com' }),
     );
@@ -88,6 +88,7 @@ describe('Profile', () => {
       imports: [Profile],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
         {
           provide: UsersService,
           useValue: {
@@ -103,6 +104,7 @@ describe('Profile', () => {
 
     navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate');
     sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('should create and load profile with stats', () => {
@@ -246,7 +248,7 @@ describe('Profile', () => {
     expect(component.isEditing()).toBe(false);
     expect(component.successMessage()).toContain('sucesso');
 
-    const stored = JSON.parse(sessionStorage.getItem('user') ?? '{}');
+    const stored = JSON.parse(localStorage.getItem('user') ?? '{}');
     expect(stored.username).toBe('novoNome');
   });
 

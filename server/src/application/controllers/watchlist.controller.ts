@@ -8,17 +8,20 @@ import {
   Param,
   Patch,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   WatchlistItem,
   WatchlistStatus,
 } from '../../domain/models/watchlist-item.model';
+import { SessionAuthGuard } from '../auth/session-auth.guard';
 import {
   CreateWatchlistItemDto,
   UpdateWatchlistStatusDto,
 } from './dto/watchlist.dto';
 
 @Controller('watchlist')
+@UseGuards(SessionAuthGuard)
 export class WatchlistController {
   constructor() {}
 

@@ -48,12 +48,13 @@ export class RegisterCard {
   }
 
   private handleSuccess(res: AuthResponse): void {
-    this.sessionService.setSession(res.access_token, {
+    this.sessionService.setSession({
       userId: res.userId,
       username: res.username,
       email: res.email,
       avatarUrl: res.avatarUrl ?? null,
     });
+    this.sessionService.setCsrfToken(res.csrfToken);
     this.router.navigate(['/home']);
   }
 

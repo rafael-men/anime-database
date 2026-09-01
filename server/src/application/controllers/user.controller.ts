@@ -34,7 +34,7 @@ import {
 import { Review } from '../../domain/models/review.model';
 import { UserAnimeActionsService } from '../../use-cases/user/user-anime-actions.service';
 import { UserService } from '../../use-cases/user/user.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { OwnershipGuard } from '../auth/ownership.guard';
 import { avatarUploadOptions } from '../../utils/file-upload';
 
@@ -95,7 +95,7 @@ class CreateReviewDto {
 }
 
 @Controller('users')
-@UseGuards(JwtAuthGuard, OwnershipGuard)
+@UseGuards(SessionAuthGuard, OwnershipGuard)
 export class UserController {
   constructor(
     private readonly userService: UserService,

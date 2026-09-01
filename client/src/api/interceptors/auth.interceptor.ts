@@ -3,6 +3,8 @@ import { inject } from '@angular/core';
 import { SessionService } from '../services/session.service';
 import { API_BASE } from '../routes/routes';
 
+const CSRF_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
    const sessionService = inject(SessionService);
 
@@ -10,16 +12,22 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       return next(req);
    }
 
-   const token = sessionService.getToken();
+   const request = req.clone({ withCredentials: true });
 
-   if (!token) {
-      return next(req);
+   if (!CSRF_METHODS.has(request.method.toUpperCase())) {
+      return next(request);
+   }
+
+   const csrfToken = sessionService.getCsrfToken();
+
+   if (!csrfToken) {
+      return next(request);
    }
 
    return next(
-      req.clone({
+      request.clone({
          setHeaders: {
-            Authorization: `Bearer ${token}`,
+            'X-CSRF-Token': csrfToken,
          },
       }),
    );

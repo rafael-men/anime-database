@@ -1,130 +1,136 @@
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { firstValueFrom } from 'rxjs';
+import { AuthService } from './auth.service';
 
 export interface SessionUser {
-   userId: string;
-   username: string;
-   email: string;
-   avatarUrl?: string | null;
+  userId: string;
+  username: string;
+  email: string;
+  avatarUrl?: string | null;
 }
+
+const USER_STORAGE_KEY = 'user';
+const CSRF_STORAGE_KEY = 'csrf_token';
 
 @Injectable({ providedIn: 'root' })
 export class SessionService {
-   private readonly platformId = inject(PLATFORM_ID);
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly authService = inject(AuthService);
 
-   private readonly tokenKey = 'access_token';
-   private readonly userKey = 'user';
+  setSession(user: SessionUser): void {
+    this.setUser(user);
+  }
 
-   setSession(token: string, user: SessionUser): void {
-      if (!this.isBrowser()) {
-         return;
+  setUser(user: SessionUser): void {
+    if (!this.isBrowser()) {
+      return;
+    }
+
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  }
+
+  updateUser(partial: Partial<SessionUser>): void {
+    const current = this.getUser();
+
+    if (!current || !this.isBrowser()) {
+      return;
+    }
+
+    const next: SessionUser = { ...current, ...partial };
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(next));
+  }
+
+  clearSession(): void {
+    if (!this.isBrowser()) {
+      return;
+    }
+
+    localStorage.removeItem(USER_STORAGE_KEY);
+    sessionStorage.removeItem(CSRF_STORAGE_KEY);
+  }
+
+  getUser(): SessionUser | null {
+    if (!this.isBrowser()) {
+      return null;
+    }
+
+    const raw = localStorage.getItem(USER_STORAGE_KEY);
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(raw) as Partial<SessionUser>;
+
+      if (!parsed.userId || !parsed.username || !parsed.email) {
+        return null;
       }
 
-      sessionStorage.setItem(this.tokenKey, token);
-      sessionStorage.setItem(this.userKey, JSON.stringify(user));
-   }
+      return {
+        userId: parsed.userId,
+        username: parsed.username,
+        email: parsed.email,
+        avatarUrl: parsed.avatarUrl ?? null,
+      };
+    } catch {
+      return null;
+    }
+  }
 
-   updateUser(partial: Partial<SessionUser>): void {
-      const current = this.getUser();
+  setCsrfToken(token: string): void {
+    if (!this.isBrowser()) {
+      return;
+    }
 
-      if (!current || !this.isBrowser()) {
-         return;
-      }
+    sessionStorage.setItem(CSRF_STORAGE_KEY, token);
+  }
 
-      const next: SessionUser = { ...current, ...partial };
-      sessionStorage.setItem(this.userKey, JSON.stringify(next));
-   }
+  getCsrfToken(): string | null {
+    if (!this.isBrowser()) {
+      return null;
+    }
 
-   clearSession(): void {
-      if (!this.isBrowser()) {
-         return;
-      }
+    return sessionStorage.getItem(CSRF_STORAGE_KEY);
+  }
 
-      sessionStorage.removeItem(this.tokenKey);
-      sessionStorage.removeItem(this.userKey);
-   }
+  isAuthenticated(): boolean {
+    return this.getUser() !== null;
+  }
 
-   getToken(): string | null {
-      if (!this.isBrowser()) {
-         return null;
-      }
+  async restoreSession(): Promise<boolean> {
+    if (!this.isBrowser()) {
+      return false;
+    }
 
-      return sessionStorage.getItem(this.tokenKey);
-   }
+    try {
+      const res = await firstValueFrom(this.authService.getSession());
 
-   getUser(): SessionUser | null {
-      if (!this.isBrowser()) {
-         return null;
-      }
-
-      const raw = sessionStorage.getItem(this.userKey);
-
-      if (!raw) {
-         return null;
-      }
-
-      try {
-         const parsed = JSON.parse(raw) as Partial<SessionUser>;
-
-         if (!parsed.userId || !parsed.username || !parsed.email) {
-            return null;
-         }
-
-         return {
-            userId: parsed.userId,
-            username: parsed.username,
-            email: parsed.email,
-            avatarUrl: parsed.avatarUrl ?? null,
-         };
-      } catch {
-         return null;
-      }
-   }
-
-   isAuthenticated(): boolean {
-      const token = this.getToken();
-
-      if (!token) {
-         return false;
-      }
-
-      if (this.isTokenExpired(token)) {
-         this.clearSession();
-         return false;
-      }
+      this.setUser({
+        userId: res.userId,
+        username: res.username,
+        email: res.email,
+        avatarUrl: res.avatarUrl ?? null,
+      });
+      this.setCsrfToken(res.csrfToken);
 
       return true;
-   }
+    } catch {
+      this.clearSession();
+      return false;
+    }
+  }
 
-   private isTokenExpired(token: string): boolean {
-      const payload = this.decodeJwtPayload(token);
+  logout(): void {
+    if (this.isBrowser()) {
+      this.authService.logout().subscribe({ error: () => undefined });
+    }
 
-      if (!payload || typeof payload.exp !== 'number') {
-         return true;
-      }
+    this.clearSession();
+  }
 
-      const nowInSeconds = Math.floor(Date.now() / 1000);
-      return payload.exp <= nowInSeconds;
-   }
-
-   private decodeJwtPayload(token: string): { exp?: number } | null {
-      const parts = token.split('.');
-
-      if (parts.length !== 3) {
-         return null;
-      }
-
-      try {
-         const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
-         const padded = base64 + '='.repeat((4 - (base64.length % 4)) % 4);
-         const decoded = atob(padded);
-         return JSON.parse(decoded) as { exp?: number };
-      } catch {
-         return null;
-      }
-   }
-
-   private isBrowser(): boolean {
-      return isPlatformBrowser(this.platformId);
-   }
+  private isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
+  }
 }

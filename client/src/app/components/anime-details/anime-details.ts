@@ -273,7 +273,7 @@ export class AnimeDetails implements OnInit {
   }
 
   logout(): void {
-    this.sessionService.clearSession();
+    this.sessionService.logout();
     this.router.navigate(['/login']);
   }
 

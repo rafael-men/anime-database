@@ -17,6 +17,8 @@ export const API_ROUTES = {
    auth: {
       login: `${API_BASE}/auth/login`,
       register: `${API_BASE}/auth/register`,
+      logout: `${API_BASE}/auth/logout`,
+      session: `${API_BASE}/auth/session`,
    },
    users: {
       profile: (id: string) => `${API_BASE}/users/${id}`,

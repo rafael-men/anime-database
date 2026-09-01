@@ -9,7 +9,7 @@ import request from 'supertest';
 import { UserController } from '../../src/application/controllers/user.controller';
 import { UserService } from '../../src/use-cases/user/user.service';
 import { UserAnimeActionsService } from '../../src/use-cases/user/user-anime-actions.service';
-import { JwtAuthGuard } from '../../src/application/auth/jwt-auth.guard';
+import { SessionAuthGuard } from '../../src/application/auth/session-auth.guard';
 import { OwnershipGuard } from '../../src/application/auth/ownership.guard';
 
 const MockGuard: CanActivate = { canActivate: () => true };
@@ -42,7 +42,7 @@ describe('UserController', () => {
         },
       ],
     })
-      .overrideGuard(JwtAuthGuard)
+      .overrideGuard(SessionAuthGuard)
       .useValue(MockGuard)
       .overrideGuard(OwnershipGuard)
       .useValue(MockGuard)

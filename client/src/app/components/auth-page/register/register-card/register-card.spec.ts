@@ -15,7 +15,7 @@ describe('RegisterCard', () => {
       imports: [RegisterCard],
       providers: [
         { provide: AuthService, useValue: { register: () => of({}) } },
-        { provide: SessionService, useValue: { setSession: () => {} } },
+        { provide: SessionService, useValue: { setSession: () => {}, setCsrfToken: () => {} } },
         { provide: Router, useValue: { navigate: () => {} } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
       ],

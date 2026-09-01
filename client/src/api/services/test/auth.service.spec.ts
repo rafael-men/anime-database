@@ -30,7 +30,7 @@ describe('AuthService', () => {
       userId: '1',
       username: 'rafael',
       email: 'rafael@test.com',
-      access_token: 'jwt-token',
+      csrfToken: 'csrf-token',
     };
 
     service.login({ email: 'rafael@test.com', password: '123456' }).subscribe((res) => {
@@ -49,7 +49,7 @@ describe('AuthService', () => {
       username: 'maria',
       email: 'maria@test.com',
       avatarUrl: '/avatars/a.png',
-      access_token: 'jwt-token',
+      csrfToken: 'csrf-token',
     };
 
     service
@@ -75,5 +75,30 @@ describe('AuthService', () => {
     const req = httpMock.expectOne(API_ROUTES.auth.register);
     expect(req.request.body).toEqual({ username: 'maria', email: 'maria@test.com', password: 'abc123' });
     req.flush({} as AuthResponse);
+  });
+
+  it('logout envia POST para a rota de logout', () => {
+    service.logout().subscribe();
+
+    const req = httpMock.expectOne(API_ROUTES.auth.logout);
+    expect(req.request.method).toBe('POST');
+    req.flush(null);
+  });
+
+  it('getSession envia GET para a rota de session', () => {
+    const response: AuthResponse = {
+      userId: '1',
+      username: 'rafael',
+      email: 'rafael@test.com',
+      csrfToken: 'csrf-token',
+    };
+
+    service.getSession().subscribe((res) => {
+      expect(res).toEqual(response);
+    });
+
+    const req = httpMock.expectOne(API_ROUTES.auth.session);
+    expect(req.request.method).toBe('GET');
+    req.flush(response);
   });
 });

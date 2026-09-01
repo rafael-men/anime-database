@@ -1,13 +1,26 @@
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { resolveUploadsDir } from './utils/file-upload';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  app.useStaticAssets(resolveUploadsDir(), { prefix: '/uploads/' });
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+  app.use(cookieParser());
+  app.useStaticAssets(resolveUploadsDir(), {
+    prefix: '/uploads/',
+    index: false,
+    dotfiles: 'ignore',
+  });
   const allowedOrigins = (
     process.env.FRONTEND_URLS ??
     process.env.FRONTEND_URL ??
@@ -32,7 +45,8 @@ async function bootstrap() {
       callback(new Error('Origin not allowed by CORS'), false);
     },
     methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+    credentials: true,
     optionsSuccessStatus: 204,
   });
 
@@ -43,6 +57,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   await app.listen(process.env.PORT ?? 3000);
 }

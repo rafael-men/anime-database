@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
 
@@ -46,8 +47,7 @@ describe('FavouritesPage', () => {
   const animeB = makeAnime(2, 'Trigun Stub');
 
   function seedSession(): void {
-    sessionStorage.setItem('access_token', 'token');
-    sessionStorage.setItem(
+    localStorage.setItem(
       'user',
       JSON.stringify({ userId: 'u1', username: 'rafael', email: 'rafael@test.com' }),
     );
@@ -68,6 +68,7 @@ describe('FavouritesPage', () => {
       imports: [FavouritesPage],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
         { provide: FavoritesService, useValue: { getFavorites: getFavoritesMock, removeFavorite: removeFavoriteMock } },
         { provide: AnimeService, useValue: { getById: getByIdMock } },
         {
@@ -79,6 +80,7 @@ describe('FavouritesPage', () => {
 
     navigateSpy = vi.spyOn(TestBed.inject(Router), 'navigate');
     sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('should create and load favorites with details', () => {

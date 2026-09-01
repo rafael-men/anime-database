@@ -15,7 +15,7 @@ describe('FormCard', () => {
       imports: [FormCard],
       providers: [
         { provide: AuthService, useValue: { login: () => of({}) } },
-        { provide: SessionService, useValue: { setSession: () => {} } },
+        { provide: SessionService, useValue: { setSession: () => {}, setCsrfToken: () => {} } },
         { provide: Router, useValue: { navigate: () => {} } },
         { provide: ActivatedRoute, useValue: { snapshot: { paramMap: { get: () => null } } } },
       ],

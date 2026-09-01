@@ -3,10 +3,10 @@ import {
   UserAnimeActionsService,
   AnimeReview,
 } from '../../use-cases/user/user-anime-actions.service';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { SessionAuthGuard } from '../auth/session-auth.guard';
 
 @Controller('reviews')
-@UseGuards(JwtAuthGuard)
+@UseGuards(SessionAuthGuard)
 export class ReviewController {
   constructor(
     private readonly userAnimeActionsService: UserAnimeActionsService,

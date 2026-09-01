@@ -6,6 +6,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { Group } from './group.model';
 import { Review } from './review.model';
 import { WatchlistItem } from './watchlist-item.model';
@@ -21,7 +22,8 @@ export class User {
   @Column({ type: 'varchar', length: 255, unique: true })
   email!: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, select: false })
+  @Exclude()
   passwordHash!: string;
 
   @Column({ type: 'varchar', length: 255, nullable: true })

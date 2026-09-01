@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
 import { vi } from 'vitest';
 import { of } from 'rxjs';
 
@@ -11,8 +12,7 @@ describe('AnimeDetails', () => {
   let fixture: ComponentFixture<AnimeDetails>;
 
   beforeEach(async () => {
-    sessionStorage.setItem('access_token', 'test-token');
-    sessionStorage.setItem(
+    localStorage.setItem(
       'user',
       JSON.stringify({ userId: 'u1', username: 'tester', email: 'tester@test.com' }),
     );
@@ -21,6 +21,7 @@ describe('AnimeDetails', () => {
       imports: [AnimeDetails],
       providers: [
         provideRouter([]),
+        provideHttpClient(),
         {
           provide: UsersService,
           useValue: { getProfile: vi.fn().mockReturnValue(of({ username: 'tester', avatarUrl: null })) },
@@ -35,6 +36,7 @@ describe('AnimeDetails', () => {
 
   afterEach(() => {
     sessionStorage.clear();
+    localStorage.clear();
   });
 
   it('should create', () => {

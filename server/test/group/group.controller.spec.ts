@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { GroupController } from '../../src/application/controllers/group.controller';
 import { GroupService } from '../../src/use-cases/group/group.service';
-import { JwtAuthGuard } from '../../src/application/auth/jwt-auth.guard';
+import { SessionAuthGuard } from '../../src/application/auth/session-auth.guard';
 
 describe('GroupController', () => {
   let app: INestApplication;
@@ -34,7 +34,7 @@ describe('GroupController', () => {
       controllers: [GroupController],
       providers: [{ provide: GroupService, useValue: groupServiceMock }],
     })
-      .overrideGuard(JwtAuthGuard)
+      .overrideGuard(SessionAuthGuard)
       .useValue({ canActivate: () => true })
       .compile();
 

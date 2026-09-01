@@ -83,6 +83,18 @@ export class UserService {
   async findByEmail(email: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { email: email.trim().toLowerCase() },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        passwordHash: true,
+        avatarUrl: true,
+        bio: true,
+        favoriteCharacterIds: true,
+        createdAt: true,
+        updatedAt: true,
+        usernameUpdatedAt: true,
+      },
     });
 
     if (!user) {
@@ -105,6 +117,7 @@ export class UserService {
     },
   ): Promise<User> {
     const user = await this.findById(userId);
+    const changes: Partial<User> = {};
 
     if (data.username !== undefined) {
       const username = data.username.trim();
@@ -118,25 +131,30 @@ export class UserService {
       if (username !== user.username) {
         this.assertUsernameChangeAllowed(user);
         await this.assertUsernameAvailable(username, user.id);
-        user.username = username;
-        user.usernameUpdatedAt = new Date();
+        changes.username = username;
+        changes.usernameUpdatedAt = new Date();
       }
     }
 
     if (data.bio !== undefined) {
-      user.bio = data.bio ?? null;
+      changes.bio = data.bio ?? null;
     }
 
     if (data.avatarUrl !== undefined) {
-      user.avatarUrl = data.avatarUrl ?? null;
+      changes.avatarUrl = data.avatarUrl ?? null;
     }
 
     if (data.favoriteCharacterIds !== undefined) {
-      user.favoriteCharacterIds = data.favoriteCharacterIds ?? null;
+      changes.favoriteCharacterIds = data.favoriteCharacterIds ?? null;
     }
 
-      return this.userRepository.save(user);
-   }
+    if (Object.keys(changes).length > 0) {
+      await this.userRepository.update(userId, changes);
+      Object.assign(user, changes);
+    }
+
+    return user;
+  }
 
    async getKinCount(characterId: number): Promise<number> {
       const users = await this.userRepository.find({

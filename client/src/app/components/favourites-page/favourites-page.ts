@@ -194,7 +194,7 @@ export class FavouritesPage implements OnInit, AfterViewInit {
   }
 
   logout(): void {
-    this.sessionService.clearSession();
+    this.sessionService.logout();
     this.router.navigate(['/login']);
   }
 }

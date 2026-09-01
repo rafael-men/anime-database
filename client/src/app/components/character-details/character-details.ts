@@ -130,7 +130,7 @@ export class CharacterDetails implements OnInit {
   }
 
   logout(): void {
-    this.sessionService.clearSession();
+    this.sessionService.logout();
     this.router.navigate(['/login']);
   }
 
