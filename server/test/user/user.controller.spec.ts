@@ -208,4 +208,61 @@ describe('UserController', () => {
     });
     expect(response.body.username).toBe('novo-nome');
   });
+
+  it('POST /users/:id/profile should accept nsfwFilter preference', async () => {
+    userServiceMock.updateProfile.mockResolvedValue({
+      id: 'user-1',
+      username: 'rafael',
+      nsfwFilter: true,
+    });
+
+    const response = await request(app.getHttpServer())
+      .post('/users/user-1/profile')
+      .send({ nsfwFilter: true })
+      .expect(201);
+
+    expect(userServiceMock.updateProfile).toHaveBeenCalledWith('user-1', {
+      nsfwFilter: true,
+    });
+    expect(response.body.nsfwFilter).toBe(true);
+  });
+
+  it('POST /users/:id/profile should reject non-boolean nsfwFilter', async () => {
+    await request(app.getHttpServer())
+      .post('/users/user-1/profile')
+      .send({ nsfwFilter: 'yes' })
+      .expect(400);
+
+    expect(userServiceMock.updateProfile).not.toHaveBeenCalled();
+  });
+
+  it('POST /users/:id/profile should accept birthDate and adultContentEnabled', async () => {
+    userServiceMock.updateProfile.mockResolvedValue({
+      id: 'user-1',
+      username: 'rafael',
+      birthDate: '2000-01-15',
+      adultContentEnabled: true,
+    });
+
+    const response = await request(app.getHttpServer())
+      .post('/users/user-1/profile')
+      .send({ birthDate: '2000-01-15', adultContentEnabled: true })
+      .expect(201);
+
+    expect(userServiceMock.updateProfile).toHaveBeenCalledWith('user-1', {
+      birthDate: '2000-01-15',
+      adultContentEnabled: true,
+    });
+    expect(response.body.birthDate).toBe('2000-01-15');
+    expect(response.body.adultContentEnabled).toBe(true);
+  });
+
+  it('POST /users/:id/profile should reject an invalid birthDate', async () => {
+    await request(app.getHttpServer())
+      .post('/users/user-1/profile')
+      .send({ birthDate: 'not-a-date' })
+      .expect(400);
+
+    expect(userServiceMock.updateProfile).not.toHaveBeenCalled();
+  });
 });

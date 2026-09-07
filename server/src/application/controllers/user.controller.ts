@@ -55,6 +55,18 @@ class UpdateUserDto {
   @IsArray()
   @IsNumber({}, { each: true })
   favoriteCharacterIds?: number[] | null;
+
+  @IsOptional()
+  @IsBoolean()
+  nsfwFilter?: boolean;
+
+  @IsOptional()
+  @IsDateString()
+  birthDate?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  adultContentEnabled?: boolean;
 }
 
 class AddFavoriteDto {

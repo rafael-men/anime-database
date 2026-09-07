@@ -35,6 +35,18 @@ export class User {
   @Column({ type: 'simple-json', nullable: true })
   favoriteCharacterIds?: number[] | null;
 
+  @Column({ type: 'boolean', default: false })
+  nsfwFilter!: boolean;
+
+  @Column({ type: 'date', nullable: true })
+  birthDate?: string | null;
+
+  @Column({ type: 'boolean', default: false })
+  adultContentEnabled!: boolean;
+
+  @Column({ type: 'varchar', length: 20, default: 'none' })
+  adultRequestStatus!: string;
+
   @CreateDateColumn({ type: 'datetime' })
   createdAt!: Date;
 

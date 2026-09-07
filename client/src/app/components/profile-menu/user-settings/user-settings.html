@@ -1,1 +1,217 @@
-<p>user-settings works!</p>
+<app-navbar
+  [activeTab]="'todos'"
+  [selectedCategory]="''"
+  [searchQuery]="searchQuery()"
+  [username]="username()"
+  [userInitial]="userInitial()"
+  [avatarUrl]="avatarUrl()"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="[]"
+  (tabChange)="onTabChange($event)"
+  (search)="onSearch()"
+  (searchQueryChange)="onSearchQueryChange($event)"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()" />
+
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto pt-28">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Preferências</h1>
+      <p class="page-subtitle">Personalize sua experiência no portal</p>
+    </div>
+  </div>
+
+  @if (isLoading()) {
+    <div class="settings-card flex items-center justify-center py-24">
+      <span class="loading-spinner"></span>
+    </div>
+  } @else if (errorMessage()) {
+    <div class="settings-card flex flex-col items-center justify-center gap-4 py-20 text-center">
+      <span class="material-symbols-outlined text-[3rem] text-[#e05555]">error</span>
+      <p class="text-sm text-[rgba(210,180,180,0.7)] m-0">{{ errorMessage() }}</p>
+      <button type="button" class="retry-btn" (click)="retryLoad()">Tentar novamente</button>
+    </div>
+  } @else {
+    <div class="settings-card p-6 sm:p-8">
+
+      <div class="flex items-start gap-4">
+        <div class="settings-icon-wrap shrink-0">
+          <span class="material-symbols-outlined text-[1.5rem]">visibility_off</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="settings-section-title">Filtro de conteúdo NSFW</h2>
+              <p class="settings-section-desc">
+                Quando ativado, alguns conteúdos não aparecem nas páginas de navegação e pesquisa.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              [attr.aria-checked]="nsfwFilter()"
+              [disabled]="isSaving()"
+              class="toggle-switch mt-1 shrink-0"
+              [class.toggle-on]="nsfwFilter()"
+              [class.toggle-saving]="isSaving()"
+              (click)="toggleNsfwFilter()"
+              aria-label="Filtro de conteúdo NSFW">
+              <span class="toggle-knob"></span>
+              @if (isSaving()) {
+                <span class="toggle-spinner"></span>
+              }
+            </button>
+          </div>
+
+          @if (nsfwFilter()) {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-red-500/10 border border-red-500/20 text-[0.75rem] text-[#f0a35e]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0">block</span>
+              <span>Ocultando animes das categorias sensíveis.</span>
+            </div>
+          } @else {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-white/[0.03] border border-white/[0.06] text-[0.75rem] text-[rgba(200,200,200,0.55)]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0">visibility</span>
+              <span>Exibindo todos os animes, incluindo os das categorias sensíveis.</span>
+            </div>
+          }
+
+          @if (saveError()) {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-red-500/10 border border-red-500/20 text-[#f08080] text-[0.8rem]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0">error</span>
+              <span>{{ saveError() }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="settings-divider"></div>
+
+      <div class="flex items-start gap-4">
+        <div class="settings-icon-wrap shrink-0">
+          <span class="material-symbols-outlined text-[1.5rem]">explicit</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <h2 class="settings-section-title">Conteúdo adulto (+18)</h2>
+              <p class="settings-section-desc">
+                Quando ativado, mídias com conteúdo para maiores de 18 anos aparecem.
+                Para ativar é preciso comprovar idade informando sua
+                data de nascimento.
+              </p>
+            </div>
+            <button
+              type="button"
+              role="switch"
+              [attr.aria-checked]="adultContent()"
+              [disabled]="adultSaving()"
+              class="toggle-switch mt-1 shrink-0"
+              [class.toggle-on]="adultContent()"
+              [class.toggle-saving]="adultSaving()"
+              (click)="toggleAdultContent()"
+              aria-label="Conteúdo adulto">
+              <span class="toggle-knob"></span>
+              @if (adultSaving()) {
+                <span class="toggle-spinner"></span>
+              }
+            </button>
+          </div>
+
+          @if (adultStatus() === 'approved') {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[0.75rem] text-[#7dd69a]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0">check_circle</span>
+              <span>
+                Conteúdo adulto habilitado.
+                @if (birthDate()) {
+                  Data de nascimento confirmada: {{ formattedBirthDate() }}.
+                }
+              </span>
+            </div>
+          } @else if (adultStatus() === 'pending') {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-amber-500/10 border border-amber-500/25 text-[0.75rem] text-[#f5c518]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0 animate-pulse">hourglass_top</span>
+              <span>
+                Solicitação em análise. O resultado aparecerá no sininho de notificações.
+                @if (birthDate()) {
+                  Data informada: {{ formattedBirthDate() }}.
+                }
+              </span>
+            </div>
+          } @else if (adultGateOpen()) {
+            <div class="mt-4 py-[0.85rem] px-[0.85rem] rounded-lg bg-white/[0.03] border border-white/[0.06]">
+              <p class="text-[0.8rem] text-[rgba(200,200,200,0.75)] m-0 mb-3">
+                Digite sua data de nascimento para solicitar o conteúdo adulto.
+                A solicitação passa por análise.
+              </p>
+              <div class="flex flex-wrap items-center gap-3">
+                <input
+                  type="date"
+                  [max]="todayIso"
+                  [value]="newBirthDate()"
+                  (input)="onBirthDateInput($any($event.target).value)"
+                  class="settings-input"
+                  aria-label="Data de nascimento" />
+                <button
+                  type="button"
+                  class="adult-confirm-btn"
+                  [disabled]="adultSaving()"
+                  (click)="confirmAdultContent()"
+                  [attr.aria-label]="'Confirmar data de nascimento ' + newBirthDate()">
+                  @if (adultSaving()) {
+                    <span class="toggle-spinner"></span>
+                  }
+                  Enviar
+                </button>
+                <button
+                  type="button"
+                  class="adult-cancel-btn"
+                  [disabled]="adultSaving()"
+                  (click)="cancelAdultGate()">
+                  Cancelar
+                </button>
+              </div>
+              @if (adultSaveError()) {
+                <p class="text-[0.75rem] text-[#f08080] m-0 mt-3">{{ adultSaveError() }}</p>
+              }
+            </div>
+          } @else if (adultStatus() === 'denied') {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-red-500/10 border border-red-500/25 text-[0.75rem] text-[#f08080]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0">block</span>
+              <span>
+                Solicitação negada. 
+              </span>
+            </div>
+          } @else {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-white/[0.03] border border-white/[0.06] text-[0.75rem] text-[rgba(200,200,200,0.55)]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0">lock</span>
+              <span>
+                @if (birthDate()) {
+                  Data de nascimento cadastrada: {{ formattedBirthDate() }}.
+                } @else {
+                  Conteúdo restrito, requer confirmação de maioridade.
+                }
+              </span>
+            </div>
+          }
+
+          @if (adultSuccess()) {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[#7dd69a] text-[0.8rem]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0">check</span>
+              <span>{{ adultSuccess() }}</span>
+            </div>
+          }
+
+          @if (adultSaveError() && !adultGateOpen()) {
+            <div class="mt-4 flex items-center gap-2 py-[0.65rem] px-[0.85rem] rounded-lg bg-red-500/10 border border-red-500/20 text-[#f08080] text-[0.8rem]">
+              <span class="material-symbols-outlined text-[1.1rem] shrink-0">error</span>
+              <span>{{ adultSaveError() }}</span>
+            </div>
+          }
+        </div>
+      </div>
+
+      <div class="settings-divider"></div>
+    </div>
+  }
+</main>

@@ -2,6 +2,10 @@ import { RenderMode, ServerRoute } from '@angular/ssr';
 
 export const serverRoutes: ServerRoute[] = [
   {
+    path: 'settings',
+    renderMode: RenderMode.Prerender,
+  },
+  {
     path: 'anime/:id',
     renderMode: RenderMode.Client,
   },

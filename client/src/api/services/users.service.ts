@@ -11,6 +11,10 @@ export interface UserProfile {
    avatarUrl?: string | null;
    bio?: string | null;
    favoriteCharacterIds?: number[] | null;
+   nsfwFilter?: boolean;
+   birthDate?: string | null;
+   adultContentEnabled?: boolean;
+   adultRequestStatus?: 'none' | 'pending' | 'approved' | 'denied';
    createdAt: string;
    updatedAt?: string | null;
    usernameUpdatedAt?: string | null;
@@ -21,6 +25,9 @@ export interface UpdateProfilePayload {
    bio?: string | null;
    avatarUrl?: string | null;
    favoriteCharacterIds?: number[] | null;
+   nsfwFilter?: boolean;
+   birthDate?: string;
+   adultContentEnabled?: boolean;
 }
 
 export interface UserReview {

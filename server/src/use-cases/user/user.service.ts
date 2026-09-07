@@ -91,6 +91,8 @@ export class UserService {
         avatarUrl: true,
         bio: true,
         favoriteCharacterIds: true,
+        birthDate: true,
+        adultContentEnabled: true,
         createdAt: true,
         updatedAt: true,
         usernameUpdatedAt: true,
@@ -114,6 +116,9 @@ export class UserService {
       bio?: string | null;
       avatarUrl?: string | null;
       favoriteCharacterIds?: number[] | null;
+      nsfwFilter?: boolean;
+      birthDate?: string;
+      adultContentEnabled?: boolean;
     },
   ): Promise<User> {
     const user = await this.findById(userId);
@@ -146,6 +151,50 @@ export class UserService {
 
     if (data.favoriteCharacterIds !== undefined) {
       changes.favoriteCharacterIds = data.favoriteCharacterIds ?? null;
+    }
+
+    if (data.nsfwFilter !== undefined) {
+      changes.nsfwFilter = data.nsfwFilter;
+    }
+
+    if (data.birthDate !== undefined) {
+      const birthDate = data.birthDate.trim();
+      const parsed = new Date(birthDate);
+
+      if (isNaN(parsed.getTime())) {
+        throw new ValidationException(
+          'Data de nascimento inválida.',
+          'BIRTHDATE_INVALID',
+        );
+      }
+
+      if (parsed.getTime() > Date.now()) {
+        throw new ValidationException(
+          'A data de nascimento não pode estar no futuro.',
+          'BIRTHDATE_FUTURE',
+        );
+      }
+
+      changes.birthDate = birthDate;
+    }
+
+    if (data.adultContentEnabled !== undefined) {
+      if (data.adultContentEnabled) {
+        const effectiveBirthDate = changes.birthDate ?? user.birthDate;
+
+        if (!effectiveBirthDate) {
+          throw new ValidationException(
+            'Informe sua data de nascimento para solicitar o conteúdo adulto.',
+            'BIRTHDATE_REQUIRED',
+          );
+        }
+
+        changes.birthDate = effectiveBirthDate;
+        changes.adultRequestStatus = 'pending';
+      } else {
+        changes.adultContentEnabled = false;
+        changes.adultRequestStatus = 'none';
+      }
     }
 
     if (Object.keys(changes).length > 0) {
@@ -217,5 +266,38 @@ export class UserService {
             'USERNAME_TAKEN',
          );
       }
+   }
+
+   async listAdultRequests(): Promise<User[]> {
+      return this.userRepository.find({
+         where: { adultRequestStatus: Not('none') },
+         order: { updatedAt: 'DESC' },
+      });
+   }
+
+   async approveAdultRequest(userId: string): Promise<User> {
+      const user = await this.findById(userId);
+
+      await this.userRepository.update(userId, {
+         adultRequestStatus: 'approved',
+         adultContentEnabled: true,
+      });
+
+      user.adultRequestStatus = 'approved';
+      user.adultContentEnabled = true;
+      return user;
+   }
+
+   async denyAdultRequest(userId: string): Promise<User> {
+      const user = await this.findById(userId);
+
+      await this.userRepository.update(userId, {
+         adultRequestStatus: 'denied',
+         adultContentEnabled: false,
+      });
+
+      user.adultRequestStatus = 'denied';
+      user.adultContentEnabled = false;
+      return user;
    }
 }

@@ -8,7 +8,7 @@ import { timingSafeEqual } from 'crypto';
 import { SessionsService } from '../sessions/sessions.service';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-const CSRF_EXEMPT_PATHS = new Set(['/auth/login', '/auth/register']);
+const CSRF_EXEMPT_PATHS = new Set(['/auth/login', '/auth/register', '/control']);
 
 interface CsrfRequest {
   method?: string;

@@ -1,0 +1,137 @@
+<main class="p-4 sm:p-8 max-w-5xl mx-auto min-h-screen">
+  <div class="admin-header">
+    <div class="flex items-center gap-3">
+      <div class="admin-icon-wrap shrink-0">
+        <span class="material-symbols-outlined text-2xl">admin_panel_settings</span>
+      </div>
+      <div>
+        <h1 class="admin-title">Painel de Validação</h1>
+        <p class="admin-subtitle">Revise solicitações de acesso ao conteúdo adulto</p>
+      </div>
+    </div>
+    @if (isLoggedIn()) {
+      <button type="button" class="admin-logout-btn" (click)="logout()">Sair</button>
+    }
+  </div>
+
+  @if (!isLoggedIn()) {
+    <section class="admin-card p-6 sm:p-8 max-w-md mx-auto">
+      <h2 class="admin-section-title mb-1">Acesso do administrador</h2>
+      <p class="admin-section-desc mb-6">Use as credenciais de administrador predefinidas.</p>
+
+      <div class="flex flex-col gap-3">
+        <input
+          type="email"
+          [(ngModel)]="email"
+          placeholder="E-mail do administrador"
+          autocomplete="username"
+          class="admin-input" />
+        <input
+          type="password"
+          [(ngModel)]="password"
+          placeholder="Senha"
+          autocomplete="current-password"
+          class="admin-input" />
+      </div>
+
+      @if (loginError()) {
+        <p class="admin-error mt-4">{{ loginError() }}</p>
+      }
+
+      <button
+        type="button"
+        class="admin-primary-btn w-full mt-5"
+        [disabled]="isAuthenticating()"
+        (click)="login()">
+        @if (isAuthenticating()) {
+          <span class="admin-spinner"></span>
+        }
+        Entrar
+      </button>
+    </section>
+  } @else if (isLoading()) {
+    <div class="admin-card flex items-center justify-center py-20">
+      <span class="admin-spinner-lg"></span>
+    </div>
+  } @else {
+    <section class="admin-card overflow-hidden">
+      <div class="px-6 py-4 border-b border-white/[0.06] flex items-center justify-between">
+        <h2 class="admin-section-title m-0">Solicitações</h2>
+        <div class="flex items-center gap-3">
+          <span class="admin-badge">
+            {{ pendingCount() }} em análise
+          </span>
+          <button type="button" class="admin-refresh-btn" (click)="refreshRequests()">
+            <span class="material-symbols-outlined text-lg">refresh</span>
+            Atualizar
+          </button>
+        </div>
+      </div>
+
+      @if (errorMessage()) {
+        <p class="admin-error px-6 py-4">{{ errorMessage() }}</p>
+      }
+
+      @if (actionError()) {
+        <p class="admin-error px-6 py-4">{{ actionError() }}</p>
+      }
+
+      @if (requests().length === 0) {
+        <div class="flex flex-col items-center gap-2 py-16 text-center">
+          <span class="material-symbols-outlined text-4xl text-[rgba(200,200,200,0.2)]">inbox</span>
+          <p class="text-sm text-[rgba(200,200,200,0.5)] m-0">Nenhuma solicitação no momento.</p>
+        </div>
+      } @else {
+        <ul class="admin-list">
+          @for (request of requests(); track request.id) {
+            <li class="admin-list-item">
+              <div class="flex items-center gap-4 min-w-0 flex-1">
+                <div
+                  class="admin-avatar shrink-0"
+                  [class]="request.adultRequestStatus === 'approved'
+                    ? 'bg-emerald-500/20 text-emerald-300'
+                    : request.adultRequestStatus === 'denied'
+                      ? 'bg-red-500/20 text-red-300'
+                      : 'bg-amber-500/20 text-amber-300'">
+                  {{ request.username.charAt(0).toUpperCase() || '?' }}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="admin-name truncate">{{ request.username }}</p>
+                  <p class="admin-email truncate">{{ request.email }}</p>
+                  <p class="admin-meta">
+                    Data de nascimento: {{ formatDate(request.birthDate) }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 shrink-0">
+                <span class="admin-status" [class]="'status-' + request.adultRequestStatus">
+                  {{ statusLabel(request.adultRequestStatus) }}
+                </span>
+
+                @if (request.adultRequestStatus === 'pending') {
+                  <div class="flex items-center gap-2">
+                    <button
+                      type="button"
+                      class="admin-approve-btn"
+                      [disabled]="isActionRunning()"
+                      (click)="approve(request)">
+                      Validar
+                    </button>
+                    <button
+                      type="button"
+                      class="admin-deny-btn"
+                      [disabled]="isActionRunning()"
+                      (click)="deny(request)">
+                      Não validar
+                    </button>
+                  </div>
+                }
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  }
+</main>

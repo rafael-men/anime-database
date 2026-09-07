@@ -1,5 +1,5 @@
-import { Component, DestroyRef, ElementRef, computed, effect, inject, input, output, signal, viewChild } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, ElementRef, PLATFORM_ID, computed, effect, inject, input, OnInit, output, signal, viewChild } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Subject, of } from 'rxjs';
@@ -8,11 +8,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { AnimeService, AnimeResult, SearchOptions } from '../../../api/services/anime.service';
+import { SessionService } from '../../../api/services/session.service';
+import { UsersService } from '../../../api/services/users.service';
+import { PreferencesService } from '../../../api/services/preferences.service';
+import type { AdultRequestStatus } from '../../../api/services/admin.service';
 import { resolveAssetUrl } from '../../../api/routes/routes';
 import { ProfileMenu } from '../profile-menu/profile-menu';
 import { CategoryChips } from '../category-chips/category-chips';
 
 export type NavbarTab = 'todos' | 'categorias' | 'ovas' | 'filmes' | 'personagens';
+
+const ADULT_NOTIFICATION_SEEN_KEY = 'adult_request_seen';
 
 @Component({
   selector: 'app-navbar',
@@ -22,7 +28,7 @@ export type NavbarTab = 'todos' | 'categorias' | 'ovas' | 'filmes' | 'personagen
   styleUrl: './navbar.css',
   host: { ngSkipHydration: 'true' },
 })
-export class Navbar {
+export class Navbar implements OnInit {
   activeTab = input<NavbarTab>('todos');
   selectedCategory = input<string>('');
   searchQuery = input<string>('');
@@ -45,8 +51,26 @@ export class Navbar {
   private readonly animeService = inject(AnimeService);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sessionService = inject(SessionService);
+  private readonly usersService = inject(UsersService);
+  private readonly preferencesService = inject(PreferencesService);
+  private readonly platformId = inject(PLATFORM_ID);
 
   localQuery = '';
+
+  adultRequestStatus = signal<AdultRequestStatus>('none');
+  showNotifications = signal(false);
+  notificationsSeen = signal<string | null>(null);
+
+  hasNotification = computed(() => {
+    const status = this.adultRequestStatus();
+    return status === 'approved' || status === 'denied';
+  });
+
+  hasUnreadNotification = computed(() => {
+    if (!this.hasNotification()) return false;
+    return this.adultRequestStatus() !== this.notificationsSeen();
+  });
 
   resolvedAvatarUrl = computed(() => resolveAssetUrl(this.avatarUrl()));
 
@@ -118,6 +142,44 @@ export class Navbar {
     effect(() => {
       this.localQuery = this.searchQuery();
     });
+  }
+
+  ngOnInit(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    const stored = window.localStorage.getItem(ADULT_NOTIFICATION_SEEN_KEY);
+    this.notificationsSeen.set(stored);
+
+    const user = this.sessionService.getUser();
+    if (user) this.refreshAdultRequestStatus(user.userId);
+  }
+
+  refreshAdultRequestStatus(userId: string): void {
+    this.usersService.getProfile(userId).subscribe({
+      next: (profile) => {
+        const status = (profile.adultRequestStatus ?? 'none') as AdultRequestStatus;
+        this.adultRequestStatus.set(status);
+        this.preferencesService.setAdultRequestStatus(status);
+      },
+      error: () => {},
+    });
+  }
+
+  toggleNotifications(): void {
+    this.showNotifications.update((v) => !v);
+  }
+
+  closeNotifications(): void {
+    this.showNotifications.set(false);
+  }
+
+  markNotificationsSeen(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+    const status = this.adultRequestStatus();
+    if (status !== 'approved' && status !== 'denied') return;
+    window.localStorage.setItem(ADULT_NOTIFICATION_SEEN_KEY, status);
+    this.notificationsSeen.set(status);
+    this.showNotifications.set(false);
   }
 
   tabClass(tab: NavbarTab): string {

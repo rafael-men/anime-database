@@ -8,13 +8,17 @@ import { CharacterDetails } from './components/character-details/character-detai
 import { Profile } from './components/profile/profile';
 import { CharactersPage } from './components/characters-page/characters-page';
 import { GroupDetail } from './components/groups-component/group-detail/group-detail';
+import { UserSettings } from './components/profile-menu/user-settings/user-settings';
+import { ValidationPage } from './components/admin/validation-page/validation-page';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: FormCard },
   { path: 'register', component: RegisterCard },
+  { path: 'control', component: ValidationPage },
   { path: 'home', component: Home, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
+  { path: 'settings', component: UserSettings, canActivate: [authGuard] },
   { path: 'favourites', component: FavouritesPage, canActivate: [authGuard] },
   { path: 'groups/:id', component: GroupDetail, canActivate: [authGuard] },
   { path: 'characters', component: CharactersPage, canActivate: [authGuard] },

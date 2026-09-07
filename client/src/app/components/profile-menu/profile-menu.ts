@@ -27,4 +27,9 @@ export class ProfileMenu {
     this.close.emit();
     this.router.navigate(['/profile']);
   }
+
+  goToSettings(): void {
+    this.close.emit();
+    this.router.navigate(['/settings']);
+  }
 }

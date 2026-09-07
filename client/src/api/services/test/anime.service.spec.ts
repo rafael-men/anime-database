@@ -3,7 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { API_ROUTES } from '../../routes/routes';
-import { AnimeDetailsData, AnimeService } from '../anime.service';
+import { AnimeDetailsData, AnimeService, NSFW_GENRES, NSFW_TAGS } from '../anime.service';
+import { PreferencesService } from '../preferences.service';
 
 const mediaItem = {
   id: 1,
@@ -46,7 +47,7 @@ describe('AnimeService', () => {
 
     const req = httpMock.expectOne(API_ROUTES.anime.graphql);
     expect(req.request.method).toBe('POST');
-    expect(req.request.body.variables).toEqual({ perPage: 12, page: 1, search: 'Naruto' });
+    expect(req.request.body.variables).toEqual({ perPage: 12, page: 1, search: 'Naruto', isAdult: false });
     expect(req.request.body.query).toContain('query (');
     req.flush(buildPageResponse());
 
@@ -79,6 +80,7 @@ describe('AnimeService', () => {
       seasonYear: 2020,
       status: 'FINISHED',
       sort: ['POPULARITY_DESC'],
+      isAdult: false,
     });
     req.flush(buildPageResponse());
   });
@@ -92,6 +94,50 @@ describe('AnimeService', () => {
     req.flush(buildPageResponse());
   });
 
+  it('search sem filtro NSFW ativo não envia exclusões', () => {
+    const prefs = TestBed.inject(PreferencesService);
+    prefs.setNsfwFilter(false);
+
+    service.search('Naruto').subscribe();
+    const req = httpMock.expectOne(API_ROUTES.anime.graphql);
+    expect(req.request.body.variables.genre_not_in).toBeUndefined();
+    expect(req.request.body.variables.tag_not_in).toBeUndefined();
+    req.flush(buildPageResponse());
+  });
+
+  it('search envia exclusões NSFW quando o filtro está ativo', () => {
+    const prefs = TestBed.inject(PreferencesService);
+    prefs.setNsfwFilter(true);
+
+    service.search('Naruto').subscribe();
+    const req = httpMock.expectOne(API_ROUTES.anime.graphql);
+    expect(req.request.body.variables.genre_not_in).toEqual(NSFW_GENRES);
+    expect(req.request.body.variables.tag_not_in).toEqual(NSFW_TAGS);
+    req.flush(buildPageResponse());
+  });
+
+  it('searchByGenre também aplica exclusões NSFW quando o filtro está ativo', () => {
+    const prefs = TestBed.inject(PreferencesService);
+    prefs.setNsfwFilter(true);
+
+    service.searchByGenre('Ação', 1).subscribe();
+    const req = httpMock.expectOne(API_ROUTES.anime.graphql);
+    expect(req.request.body.variables.genre_not_in).toEqual(NSFW_GENRES);
+    expect(req.request.body.variables.tag_not_in).toEqual(NSFW_TAGS);
+    req.flush(buildPageResponse());
+  });
+
+  it('getSuggestions exclui conteúdo NSFW quando o filtro está ativo', () => {
+    const prefs = TestBed.inject(PreferencesService);
+    prefs.setNsfwFilter(true);
+
+    service.getSuggestions('Na').subscribe();
+    const req = httpMock.expectOne(API_ROUTES.anime.graphql);
+    expect(req.request.body.variables.genre_not_in).toEqual(NSFW_GENRES);
+    expect(req.request.body.variables.tag_not_in).toEqual(NSFW_TAGS);
+    req.flush({ data: { Page: { media: [mediaItem] } } });
+  });
+
   it('getSuggestions retorna lista vazia para termos com menos de 2 caracteres', () => {
     let result: unknown = 'not-called';
     service.getSuggestions('a').subscribe((res) => (result = res));
@@ -103,7 +149,7 @@ describe('AnimeService', () => {
     service.getSuggestions('Na').subscribe();
 
     const req = httpMock.expectOne(API_ROUTES.anime.graphql);
-    expect(req.request.body.variables).toEqual({ search: 'Na', perPage: 8 });
+    expect(req.request.body.variables).toEqual({ search: 'Na', perPage: 8, isAdult: false });
     req.flush({ data: { Page: { media: [mediaItem] } } });
   });
 
@@ -123,7 +169,7 @@ describe('AnimeService', () => {
     service.getById(10).subscribe((res) => (result = res));
 
     const req = httpMock.expectOne(API_ROUTES.anime.graphql);
-    expect(req.request.body.variables).toEqual({ id: 10 });
+    expect(req.request.body.variables).toEqual({ id: 10, isAdult: false });
     req.flush({ data: { Media: { id: 10, title: { romaji: 'Bleach' } } } });
 
     expect(result.mal_id).toBe(10);
@@ -141,7 +187,7 @@ describe('AnimeService', () => {
     service.getByIds([1, 2]).subscribe();
 
     const req = httpMock.expectOne(API_ROUTES.anime.graphql);
-    expect(req.request.body.variables).toEqual({ ids: [1, 2] });
+    expect(req.request.body.variables).toEqual({ ids: [1, 2], isAdult: false });
     req.flush({
       data: {
         Page: {
@@ -187,7 +233,7 @@ describe('AnimeService', () => {
     service.getDetails(5).subscribe((res) => (result = res));
 
     const req = httpMock.expectOne(API_ROUTES.anime.graphql);
-    expect(req.request.body.variables).toEqual({ id: 5 });
+    expect(req.request.body.variables).toEqual({ id: 5, isAdult: false });
     req.flush({ data: { Media: details } });
 
     expect(result.title).toBe('Attack on Titan');
@@ -236,5 +282,27 @@ describe('AnimeService', () => {
     req.flush({ data: { Media: { id: 7, title: { romaji: 'Solo' } } } });
 
     expect(result.title).toBe('Solo');
+  });
+
+  it('searchByAdult envia isAdult true e não exclui NSFW mesmo com filtro ativo', () => {
+    const prefs = TestBed.inject(PreferencesService);
+    prefs.setNsfwFilter(true);
+
+    service.searchByAdult(1).subscribe();
+    const req = httpMock.expectOne(API_ROUTES.anime.graphql);
+    expect(req.request.body.variables).toEqual({ perPage: 12, page: 1, isAdult: true });
+    expect(req.request.body.variables.genre_not_in).toBeUndefined();
+    expect(req.request.body.variables.tag_not_in).toBeUndefined();
+    req.flush(buildPageResponse());
+  });
+
+  it('getDetails envia isAdult true quando conteúdo adulto está ativo', () => {
+    const prefs = TestBed.inject(PreferencesService);
+    prefs.setAdultContent(true);
+
+    service.getDetails(5).subscribe();
+    const req = httpMock.expectOne(API_ROUTES.anime.graphql);
+    expect(req.request.body.variables).toEqual({ id: 5, isAdult: true });
+    req.flush({ data: { Media: { id: 5, title: { romaji: 'X' } } } });
   });
 });

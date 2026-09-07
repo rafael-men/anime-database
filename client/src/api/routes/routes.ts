@@ -1,4 +1,12 @@
-export const API_BASE = 'http://localhost:3000';
+function resolveApiBase(): string {
+   if (typeof window !== 'undefined' && window.location?.hostname) {
+      return `http://${window.location.hostname}:3000`;
+   }
+
+   return 'http://127.0.0.1:3000';
+}
+
+export const API_BASE = resolveApiBase();
 export const ANILIST_API_BASE = 'https://graphql.anilist.co';
 
 export function resolveAssetUrl(path?: string | null): string | null {
@@ -46,5 +54,10 @@ export const API_ROUTES = {
    watchlist: {
       base: `${API_BASE}/watchlist`,
       byId: (id: string) => `${API_BASE}/watchlist/${id}`,
+   },
+   control: {
+      users: `${API_BASE}/control/users`,
+      userApprove: (id: string) => `${API_BASE}/control/users/${id}/approve`,
+      userDeny: (id: string) => `${API_BASE}/control/users/${id}/deny`,
    },
 };

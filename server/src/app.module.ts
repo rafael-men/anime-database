@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './application/auth/auth.module';
 import { CsrfGuard } from './application/auth/csrf.guard';
+import { AdminController } from './application/controllers/admin.controller';
 import { GroupController } from './application/controllers/group.controller';
 import { ReviewController } from './application/controllers/review.controller';
 import { UserController } from './application/controllers/user.controller';
@@ -45,6 +46,7 @@ import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.ser
     GroupModule,
   ],
   controllers: [
+    AdminController,
     UserController,
     ReviewController,
     GroupController,

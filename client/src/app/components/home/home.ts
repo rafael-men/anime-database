@@ -3,6 +3,7 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnimeService, AnimeResult, SearchOptions } from '../../../api/services/anime.service';
 import { SessionService } from '../../../api/services/session.service';
+import { PreferencesService } from '../../../api/services/preferences.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
 import { UsersService } from '../../../api/services/users.service';
 import { Navbar, NavbarTab } from '../navbar/navbar';
@@ -27,6 +28,26 @@ const CATEGORY_GENRE_EN: Record<string, string> = {
   'Música': 'Music',
 };
 
+const ADULT_CATEGORY = '+18';
+
+const BASE_CATEGORIES = [
+  'Ação',
+  'Aventura',
+  'Comédia',
+  'Drama',
+  'Fantasia',
+  'Horror',
+  'Mistério',
+  'Romance',
+  'Sci-Fi',
+  'Slice of Life',
+  'Esportes',
+  'Sobrenatural',
+  'Thriller',
+  'Mecha',
+  'Música',
+];
+
 @Component({
   selector: 'app-home',
   standalone: true,
@@ -39,6 +60,7 @@ export class Home implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly platformId = inject(PLATFORM_ID);
   private readonly sessionService = inject(SessionService);
+  private readonly preferencesService = inject(PreferencesService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly usersService = inject(UsersService);
 
@@ -62,43 +84,52 @@ export class Home implements OnInit {
     return name ? name.charAt(0).toUpperCase() : 'U';
   });
 
-  categories = [
-    'Ação', 'Aventura', 'Comédia', 'Drama', 'Fantasia',
-    'Horror', 'Mistério', 'Romance', 'Sci-Fi', 'Slice of Life',
-    'Esportes', 'Sobrenatural', 'Thriller', 'Mecha', 'Música'
-  ];
+  categories = computed<string[]>(() =>
+    this.preferencesService.adultContent()
+      ? [...BASE_CATEGORIES, ADULT_CATEGORY]
+      : BASE_CATEGORIES,
+  );
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
-    this.loadUser();
-    this.loadFavorites();
+    this.loadUser().then(() => {
+      this.loadFavorites();
 
-    const queryParam = this.route.snapshot.queryParamMap.get('q');
-    if (queryParam) {
-      this.searchQuery = queryParam;
-      this.onSearch();
-    } else {
-      this.loadAnimes();
-    }
+      const queryParam = this.route.snapshot.queryParamMap.get('q');
+      if (queryParam) {
+        this.searchQuery = queryParam;
+        this.onSearch();
+      } else {
+        this.loadAnimes();
+      }
+    });
   }
 
-  private loadUser(): void {
+  private loadUser(): Promise<void> {
     const user = this.sessionService.getUser();
     this.username.set(user?.username ?? '');
     this.avatarUrl.set(user?.avatarUrl ?? null);
 
-    if (!user) return;
+    if (!user) return Promise.resolve();
 
-    this.usersService.getProfile(user.userId).subscribe({
-      next: (profile) => {
-        this.username.set(profile.username);
-        this.avatarUrl.set(profile.avatarUrl ?? null);
-        this.sessionService.updateUser({
-          username: profile.username,
-          avatarUrl: profile.avatarUrl ?? null,
-        });
-      },
-      error: () => {},
+    return new Promise<void>((resolve) => {
+      this.usersService.getProfile(user.userId).subscribe({
+        next: (profile) => {
+          this.username.set(profile.username);
+          this.avatarUrl.set(profile.avatarUrl ?? null);
+          this.preferencesService.setNsfwFilter(!!profile.nsfwFilter);
+          this.preferencesService.setAdultRequestStatus(profile.adultRequestStatus ?? 'none');
+          this.preferencesService.setBirthDate(profile.birthDate ?? null);
+          this.sessionService.updateUser({
+            username: profile.username,
+            avatarUrl: profile.avatarUrl ?? null,
+          });
+          resolve();
+        },
+        error: () => {
+          resolve();
+        },
+      });
     });
   }
 
@@ -237,9 +268,17 @@ export class Home implements OnInit {
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    this.animeService
-      .searchByGenre(CATEGORY_GENRE_EN[category] ?? category, 1, this.buildSearchOptions())
-      .subscribe({
+    const options = this.buildSearchOptions();
+    const request$ =
+      category === ADULT_CATEGORY
+        ? this.animeService.searchByAdult(1, options)
+        : this.animeService.searchByGenre(
+            CATEGORY_GENRE_EN[category] ?? category,
+            1,
+            options,
+          );
+
+    request$.subscribe({
         next: (res) => {
           this.animes.set(res.data);
           this.hasNextPage.set(res.pagination.has_next_page);
@@ -263,7 +302,13 @@ export class Home implements OnInit {
     const options = this.buildSearchOptions();
 
     const request$ = category
-      ? this.animeService.searchByGenre(CATEGORY_GENRE_EN[category] ?? category, this.currentPage(), options)
+      ? category === ADULT_CATEGORY
+        ? this.animeService.searchByAdult(this.currentPage(), options)
+        : this.animeService.searchByGenre(
+            CATEGORY_GENRE_EN[category] ?? category,
+            this.currentPage(),
+            options,
+          )
       : this.animeService.search(query, this.currentPage(), options);
 
     request$.subscribe({

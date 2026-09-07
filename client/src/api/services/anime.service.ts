@@ -2,12 +2,24 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map, of } from 'rxjs';
 import { API_ROUTES } from '../routes/routes';
+import { PreferencesService } from './preferences.service';
+
+export const NSFW_GENRES: string[] = ['Ecchi', 'Horror'];
+
+export const NSFW_TAGS: string[] = [
+  'Ecchi',
+  'Horror',
+  'Ero Guro',
+  'Ero-Guro',
+  'Drugs',
+  'Torture',
+];
 
 const MEDIA_QUERY = `
-query ($page: Int, $perPage: Int, $search: String, $genre: String, $format: MediaFormat, $seasonYear: Int, $status: MediaStatus, $sort: [MediaSort] = [SCORE_DESC]) {
+query ($page: Int, $perPage: Int, $search: String, $genre: String, $format: MediaFormat, $seasonYear: Int, $status: MediaStatus, $sort: [MediaSort] = [SCORE_DESC], $genre_not_in: [String], $tag_not_in: [String], $isAdult: Boolean) {
   Page(page: $page, perPage: $perPage) {
     pageInfo { currentPage hasNextPage lastPage total }
-    media(search: $search, genre: $genre, type: ANIME, format: $format, seasonYear: $seasonYear, status: $status, sort: $sort) {
+    media(search: $search, genre: $genre, genre_not_in: $genre_not_in, tag_not_in: $tag_not_in, isAdult: $isAdult, type: ANIME, format: $format, seasonYear: $seasonYear, status: $status, sort: $sort) {
       id
       title { romaji english }
       coverImage { large }
@@ -21,8 +33,8 @@ averageScore
 }`;
 
 const MEDIA_BY_ID_QUERY = `
-query ($id: Int) {
-  Media(id: $id, type: ANIME) {
+query ($id: Int, $isAdult: Boolean) {
+  Media(id: $id, isAdult: $isAdult, type: ANIME) {
     id
     title { romaji english }
     coverImage { large }
@@ -35,9 +47,9 @@ query ($id: Int) {
 }`;
 
 const MEDIA_BY_IDS_QUERY = `
-query ($ids: [Int]) {
+query ($ids: [Int], $isAdult: Boolean) {
   Page(perPage: 50) {
-    media(id_in: $ids, type: ANIME) {
+    media(id_in: $ids, isAdult: $isAdult, type: ANIME) {
       id
       title { romaji english }
       coverImage { large }
@@ -51,8 +63,8 @@ query ($ids: [Int]) {
 }`;
 
 const MEDIA_DETAILS_QUERY = `
-query ($id: Int) {
-  Media(id: $id, type: ANIME) {
+query ($id: Int, $isAdult: Boolean) {
+  Media(id: $id, isAdult: $isAdult, type: ANIME) {
     id
     title { romaji english native }
     description
@@ -80,9 +92,9 @@ query ($id: Int) {
 const GENRES_QUERY = `query { GenreCollection }`;
 
 const SUGGESTIONS_QUERY = `
-query ($search: String, $perPage: Int) {
+query ($search: String, $perPage: Int, $genre_not_in: [String], $tag_not_in: [String], $isAdult: Boolean) {
   Page(page: 1, perPage: $perPage) {
-    media(search: $search, type: ANIME, sort: SEARCH_MATCH) {
+    media(search: $search, genre_not_in: $genre_not_in, tag_not_in: $tag_not_in, isAdult: $isAdult, type: ANIME, sort: SEARCH_MATCH) {
       id
       title { romaji english native }
       coverImage { large }
@@ -241,6 +253,7 @@ export interface AnimeSearchResponse {
 @Injectable({ providedIn: 'root' })
 export class AnimeService {
   private readonly http = inject(HttpClient);
+  private readonly preferencesService = inject(PreferencesService);
   private readonly perPage = 12;
 
   search(query: string, page: number = 1, options: SearchOptions = {}): Observable<AnimeSearchResponse> {
@@ -251,6 +264,10 @@ export class AnimeService {
     return this.fetchMedia({ page, genre, ...options });
   }
 
+  searchByAdult(page: number = 1, options: SearchOptions = {}): Observable<AnimeSearchResponse> {
+    return this.fetchMedia({ page, isAdult: true, ...options });
+  }
+
   getSuggestions(query: string): Observable<AnimeResult[]> {
     const term = query.trim();
     if (term.length < 2) return of([]);
@@ -258,7 +275,12 @@ export class AnimeService {
     return this.http
       .post<AniListPageResponse>(API_ROUTES.anime.graphql, {
         query: SUGGESTIONS_QUERY,
-        variables: { search: term, perPage: 8 },
+        variables: {
+          search: term,
+          perPage: 8,
+          isAdult: false,
+          ...this.nsfwVariables(),
+        },
       })
       .pipe(map((res) => res.data.Page.media.map((m) => this.mapAnime(m))));
   }
@@ -275,7 +297,7 @@ export class AnimeService {
     return this.http
       .post<{ data: { Media: AniListMedia } }>(API_ROUTES.anime.graphql, {
         query: MEDIA_BY_ID_QUERY,
-        variables: { id },
+        variables: { id, isAdult: this.preferencesService.adultContent() },
       })
       .pipe(map((res) => this.mapAnime(res.data.Media)));
   }
@@ -285,7 +307,10 @@ export class AnimeService {
     return this.http
       .post<{ data: { Page: { media: AniListMedia[] } } }>(
         API_ROUTES.anime.graphql,
-        { query: MEDIA_BY_IDS_QUERY, variables: { ids } },
+        {
+          query: MEDIA_BY_IDS_QUERY,
+          variables: { ids, isAdult: this.preferencesService.adultContent() },
+        },
       )
       .pipe(map((res) => res.data.Page.media.map((m) => this.mapAnime(m))));
   }
@@ -294,7 +319,7 @@ export class AnimeService {
     return this.http
       .post<{ data: { Media: AniListMediaDetails } }>(API_ROUTES.anime.graphql, {
         query: MEDIA_DETAILS_QUERY,
-        variables: { id },
+        variables: { id, isAdult: this.preferencesService.adultContent() },
       })
       .pipe(map((res) => this.mapDetails(res.data.Media)));
   }
@@ -348,8 +373,9 @@ export class AnimeService {
     page: number;
     search?: string;
     genre?: string;
+    isAdult?: boolean;
   } & SearchOptions): Observable<AnimeSearchResponse> {
-    const { format, year, status, sort, ...rest } = variables;
+    const { format, year, status, sort, isAdult, ...rest } = variables;
     return this.http
       .post<AniListPageResponse>(API_ROUTES.anime.graphql, {
         query: MEDIA_QUERY,
@@ -360,6 +386,8 @@ export class AnimeService {
           ...(year ? { seasonYear: year } : {}),
           ...(status ? { status } : {}),
           ...(sort ? { sort: [sort] } : {}),
+          isAdult: isAdult ?? false,
+          ...(isAdult ? {} : this.nsfwVariables()),
         },
       })
       .pipe(
@@ -372,6 +400,13 @@ export class AnimeService {
           },
         })),
       );
+  }
+
+  private nsfwVariables(): { genre_not_in?: string[]; tag_not_in?: string[] } {
+    if (!this.preferencesService.nsfwFilter()) {
+      return {};
+    }
+    return { genre_not_in: NSFW_GENRES, tag_not_in: NSFW_TAGS };
   }
 
   private mapAnime(m: AniListMedia): AnimeResult {
