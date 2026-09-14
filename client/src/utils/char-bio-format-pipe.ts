@@ -1,4 +1,4 @@
-import { Pipe, PipeTransform } from '@angular/core';
+import { Pipe, PipeTransform, SecurityContext } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 
 @Pipe({
@@ -16,23 +16,26 @@ export class CharBioFormatPipe implements PipeTransform {
     text = text.replace(/(\*\*|__)(.+?)\1/g, '<strong>$2</strong>');
     text = text.replace(/(\*|_)(.+?)\1/g, '<em>$2</em>');
     text = text.replace(
-      /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      /\[([^\]]+)\]\((https?:\/\/[^\s)"']+)\)/g,
       '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
     );
     text = hideSpoilers
       ? text.replace(
           /~!([\s\S]+?)!~/g,
-          '<span class="spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>'
+          '<span class="spoiler">$1</span>'
         )
       : text.replace(/~!([\s\S]+?)!~/g, '$1');
 
-    return this.sanitizer.bypassSecurityTrustHtml(text);
+    const sanitized = this.sanitizer.sanitize(SecurityContext.HTML, text);
+    return this.sanitizer.bypassSecurityTrustHtml(sanitized ?? '');
   }
 
   private escapeHtml(text: string): string {
     return text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 }

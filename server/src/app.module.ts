@@ -10,8 +10,10 @@ import { GroupController } from './application/controllers/group.controller';
 import { ReviewController } from './application/controllers/review.controller';
 import { UserController } from './application/controllers/user.controller';
 import { WatchlistController } from './application/controllers/watchlist.controller';
+import { FollowController } from './application/controllers/follow.controller';
 import { SessionsModule } from './application/sessions/sessions.module';
 import { getDatabaseConfig } from './data/config/database.config';
+import { Follow } from './domain/models/follow.model';
 import { Group } from './domain/models/group.model';
 import { GroupItem } from './domain/models/group-item.model';
 import { Review } from './domain/models/review.model';
@@ -19,7 +21,9 @@ import { User } from './domain/models/user.model';
 import { WatchlistItem } from './domain/models/watchlist-item.model';
 import { UserModule } from './use-cases/user/user.module';
 import { GroupModule } from './use-cases/group/group.module';
+import { FollowModule } from './use-cases/follow/follow.module';
 import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.service';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -39,11 +43,20 @@ import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.ser
       }),
     }),
     TypeOrmModule.forRoot(getDatabaseConfig()),
-    TypeOrmModule.forFeature([User, Review, WatchlistItem, Group, GroupItem]),
+    TypeOrmModule.forFeature([
+      User,
+      Review,
+      WatchlistItem,
+      Group,
+      GroupItem,
+      Follow,
+    ]),
     AuthModule,
     SessionsModule,
     UserModule,
     GroupModule,
+    FollowModule,
+    StorageModule,
   ],
   controllers: [
     AdminController,
@@ -51,6 +64,7 @@ import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.ser
     ReviewController,
     GroupController,
     WatchlistController,
+    FollowController,
   ],
   providers: [
     UserAnimeActionsService,

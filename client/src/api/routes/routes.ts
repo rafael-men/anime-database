@@ -38,6 +38,13 @@ export const API_ROUTES = {
       kinCount: (characterId: number) => `${API_BASE}/users/kin-count/${characterId}`,
       usernameAvailability: (id: string) => `${API_BASE}/users/${id}/check-username`,
    },
+   follows: {
+      follow: (id: string) => `${API_BASE}/follows/${id}`,
+      counts: (id: string) => `${API_BASE}/follows/${id}/counts`,
+      check: (id: string) => `${API_BASE}/follows/${id}/check`,
+      followers: (id: string) => `${API_BASE}/follows/${id}/followers`,
+      following: (id: string) => `${API_BASE}/follows/${id}/following`,
+   },
    anime: {
       graphql: `${ANILIST_API_BASE}`,
    },

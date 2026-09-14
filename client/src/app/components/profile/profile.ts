@@ -1,7 +1,7 @@
 import { Component, computed, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, map, switchMap } from 'rxjs/operators';
@@ -12,11 +12,12 @@ import { resolveAssetUrl } from '../../../api/routes/routes';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { DiaryComponent } from './sections/diary-component/diary-component';
 import { FavCharactersComponent } from './sections/fav-characters-component/fav-characters-component';
+import { FollowComponent } from './follow-component/follow-component';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, Navbar, DiaryComponent, FavCharactersComponent],
+  imports: [CommonModule, FormsModule, Navbar, DiaryComponent, FavCharactersComponent, FollowComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -26,6 +27,7 @@ export class Profile implements OnInit {
   private readonly favoritesService = inject(FavoritesService);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly route = inject(ActivatedRoute);
 
   profile = signal<UserProfile | null>(null);
   favoriteItems = signal<FavoriteItem[]>([]);
@@ -71,6 +73,8 @@ export class Profile implements OnInit {
   searchQuery = signal('');
   showProfileMenu = signal(false);
   private readonly sessionUserId = signal('');
+  readonly viewedUserId = signal('');
+  readonly isOwnProfile = computed(() => this.sessionUserId() === this.viewedUserId());
 
   username = computed(() => this.profile()?.username ?? '');
   avatarUrl = computed(() => this.profile()?.avatarUrl ?? null);
@@ -110,7 +114,18 @@ export class Profile implements OnInit {
     }
 
     this.sessionUserId.set(user.userId);
-    this.loadProfile(user.userId);
+
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        const targetId = params.get('id');
+        const userId = targetId ?? user.userId;
+        this.viewedUserId.set(userId);
+        this.loadProfile(userId);
+        this.loadUserFavorites(userId);
+        this.loadUserReviews(userId);
+      });
+
     this.usernameCheck$
       .pipe(
         debounceTime(500),
@@ -131,11 +146,17 @@ export class Profile implements OnInit {
           this.usernameAvailable.set(null);
         },
       });
-    this.favoritesService.getFavorites(user.userId).subscribe({
+  }
+
+  private loadUserFavorites(userId: string): void {
+    this.favoritesService.getFavorites(userId).subscribe({
       next: (items) => this.favoriteItems.set(items),
       error: () => {},
     });
-    this.usersService.getReviews(user.userId).subscribe({
+  }
+
+  private loadUserReviews(userId: string): void {
+    this.usersService.getReviews(userId).subscribe({
       next: (reviews) => this.userReviews.set(reviews),
       error: () => {},
     });
@@ -159,8 +180,12 @@ export class Profile implements OnInit {
   }
 
   retryLoad(): void {
-    const userId = this.sessionUserId();
-    if (userId) this.loadProfile(userId);
+    const userId = this.viewedUserId();
+    if (userId) {
+      this.loadProfile(userId);
+      this.loadUserFavorites(userId);
+      this.loadUserReviews(userId);
+    }
   }
 
   startEditing(): void {
@@ -328,6 +353,7 @@ export class Profile implements OnInit {
       return 'Você só pode mudar seu nome de usuário a cada 4 meses.';
     }
     if (err?.status === 400) return 'Imagem inválida. Use JPG, PNG, WEBP ou GIF de até 2MB.';
+    if (err?.status === 413) return 'A imagem deve ter no máximo 2MB.';
     if (err?.status === 401) return 'Sua sessão expirou. Faça login novamente.';
     if (err?.status === 409) return 'Este nome de usuário já está em uso.';
     if (err?.error?.message) return err.error.message;

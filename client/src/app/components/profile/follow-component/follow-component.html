@@ -1,1 +1,47 @@
-<p>follow-component works!</p>
+@if (!isOwnProfile()) {
+  <div class="flex items-center gap-3 mt-4 justify-center sm:justify-start">
+    <button
+      type="button"
+      class="follow-btn"
+      [class.following]="isFollowing()"
+      [disabled]="isLoading()"
+      (click)="toggleFollow()">
+      @if (isLoading()) {
+        <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+      } @else {
+        <span class="material-symbols-outlined text-lg">{{ isFollowing() ? 'person_remove' : 'person_add' }}</span>
+        <span>{{ isFollowing() ? 'Deixar de seguir' : 'Seguir' }}</span>
+      }
+    </button>
+  </div>
+}
+
+<div class="flex items-center gap-5 mt-4 justify-center sm:justify-start">
+  <button type="button" class="follow-stat-btn" (click)="openFollowers()">
+    <span class="follow-stat-value">{{ counts().followers }}</span>
+    <span class="follow-stat-label">Seguidores</span>
+  </button>
+  <button type="button" class="follow-stat-btn" (click)="openFollowing()">
+    <span class="follow-stat-value">{{ counts().following }}</span>
+    <span class="follow-stat-label">Seguindo</span>
+  </button>
+</div>
+
+@if (showFollowers() || showFollowing()) {
+  <div class="follow-modal-overlay" (click)="closeLists()">
+    <div class="follow-modal" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-[#f1e8e8]">
+          {{ showFollowers() ? 'Seguidores' : 'Seguindo' }}
+        </h3>
+        <button type="button" class="p-1 hover:bg-white/10 rounded-lg transition-colors" (click)="closeLists()">
+          <span class="material-symbols-outlined text-xl text-white/60">close</span>
+        </button>
+      </div>
+      <app-follow-users-component
+        [userId]="userId()"
+        [type]="showFollowers() ? 'followers' : 'following'"
+        (userClick)="goToProfile($event)" />
+    </div>
+  </div>
+}

@@ -61,6 +61,8 @@ describe('Profile', () => {
   let getReviewsMock: ReturnType<typeof vi.fn>;
   let getFavoritesMock: ReturnType<typeof vi.fn>;
   let navigateSpy: ReturnType<typeof vi.spyOn>;
+  let followCountsMock: ReturnType<typeof vi.fn>;
+  let isFollowingMock: ReturnType<typeof vi.fn>;
 
   function seedSession(): void {
     localStorage.setItem(
@@ -83,6 +85,8 @@ describe('Profile', () => {
     uploadAvatarMock = vi.fn(() => of(makeProfile()));
     getReviewsMock = vi.fn().mockReturnValue(of([makeReview(1), makeReview(2), makeReview(3)]));
     getFavoritesMock = vi.fn().mockReturnValue(of([makeFavorite(1), makeFavorite(2)]));
+    followCountsMock = vi.fn().mockReturnValue(of({ followers: 1, following: 2 }));
+    isFollowingMock = vi.fn().mockReturnValue(of(false));
 
     await TestBed.configureTestingModule({
       imports: [Profile],
@@ -96,6 +100,8 @@ describe('Profile', () => {
             updateProfile: updateProfileMock,
             uploadAvatar: uploadAvatarMock,
             getReviews: getReviewsMock,
+            getFollowCounts: followCountsMock,
+            isFollowing: isFollowingMock,
           },
         },
         { provide: FavoritesService, useValue: { getFavorites: getFavoritesMock } },

@@ -18,6 +18,7 @@ export const routes: Routes = [
   { path: 'control', component: ValidationPage },
   { path: 'home', component: Home, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
+  { path: 'profile/:id', component: Profile, canActivate: [authGuard] },
   { path: 'settings', component: UserSettings, canActivate: [authGuard] },
   { path: 'favourites', component: FavouritesPage, canActivate: [authGuard] },
   { path: 'groups/:id', component: GroupDetail, canActivate: [authGuard] },

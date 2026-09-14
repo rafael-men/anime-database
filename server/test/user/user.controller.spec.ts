@@ -11,6 +11,8 @@ import { UserService } from '../../src/use-cases/user/user.service';
 import { UserAnimeActionsService } from '../../src/use-cases/user/user-anime-actions.service';
 import { SessionAuthGuard } from '../../src/application/auth/session-auth.guard';
 import { OwnershipGuard } from '../../src/application/auth/ownership.guard';
+import { StorageProvider } from '../../src/storage/storage-provider.interface';
+import { STORAGE_PROVIDER } from '../../src/storage/storage.module';
 
 const MockGuard: CanActivate = { canActivate: () => true };
 
@@ -31,6 +33,14 @@ describe('UserController', () => {
     getUserReviews: jest.fn(),
   };
 
+  const storageMock: StorageProvider = {
+    providerName: 'local',
+    upload: jest.fn().mockResolvedValue({
+      url: '/uploads/avatar.png',
+      key: 'avatar.png',
+    }),
+  };
+
   beforeEach(async () => {
     const moduleRef: TestingModule = await Test.createTestingModule({
       controllers: [UserController],
@@ -40,6 +50,7 @@ describe('UserController', () => {
           provide: UserAnimeActionsService,
           useValue: userAnimeActionsServiceMock,
         },
+        { provide: STORAGE_PROVIDER, useValue: storageMock },
       ],
     })
       .overrideGuard(SessionAuthGuard)
@@ -68,7 +79,10 @@ describe('UserController', () => {
       .query({ username: 'rafa' })
       .expect(200);
 
-    expect(userServiceMock.isUsernameAvailable).toHaveBeenCalledWith('rafa', 'user-1');
+    expect(userServiceMock.isUsernameAvailable).toHaveBeenCalledWith(
+      'rafa',
+      'user-1',
+    );
     expect(response.body).toEqual({ available: true });
   });
 
@@ -264,5 +278,73 @@ describe('UserController', () => {
       .expect(400);
 
     expect(userServiceMock.updateProfile).not.toHaveBeenCalled();
+  });
+
+  describe('POST /users/:id/avatar', () => {
+    const PNG_MAGIC = Buffer.from([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 1, 2, 3, 4,
+    ]);
+
+    beforeEach(() => {
+      (storageMock.upload as jest.Mock).mockClear();
+      userServiceMock.updateProfile.mockResolvedValue({
+        id: 'user-1',
+        username: 'rafael',
+        avatarUrl: '/uploads/avatar.png',
+      });
+    });
+
+    it('should upload an avatar with valid magic bytes', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/users/user-1/avatar')
+        .attach('file', PNG_MAGIC, {
+          filename: 'foto.png',
+          contentType: 'image/png',
+        })
+        .expect(201);
+
+      expect(storageMock.upload).toHaveBeenCalledWith({
+        buffer: PNG_MAGIC,
+        kind: 'png',
+      });
+      expect(userServiceMock.updateProfile).toHaveBeenCalledWith('user-1', {
+        avatarUrl: '/uploads/avatar.png',
+      });
+      expect(response.body.avatarUrl).toBe('/uploads/avatar.png');
+    });
+
+    it('should reject content that is not a real image despite the mimetype', async () => {
+      const html = Buffer.from('<html><script>alert(1)</script></html>');
+
+      await request(app.getHttpServer())
+        .post('/users/user-1/avatar')
+        .attach('file', html, {
+          filename: 'foto.png',
+          contentType: 'image/png',
+        })
+        .expect(400);
+
+      expect(storageMock.upload).not.toHaveBeenCalled();
+      expect(userServiceMock.updateProfile).not.toHaveBeenCalled();
+    });
+
+    it('should reject when declared mimetype does not match magic bytes', async () => {
+      await request(app.getHttpServer())
+        .post('/users/user-1/avatar')
+        .attach('file', PNG_MAGIC, {
+          filename: 'foto.gif',
+          contentType: 'image/gif',
+        })
+        .expect(400);
+
+      expect(storageMock.upload).not.toHaveBeenCalled();
+      expect(userServiceMock.updateProfile).not.toHaveBeenCalled();
+    });
+
+    it('should reject empty uploads', async () => {
+      await request(app.getHttpServer())
+        .post('/users/user-1/avatar')
+        .expect(400);
+    });
   });
 });

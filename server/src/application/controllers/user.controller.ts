@@ -6,6 +6,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Inject,
   Param,
   Post,
   Query,
@@ -37,6 +38,9 @@ import { UserService } from '../../use-cases/user/user.service';
 import { SessionAuthGuard } from '../auth/session-auth.guard';
 import { OwnershipGuard } from '../auth/ownership.guard';
 import { avatarUploadOptions } from '../../utils/file-upload';
+import { assertSafeImage } from '../../utils/file-validation';
+import { STORAGE_PROVIDER } from '../../storage/storage.module';
+import type { StorageProvider } from '../../storage/storage-provider.interface';
 
 class UpdateUserDto {
   @IsOptional()
@@ -107,15 +111,18 @@ class CreateReviewDto {
 }
 
 @Controller('users')
-@UseGuards(SessionAuthGuard, OwnershipGuard)
+@UseGuards(SessionAuthGuard)
 export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly userAnimeActionsService: UserAnimeActionsService,
+    @Inject(STORAGE_PROVIDER) private readonly storage: StorageProvider,
   ) {}
 
   @Get('kin-count/:characterId')
-  async getKinCount(@Param('characterId') characterId: string): Promise<{ count: number }> {
+  async getKinCount(
+    @Param('characterId') characterId: string,
+  ): Promise<{ count: number }> {
     const id = Number(characterId);
     if (isNaN(id)) {
       return { count: 0 };
@@ -142,6 +149,7 @@ export class UserController {
   }
 
   @Post(':id/favorites')
+  @UseGuards(OwnershipGuard)
   async addFavorite(
     @Param('id') userId: string,
     @Body() body: AddFavoriteDto,
@@ -154,6 +162,7 @@ export class UserController {
   }
 
   @Delete(':id/favorites/:animeId')
+  @UseGuards(OwnershipGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async removeFavorite(
     @Param('id') userId: string,
@@ -171,6 +180,7 @@ export class UserController {
   }
 
   @Post(':id/reviews')
+  @UseGuards(OwnershipGuard)
   async createReview(
     @Param('id') userId: string,
     @Body() body: CreateReviewDto,
@@ -194,6 +204,7 @@ export class UserController {
   }
 
   @Post(':id/profile')
+  @UseGuards(OwnershipGuard)
   async updateProfile(
     @Param('id') userId: string,
     @Body() body: UpdateUserDto,
@@ -202,6 +213,7 @@ export class UserController {
   }
 
   @Post(':id/avatar')
+  @UseGuards(OwnershipGuard)
   @UseInterceptors(FileInterceptor('file', avatarUploadOptions()))
   async uploadAvatar(
     @Param('id') userId: string,
@@ -211,8 +223,14 @@ export class UserController {
       throw new BadRequestException('Nenhum arquivo enviado.');
     }
 
+    const kind = assertSafeImage(file.buffer, file.mimetype);
+    const stored = await this.storage.upload({
+      buffer: file.buffer,
+      kind,
+    });
+
     return this.userService.updateProfile(userId, {
-      avatarUrl: `/uploads/${file.filename}`,
+      avatarUrl: stored.url,
     });
   }
 }

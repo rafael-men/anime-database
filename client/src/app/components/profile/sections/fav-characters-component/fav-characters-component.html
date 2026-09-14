@@ -1,7 +1,7 @@
 <section class="kins-section">
   <div class="kins-header">
     <span class="material-symbols-outlined kins-icon">favorite</span>
-    <h2 class="kins-title">Meus Kins</h2>
+    <h2 class="kins-title">{{ editable() ? 'Meus Kins' : 'Kins' }}</h2>
   </div>
 
   @if (isLoading()) {
@@ -12,9 +12,11 @@
     <div class="kins-grid">
       @for (character of kins(); track character.id) {
         <div class="kin-card">
-          <button type="button" class="kin-remove" (click)="removeCharacter(character.id)" title="Remover">
-            <span class="material-symbols-outlined">close</span>
-          </button>
+          @if (editable()) {
+            <button type="button" class="kin-remove" (click)="removeCharacter(character.id)" title="Remover">
+              <span class="material-symbols-outlined">close</span>
+            </button>
+          }
           @if (character.image) {
             <img [src]="character.image" [alt]="character.name" class="kin-img" loading="lazy" />
           } @else {
@@ -31,7 +33,7 @@
         </div>
       }
 
-      @if (hasEmptySlots) {
+      @if (editable() && hasEmptySlots) {
         <button type="button" class="kin-add" (click)="openModal()">
           <span class="material-symbols-outlined kin-add-icon">add</span>
           <span class="kin-add-text">Adicionar kin</span>

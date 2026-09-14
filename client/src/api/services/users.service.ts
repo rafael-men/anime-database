@@ -43,6 +43,20 @@ export interface UserReview {
    updatedAt: string;
 }
 
+export interface FollowCounts {
+   followers: number;
+   following: number;
+}
+
+export interface FollowUser {
+   id: string;
+   username: string;
+   email: string;
+   avatarUrl?: string | null;
+   bio?: string | null;
+   createdAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class UsersService {
    private readonly http = inject(HttpClient);
@@ -76,5 +90,31 @@ export class UsersService {
       return this.http.get<{ available: boolean }>(API_ROUTES.users.usernameAvailability(userId), {
          params: { username },
       });
+   }
+
+   follow(userId: string): Observable<void> {
+      return this.http.post<void>(API_ROUTES.follows.follow(userId), {});
+   }
+
+   unfollow(userId: string): Observable<void> {
+      return this.http.delete<void>(API_ROUTES.follows.follow(userId));
+   }
+
+   isFollowing(userId: string): Observable<boolean> {
+      return this.http
+         .get<{ isFollowing: boolean }>(API_ROUTES.follows.check(userId))
+         .pipe(map((res) => res.isFollowing));
+   }
+
+   getFollowCounts(userId: string): Observable<FollowCounts> {
+      return this.http.get<FollowCounts>(API_ROUTES.follows.counts(userId));
+   }
+
+   getFollowers(userId: string): Observable<FollowUser[]> {
+      return this.http.get<FollowUser[]>(API_ROUTES.follows.followers(userId));
+   }
+
+   getFollowing(userId: string): Observable<FollowUser[]> {
+      return this.http.get<FollowUser[]>(API_ROUTES.follows.following(userId));
    }
 }

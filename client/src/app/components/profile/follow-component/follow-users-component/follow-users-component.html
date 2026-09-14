@@ -1,0 +1,36 @@
+@if (isLoading()) {
+  <div class="flex items-center justify-center py-8">
+    <span class="inline-block w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+  </div>
+} @else if (users().length === 0) {
+  <div class="text-center py-8">
+    <p class="text-sm text-[rgba(200,200,200,0.4)]">
+      {{ type() === 'followers' ? 'Nenhum seguidor ainda.' : 'Não está seguindo ninguém ainda.' }}
+    </p>
+  </div>
+} @else {
+  <div class="flex flex-col gap-1">
+    @for (user of users(); track user.id) {
+      <button
+        type="button"
+        class="follow-user-row"
+        (click)="onUserClick(user.id)">
+        @if (user.avatarUrl) {
+          <img
+            [src]="resolveAvatar(user.avatarUrl)"
+            [alt]="user.username"
+            class="w-10 h-10 rounded-full object-cover shrink-0" />
+        } @else {
+          <div class="follow-user-avatar">{{ userInitial(user.username) }}</div>
+        }
+        <div class="flex-1 min-w-0 text-left">
+          <p class="text-sm font-medium text-[#f1e8e8] truncate m-0">{{ user.username }}</p>
+          @if (user.bio) {
+            <p class="text-xs text-[rgba(200,200,200,0.4)] truncate m-0 mt-0.5">{{ user.bio }}</p>
+          }
+        </div>
+        <span class="material-symbols-outlined text-sm text-white/30">chevron_right</span>
+      </button>
+    }
+  </div>
+}

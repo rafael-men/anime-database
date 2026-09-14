@@ -1,0 +1,82 @@
+.follow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.2rem;
+  border-radius: 0.5rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1e8e8;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.follow-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.follow-btn.following {
+  background: rgba(220, 60, 60, 0.15);
+  border-color: rgba(220, 60, 60, 0.3);
+  color: #f08080;
+}
+
+.follow-btn.following:hover:not(:disabled) {
+  background: rgba(220, 60, 60, 0.25);
+}
+
+.follow-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.follow-stat-btn {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: opacity 0.2s;
+}
+
+.follow-stat-btn:hover {
+  opacity: 0.8;
+}
+
+.follow-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f1e8e8;
+}
+
+.follow-stat-label {
+  font-size: 0.75rem;
+  color: rgba(200, 200, 200, 0.55);
+}
+
+.follow-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.follow-modal {
+  background: #1a1a1a;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 28rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}

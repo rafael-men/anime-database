@@ -20,6 +20,7 @@ async function bootstrap() {
     prefix: '/uploads/',
     index: false,
     dotfiles: 'ignore',
+    fallthrough: false,
   });
   const allowedOrigins = (
     process.env.FRONTEND_URLS ??

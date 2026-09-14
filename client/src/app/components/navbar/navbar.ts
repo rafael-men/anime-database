@@ -248,7 +248,17 @@ export class Navbar implements OnInit {
 
     const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const regex = new RegExp(`(${escaped})`, 'gi');
-    return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+    let result = '';
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+    while ((match = regex.exec(text)) !== null) {
+      result += this.escapeHtml(text.slice(lastIndex, match.index));
+      const start = match.index;
+      lastIndex = regex.lastIndex;
+      result += `<mark class="search-highlight">${this.escapeHtml(text.slice(start, lastIndex))}</mark>`;
+    }
+    if (lastIndex === 0) return this.escapeHtml(text);
+    return result + this.escapeHtml(text.slice(lastIndex));
   }
 
   private escapeHtml(text: string): string {
@@ -256,7 +266,8 @@ export class Navbar implements OnInit {
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
   }
 
   onSearch(): void {

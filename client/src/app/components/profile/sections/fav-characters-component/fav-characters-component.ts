@@ -15,6 +15,7 @@ export class FavCharactersComponent {
   private readonly characterService = inject(CharacterService);
 
   characterIds = input<number[]>([]);
+  editable = input(true);
   characterIdsChange = output<number[]>();
 
   kins = signal<CharacterResult[]>([]);

@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { of } from 'rxjs';
 
 import { Navbar } from './navbar';
@@ -91,6 +91,19 @@ describe('Navbar', () => {
 
     component.adultRequestStatus.set('none');
     expect(component.hasNotification()).toBe(false);
+  });
+
+  it('should escape user data in highlight output', () => {
+    expect(component.highlight('Título & <b>X</b>', '')).toBe('Título &amp; &lt;b&gt;X&lt;/b&gt;');
+    expect(component.highlight('<script>alert(1)</script>', 'script')).toBe(
+      '&lt;<mark class="search-highlight">script</mark>&gt;alert(1)&lt;/<mark class="search-highlight">script</mark>&gt;'
+    );
+    expect(component.highlight('One Piece', 'one')).toBe(
+      '<mark class="search-highlight">One</mark> Piece'
+    );
+    expect(component.highlight('One < Two', '<')).toBe(
+      'One <mark class="search-highlight">&lt;</mark> Two'
+    );
   });
 
   it('should not mark a non-terminal status as seen', () => {
