@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -38,6 +39,11 @@ export class FollowController {
     @Param('id') targetUserId: string,
   ): Promise<void> {
     await this.followService.unfollow(req.user.sub, targetUserId);
+  }
+
+  @Get('search')
+  async searchUsers(@Req() req: AuthRequest, @Query('q') query?: string) {
+    return this.followService.searchUsers(query ?? '', req.user.sub);
   }
 
   @Get(':id/check')

@@ -1,12 +1,12 @@
-<nav class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/[0.06]">
+<nav
+  class="fixed top-0 left-0 right-0 z-50 bg-black/90 backdrop-blur-xl border-b border-white/[0.06]"
+>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex items-center justify-between h-16 gap-3 sm:gap-4">
-
-
-      <div class="flex items-center gap-3 cursor-pointer shrink-0" (click)="tabChange.emit('todos')">
-        <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-[#a82020] to-[#8b1a1a] flex items-center justify-center shadow-lg shadow-red-900/20">
-          <span class="material-symbols-outlined text-white text-xl">play_circle</span>
-        </div>
+      <div
+        class="flex items-center gap-3 cursor-pointer shrink-0"
+        (click)="tabChange.emit('todos')"
+      >
         <span class="text-xl font-bold text-[#f0f0f0] tracking-tight hidden sm:block">
           Ani<span class="text-[#c02828]">DB</span>
         </span>
@@ -17,19 +17,23 @@
           <button
             (click)="tabChange.emit(tab.id)"
             class="px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200"
-            [class]="tabClass(tab.id)">
+            [class]="tabClass(tab.id)"
+          >
             {{ tab.label }}
           </button>
         }
       </div>
 
-   
       <div class="flex items-center gap-2 sm:gap-3 flex-1 justify-end min-w-0">
-
         <div class="flex-1 min-w-0 sm:flex-none sm:w-72 lg:w-80 sm:shrink-0 relative">
-          <div class="flex items-center bg-white/[0.05] border border-white/[0.08] rounded-full px-4 py-2 focus-within:border-white/[0.18] focus-within:bg-white/[0.07] transition-all duration-200"
-            [class]="showSuggestions() ? 'rounded-b-none border-b-transparent' : ''">
-            <span class="material-symbols-outlined text-[rgba(200,200,200,0.4)] text-lg mr-2 shrink-0">search</span>
+          <div
+            class="flex items-center bg-white/[0.05] border border-white/[0.08] rounded-full px-4 py-2 focus-within:border-white/[0.18] focus-within:bg-white/[0.07] transition-all duration-200"
+            [class]="showSuggestions() ? 'rounded-b-none border-b-transparent' : ''"
+          >
+            <span
+              class="material-symbols-outlined text-[rgba(200,200,200,0.4)] text-lg mr-2 shrink-0"
+              >search</span
+            >
             <input
               type="text"
               [(ngModel)]="localQuery"
@@ -37,18 +41,23 @@
               (keydown)="onSearchKeydown($event)"
               placeholder="Pesquisar..."
               autocomplete="off"
-              class="bg-transparent border-none outline-none text-[#f0f0f0] text-sm w-full min-w-0 placeholder-[rgba(200,200,200,0.35)]" />
+              class="bg-transparent border-none outline-none text-[#f0f0f0] text-sm w-full min-w-0 placeholder-[rgba(200,200,200,0.35)]"
+            />
             @if (localQuery) {
               <button
                 (click)="onClear()"
-                class="ml-1 shrink-0 text-[rgba(200,200,200,0.45)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0">
+                class="ml-1 shrink-0 text-[rgba(200,200,200,0.45)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0"
+              >
                 <span class="material-symbols-outlined text-lg">close</span>
               </button>
             }
           </div>
 
           @if (showSuggestions()) {
-            <div #suggestionsList class="absolute left-0 right-0 top-full rounded-b-xl bg-[#141414]/95 backdrop-blur-xl border border-white/[0.08] border-t-0 shadow-2xl overflow-hidden z-50 max-h-[70vh] overflow-y-auto">
+            <div
+              #suggestionsList
+              class="absolute left-0 right-0 top-full rounded-b-xl bg-[#141414]/95 backdrop-blur-xl border border-white/[0.08] border-t-0 shadow-2xl overflow-hidden z-50 max-h-[70vh] overflow-y-auto"
+            >
               @if (isSuggesting() && suggestions().length === 0) {
                 <div class="flex items-center gap-2 px-4 py-3">
                   <div class="suggestion-spinner"></div>
@@ -56,8 +65,12 @@
                 </div>
               } @else if (suggestions().length === 0) {
                 <div class="flex flex-col items-center gap-1.5 px-4 py-5">
-                  <span class="material-symbols-outlined text-[1.5rem] text-[rgba(200,200,200,0.2)]">search_off</span>
-                  <p class="text-sm text-[rgba(200,200,200,0.45)] m-0">Nenhum resultado para "{{ localQuery }}"</p>
+                  <span class="material-symbols-outlined text-[1.5rem] text-[rgba(200,200,200,0.2)]"
+                    >search_off</span
+                  >
+                  <p class="text-sm text-[rgba(200,200,200,0.45)] m-0">
+                    Nenhum resultado para "{{ localQuery }}"
+                  </p>
                 </div>
               } @else {
                 @for (s of suggestions(); track s.mal_id; let i = $index) {
@@ -65,23 +78,34 @@
                     type="button"
                     (mousedown)="selectSuggestion(s)"
                     class="w-full flex items-center gap-3 px-3 py-2.5 text-left cursor-pointer border-none bg-transparent transition-colors duration-100"
-                    [class]="selectedIndex() === i ? 'bg-white/[0.09]' : 'hover:bg-white/[0.06]'">
+                    [class]="selectedIndex() === i ? 'bg-white/[0.09]' : 'hover:bg-white/[0.06]'"
+                  >
                     <img
                       [src]="s.images.jpg.image_url"
                       [alt]="s.title"
                       class="w-10 h-14 object-cover rounded-md shrink-0"
-                      loading="lazy" />
+                      loading="lazy"
+                    />
                     <span class="min-w-0 flex-1">
-                      <span class="block text-sm font-medium text-[#f0f0f0] truncate" [innerHTML]="highlight(s.title, localQuery)"></span>
+                      <span
+                        class="block text-sm font-medium text-[#f0f0f0] truncate"
+                        [innerHTML]="highlight(s.title, localQuery)"
+                      ></span>
                       @if (s.titleNative && s.titleNative !== s.title) {
-                        <span class="block text-xs text-[rgba(200,200,200,0.4)] truncate">{{ s.titleNative }}</span>
+                        <span class="block text-xs text-[rgba(200,200,200,0.4)] truncate">{{
+                          s.titleNative
+                        }}</span>
                       }
                       @if (suggestionMeta(s)) {
-                        <span class="block text-xs text-[rgba(200,200,200,0.5)] truncate mt-0.5">{{ suggestionMeta(s) }}</span>
+                        <span class="block text-xs text-[rgba(200,200,200,0.5)] truncate mt-0.5">{{
+                          suggestionMeta(s)
+                        }}</span>
                       }
                     </span>
                     @if (s.score) {
-                      <span class="flex items-center gap-0.5 shrink-0 text-xs font-bold text-[rgba(230,230,230,0.85)]">
+                      <span
+                        class="flex items-center gap-0.5 shrink-0 text-xs font-bold text-[rgba(230,230,230,0.85)]"
+                      >
                         <span class="material-symbols-outlined text-sm text-[#f5c518]">star</span>
                         {{ s.score.toFixed(1) }}
                       </span>
@@ -99,28 +123,41 @@
             (click)="toggleFilters()"
             aria-label="Filtros de busca"
             class="w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-200 cursor-pointer bg-white/[0.05] border-white/[0.08]"
-            [class]="hasActiveFilters()
-              ? 'text-[#e05555] !border-[#a82020]/60 bg-[#a82020]/10'
-              : 'text-[rgba(200,200,200,0.65)] hover:text-[#f0f0f0] hover:bg-white/[0.08]'">
+            [class]="
+              hasActiveFilters()
+                ? 'text-[#e05555] !border-[#a82020]/60 bg-[#a82020]/10'
+                : 'text-[rgba(200,200,200,0.65)] hover:text-[#f0f0f0] hover:bg-white/[0.08]'
+            "
+          >
             <span class="material-symbols-outlined text-xl">tune</span>
           </button>
           @if (hasActiveFilters()) {
-            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c02828] ring-2 ring-black pointer-events-none"></span>
+            <span
+              class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c02828] ring-2 ring-black pointer-events-none"
+            ></span>
           }
 
           @if (showFilters()) {
-            <div class="sm:hidden fixed inset-x-0 top-16 z-50 px-4 pt-2 pb-4 bg-black/50" (click)="showFilters.set(false)">
-              <div class="rounded-2xl bg-[#111111] border border-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.6)] overflow-hidden"
-                (click)="$event.stopPropagation()">
+            <div
+              class="sm:hidden fixed inset-x-0 top-16 z-50 px-4 pt-2 pb-4 bg-black/50"
+              (click)="showFilters.set(false)"
+            >
+              <div
+                class="rounded-2xl bg-[#111111] border border-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.6)] overflow-hidden"
+                (click)="$event.stopPropagation()"
+              >
                 <div class="flex items-center justify-between px-4 pt-4 pb-2">
                   <p class="text-sm font-bold text-[#f0f0f0] m-0 flex items-center gap-2">
-                    <span class="material-symbols-outlined text-base text-[rgba(200,200,200,0.5)]">tune</span>
+                    <span class="material-symbols-outlined text-base text-[rgba(200,200,200,0.5)]"
+                      >tune</span
+                    >
                     Filtros
                   </p>
                   <button
                     type="button"
                     (click)="clearFilters()"
-                    class="text-xs text-[rgba(200,200,200,0.5)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0">
+                    class="text-xs text-[rgba(200,200,200,0.5)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0"
+                  >
                     Limpar
                   </button>
                 </div>
@@ -132,7 +169,8 @@
                     <mat-label>Formato</mat-label>
                     <mat-select
                       [value]="filters().format ?? ''"
-                      (selectionChange)="setFilter('format', $event.value)">
+                      (selectionChange)="setFilter('format', $event.value)"
+                    >
                       @for (opt of formatOptions; track opt.value) {
                         <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                       }
@@ -143,7 +181,8 @@
                     <mat-label>Ano</mat-label>
                     <mat-select
                       [value]="filters().year ?? ''"
-                      (selectionChange)="setFilter('year', $any($event.value))">
+                      (selectionChange)="setFilter('year', $any($event.value))"
+                    >
                       <mat-option value="">Qualquer ano</mat-option>
                       @for (year of yearOptions; track year) {
                         <mat-option [value]="year">{{ year }}</mat-option>
@@ -155,7 +194,8 @@
                     <mat-label>Status</mat-label>
                     <mat-select
                       [value]="filters().status ?? ''"
-                      (selectionChange)="setFilter('status', $event.value)">
+                      (selectionChange)="setFilter('status', $event.value)"
+                    >
                       @for (opt of statusOptions; track opt.value) {
                         <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                       }
@@ -166,7 +206,8 @@
                     <mat-label>Ordenar por</mat-label>
                     <mat-select
                       [value]="filters().sort ?? ''"
-                      (selectionChange)="setFilter('sort', $event.value)">
+                      (selectionChange)="setFilter('sort', $event.value)"
+                    >
                       @for (opt of sortOptions; track opt.value) {
                         <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                       }
@@ -178,16 +219,20 @@
 
             <div
               class="hidden sm:block absolute right-0 top-full mt-2 w-80 rounded-2xl bg-[#111111] border border-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.6)] z-50 overflow-hidden"
-              (mouseleave)="showFilters.set(false)">
+              (mouseleave)="showFilters.set(false)"
+            >
               <div class="flex items-center justify-between px-4 pt-4 pb-2">
                 <p class="text-sm font-bold text-[#f0f0f0] m-0 flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base text-[rgba(200,200,200,0.5)]">tune</span>
+                  <span class="material-symbols-outlined text-base text-[rgba(200,200,200,0.5)]"
+                    >tune</span
+                  >
                   Filtros
                 </p>
                 <button
                   type="button"
                   (click)="clearFilters()"
-                  class="text-xs text-[rgba(200,200,200,0.5)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0">
+                  class="text-xs text-[rgba(200,200,200,0.5)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0"
+                >
                   Limpar
                 </button>
               </div>
@@ -199,7 +244,8 @@
                   <mat-label>Formato</mat-label>
                   <mat-select
                     [value]="filters().format ?? ''"
-                    (selectionChange)="setFilter('format', $event.value)">
+                    (selectionChange)="setFilter('format', $event.value)"
+                  >
                     @for (opt of formatOptions; track opt.value) {
                       <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                     }
@@ -210,7 +256,8 @@
                   <mat-label>Ano</mat-label>
                   <mat-select
                     [value]="filters().year ?? ''"
-                    (selectionChange)="setFilter('year', $any($event.value))">
+                    (selectionChange)="setFilter('year', $any($event.value))"
+                  >
                     <mat-option value="">Qualquer ano</mat-option>
                     @for (year of yearOptions; track year) {
                       <mat-option [value]="year">{{ year }}</mat-option>
@@ -222,7 +269,8 @@
                   <mat-label>Status</mat-label>
                   <mat-select
                     [value]="filters().status ?? ''"
-                    (selectionChange)="setFilter('status', $event.value)">
+                    (selectionChange)="setFilter('status', $event.value)"
+                  >
                     @for (opt of statusOptions; track opt.value) {
                       <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                     }
@@ -233,7 +281,8 @@
                   <mat-label>Ordenar por</mat-label>
                   <mat-select
                     [value]="filters().sort ?? ''"
-                    (selectionChange)="setFilter('sort', $event.value)">
+                    (selectionChange)="setFilter('sort', $event.value)"
+                  >
                     @for (opt of sortOptions; track opt.value) {
                       <mat-option [value]="opt.value">{{ opt.label }}</mat-option>
                     }
@@ -250,27 +299,34 @@
             (click)="toggleNotifications()"
             aria-label="Notificações"
             class="w-9 h-9 rounded-full flex items-center justify-center border transition-all duration-200 cursor-pointer bg-white/[0.05] border-white/[0.08] text-[rgba(200,200,200,0.65)] hover:text-[#f0f0f0] hover:bg-white/[0.08]"
-            [class]="showNotifications() ? 'text-[#f0f0f0] bg-white/[0.08]' : ''">
+            [class]="showNotifications() ? 'text-[#f0f0f0] bg-white/[0.08]' : ''"
+          >
             <span class="material-symbols-outlined text-xl">notifications</span>
           </button>
           @if (hasUnreadNotification()) {
-            <span class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c02828] ring-2 ring-black pointer-events-none"></span>
+            <span
+              class="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-[#c02828] ring-2 ring-black pointer-events-none"
+            ></span>
           }
 
           @if (showNotifications() && hasNotification()) {
             <div
               class="absolute right-0 top-full mt-2 w-80 rounded-2xl bg-[#111111] border border-white/[0.08] shadow-[0_16px_48px_rgba(0,0,0,0.6)] z-50 overflow-hidden"
-              (mouseleave)="closeNotifications()">
+              (mouseleave)="closeNotifications()"
+            >
               <div class="flex items-center justify-between px-4 pt-4 pb-2">
                 <p class="text-sm font-bold text-[#f0f0f0] m-0 flex items-center gap-2">
-                  <span class="material-symbols-outlined text-base text-[rgba(200,200,200,0.5)]">notifications</span>
+                  <span class="material-symbols-outlined text-base text-[rgba(200,200,200,0.5)]"
+                    >notifications</span
+                  >
                   Notificações
                 </p>
                 @if (hasUnreadNotification()) {
                   <button
                     type="button"
                     (click)="markNotificationsSeen()"
-                    class="text-xs text-[rgba(200,200,200,0.5)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0">
+                    class="text-xs text-[rgba(200,200,200,0.5)] hover:text-[#f0f0f0] transition-colors bg-transparent border-none cursor-pointer p-0"
+                  >
                     Marcar como lida
                   </button>
                 }
@@ -281,21 +337,31 @@
               <div class="p-4">
                 @if (adultRequestStatus() === 'approved') {
                   <div class="flex items-start gap-3 py-2 rounded-xl">
-                    <span class="material-symbols-outlined text-[1.2rem] text-[#7dd69a] shrink-0 mt-0.5">check_circle</span>
+                    <span
+                      class="material-symbols-outlined text-[1.2rem] text-[#7dd69a] shrink-0 mt-0.5"
+                      >check_circle</span
+                    >
                     <div class="min-w-0">
-                      <p class="text-sm font-semibold text-[#f0f0f0] m-0">Conteúdo adulto aprovado</p>
+                      <p class="text-sm font-semibold text-[#f0f0f0] m-0">
+                        Conteúdo adulto aprovado
+                      </p>
                       <p class="text-xs text-[rgba(200,200,200,0.55)] m-0 mt-1">
-                        Sua solicitação foi aprovada. A categoria +18 já está disponível em Explorar.
+                        Sua solicitação foi aprovada. A categoria +18 já está disponível em
+                        Explorar.
                       </p>
                     </div>
                   </div>
                 } @else if (adultRequestStatus() === 'denied') {
                   <div class="flex items-start gap-3 py-2 rounded-xl">
-                    <span class="material-symbols-outlined text-[1.2rem] text-[#f08080] shrink-0 mt-0.5">block</span>
+                    <span
+                      class="material-symbols-outlined text-[1.2rem] text-[#f08080] shrink-0 mt-0.5"
+                      >block</span
+                    >
                     <div class="min-w-0">
                       <p class="text-sm font-semibold text-[#f0f0f0] m-0">Solicitação negada</p>
                       <p class="text-xs text-[rgba(200,200,200,0.55)] m-0 mt-1">
-                        Sua solicitação de conteúdo adulto foi negada. Acesse as configurações para tentar novamente.
+                        Sua solicitação de conteúdo adulto foi negada. Acesse as configurações para
+                        tentar novamente.
                       </p>
                     </div>
                   </div>
@@ -308,9 +374,15 @@
         <div class="relative shrink-0">
           <button
             (click)="toggleProfile.emit()"
-            class="w-9 h-9 rounded-full bg-gradient-to-br from-[#a82020] to-[#8b1a1a] flex items-center justify-center text-white text-sm font-bold ring-2 ring-white/[0.1] hover:ring-white/[0.2] transition-all duration-200 shadow-lg shadow-red-900/20 border-none cursor-pointer p-0 overflow-hidden">
+            class="w-9 h-9 rounded-full bg-gradient-to-br from-[#a82020] to-[#8b1a1a] flex items-center justify-center text-white text-sm font-bold ring-2 ring-white/[0.1] hover:ring-white/[0.2] transition-all duration-200 shadow-lg shadow-red-900/20 border-none cursor-pointer p-0 overflow-hidden"
+          >
             @if (resolvedAvatarUrl(); as avatar) {
-              <img [src]="avatar" [alt]="username() || 'Perfil'" class="w-full h-full object-cover rounded-full" />
+              <img
+                [src]="avatar"
+                [alt]="username() || 'Perfil'"
+                avatarFallback
+                class="w-full h-full object-cover rounded-full"
+              />
             } @else {
               {{ userInitial() }}
             }
@@ -321,7 +393,8 @@
             [userInitial]="userInitial()"
             [isOpen]="showProfileMenu()"
             (logout)="logout.emit()"
-            (close)="closeProfile.emit()" />
+            (close)="closeProfile.emit()"
+          />
         </div>
       </div>
     </div>
@@ -332,7 +405,8 @@
           <button
             (click)="tabChange.emit(tab.id)"
             class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 shrink-0"
-            [class]="tabClass(tab.id)">
+            [class]="tabClass(tab.id)"
+          >
             <span class="material-symbols-outlined text-lg">{{ tab.icon }}</span>
             {{ tab.label }}
           </button>
@@ -345,7 +419,8 @@
         <app-category-chips
           [categories]="categories()"
           [selectedCategory]="selectedCategory()"
-          (categorySelect)="categorySelect.emit($event)" />
+          (categorySelect)="categorySelect.emit($event)"
+        />
       </div>
     }
   </div>

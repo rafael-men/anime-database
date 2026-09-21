@@ -1,6 +1,5 @@
-import { Injectable, PLATFORM_ID, inject } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { isPlatformBrowser } from '@angular/common';
 import { Observable } from 'rxjs';
 import { API_ROUTES } from '../routes/routes';
 
@@ -17,29 +16,21 @@ export interface AdultRequest {
   updatedAt?: string | null;
 }
 
-const ADMIN_CREDENTIALS_KEY = 'admin_credentials';
-
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly http = inject(HttpClient);
-  private readonly platformId = inject(PLATFORM_ID);
+  private encodedCredentials: string | null = null;
 
   setCredentials(email: string, password: string): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    sessionStorage.setItem(
-      ADMIN_CREDENTIALS_KEY,
-      btoa(`${email}:${password}`),
-    );
+    this.encodedCredentials = btoa(`${email}:${password}`);
   }
 
   clearCredentials(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
-    sessionStorage.removeItem(ADMIN_CREDENTIALS_KEY);
+    this.encodedCredentials = null;
   }
 
   hasCredentials(): boolean {
-    if (!isPlatformBrowser(this.platformId)) return false;
-    return sessionStorage.getItem(ADMIN_CREDENTIALS_KEY) !== null;
+    return this.encodedCredentials !== null;
   }
 
   login(email: string, password: string): Observable<AdultRequest[]> {
@@ -72,11 +63,8 @@ export class AdminService {
   }
 
   private authHeaders(): HttpHeaders {
-    if (!isPlatformBrowser(this.platformId)) return new HttpHeaders();
-
-    const encoded = sessionStorage.getItem(ADMIN_CREDENTIALS_KEY);
-    return encoded
-      ? new HttpHeaders({ Authorization: `Basic ${encoded}` })
+    return this.encodedCredentials
+      ? new HttpHeaders({ Authorization: `Basic ${this.encodedCredentials}` })
       : new HttpHeaders();
   }
 }

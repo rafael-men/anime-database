@@ -28,6 +28,11 @@ export class ProfileMenu {
     this.router.navigate(['/profile']);
   }
 
+  goToFollowing(): void {
+    this.close.emit();
+    this.router.navigate(['/seguindo']);
+  }
+
   goToSettings(): void {
     this.close.emit();
     this.router.navigate(['/settings']);

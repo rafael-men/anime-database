@@ -9,7 +9,9 @@ import { Profile } from './components/profile/profile';
 import { CharactersPage } from './components/characters-page/characters-page';
 import { GroupDetail } from './components/groups-component/group-detail/group-detail';
 import { UserSettings } from './components/profile-menu/user-settings/user-settings';
+import { AddComponent } from './components/profile-menu/add-component/add-component';
 import { ValidationPage } from './components/admin/validation-page/validation-page';
+import { NotFoundPage } from './components/static/not-found-page/not-found-page';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -20,10 +22,12 @@ export const routes: Routes = [
   { path: 'profile', component: Profile, canActivate: [authGuard] },
   { path: 'profile/:id', component: Profile, canActivate: [authGuard] },
   { path: 'settings', component: UserSettings, canActivate: [authGuard] },
+  { path: 'seguindo', component: AddComponent, canActivate: [authGuard] },
   { path: 'favourites', component: FavouritesPage, canActivate: [authGuard] },
   { path: 'groups/:id', component: GroupDetail, canActivate: [authGuard] },
   { path: 'characters', component: CharactersPage, canActivate: [authGuard] },
   { path: 'character/:id', component: CharacterDetails, canActivate: [authGuard] },
   { path: 'anime/:id', component: AnimeDetails, canActivate: [authGuard] },
   { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: '**', component: NotFoundPage },
 ];

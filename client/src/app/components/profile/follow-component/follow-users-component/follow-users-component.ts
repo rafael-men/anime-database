@@ -2,10 +2,11 @@ import { Component, DestroyRef, effect, inject, input, output, signal } from '@a
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FollowUser, UsersService } from '../../../../../api/services/users.service';
 import { resolveAssetUrl } from '../../../../../api/routes/routes';
+import { AvatarFallbackDirective } from '../../../../directives/avatar-fallback.directive';
 
 @Component({
   selector: 'app-follow-users-component',
-  imports: [],
+  imports: [AvatarFallbackDirective],
   templateUrl: './follow-users-component.html',
   styleUrl: './follow-users-component.css',
 })
@@ -34,9 +35,10 @@ export class FollowUsersComponent {
     this.isLoading.set(true);
     this.users.set([]);
 
-    const request$ = type === 'followers'
-      ? this.usersService.getFollowers(userId)
-      : this.usersService.getFollowing(userId);
+    const request$ =
+      type === 'followers'
+        ? this.usersService.getFollowers(userId)
+        : this.usersService.getFollowing(userId);
 
     request$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (users) => {

@@ -8,7 +8,7 @@ import { timingSafeEqual } from 'crypto';
 import { SessionsService } from '../sessions/sessions.service';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-const CSRF_EXEMPT_PATHS = new Set(['/auth/login', '/auth/register', '/control']);
+const CSRF_EXEMPT_PATHS = new Set(['/auth/login', '/auth/register']);
 
 interface CsrfRequest {
   method?: string;
@@ -23,9 +23,7 @@ export class CsrfGuard implements CanActivate {
   constructor(private readonly sessionsService: SessionsService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context
-      .switchToHttp()
-      .getRequest<CsrfRequest>();
+    const request = context.switchToHttp().getRequest<CsrfRequest>();
 
     const method = (request.method ?? 'GET').toUpperCase();
 

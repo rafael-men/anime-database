@@ -1,70 +1,71 @@
 function resolveApiBase(): string {
-   if (typeof window !== 'undefined' && window.location?.hostname) {
-      return `http://${window.location.hostname}:3000`;
-   }
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    return `http://${window.location.hostname}:3000`;
+  }
 
-   return 'http://127.0.0.1:3000';
+  return 'http://127.0.0.1:3000';
 }
 
 export const API_BASE = resolveApiBase();
 export const ANILIST_API_BASE = 'https://graphql.anilist.co';
 
 export function resolveAssetUrl(path?: string | null): string | null {
-   if (!path) {
-      return null;
-   }
+  if (!path) {
+    return null;
+  }
 
-   if (/^(https?:|data:|blob:)/i.test(path)) {
-      return path;
-   }
+  if (/^(https?:|data:|blob:)/i.test(path)) {
+    return path;
+  }
 
-   return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
+  return `${API_BASE}${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
 export const API_ROUTES = {
-   auth: {
-      login: `${API_BASE}/auth/login`,
-      register: `${API_BASE}/auth/register`,
-      logout: `${API_BASE}/auth/logout`,
-      session: `${API_BASE}/auth/session`,
-   },
-   users: {
-      profile: (id: string) => `${API_BASE}/users/${id}`,
-      favorites: (id: string) => `${API_BASE}/users/${id}/favorites`,
-      favorite: (id: string, animeId: number) => `${API_BASE}/users/${id}/favorites/${animeId}`,
-      reviews: (id: string) => `${API_BASE}/users/${id}/reviews`,
-      updateProfile: (id: string) => `${API_BASE}/users/${id}/profile`,
-      avatar: (id: string) => `${API_BASE}/users/${id}/avatar`,
-      kinCount: (characterId: number) => `${API_BASE}/users/kin-count/${characterId}`,
-      usernameAvailability: (id: string) => `${API_BASE}/users/${id}/check-username`,
-   },
-   follows: {
-      follow: (id: string) => `${API_BASE}/follows/${id}`,
-      counts: (id: string) => `${API_BASE}/follows/${id}/counts`,
-      check: (id: string) => `${API_BASE}/follows/${id}/check`,
-      followers: (id: string) => `${API_BASE}/follows/${id}/followers`,
-      following: (id: string) => `${API_BASE}/follows/${id}/following`,
-   },
-   anime: {
-      graphql: `${ANILIST_API_BASE}`,
-   },
-   reviews: {
-      byAnime: (animeId: number) => `${API_BASE}/reviews/anime/${animeId}`,
-      create: (userId: string) => `${API_ROUTES.users.reviews(userId)}`,
-   },
-   groups: {
-      base: `${API_BASE}/groups`,
-      byId: (id: string) => `${API_BASE}/groups/${id}`,
-      byOwner: (ownerId: string) => `${API_BASE}/groups/owner/${ownerId}`,
-      items: (id: string) => `${API_BASE}/groups/${id}/items`,
-   },
-   watchlist: {
-      base: `${API_BASE}/watchlist`,
-      byId: (id: string) => `${API_BASE}/watchlist/${id}`,
-   },
-   control: {
-      users: `${API_BASE}/control/users`,
-      userApprove: (id: string) => `${API_BASE}/control/users/${id}/approve`,
-      userDeny: (id: string) => `${API_BASE}/control/users/${id}/deny`,
-   },
+  auth: {
+    login: `${API_BASE}/auth/login`,
+    register: `${API_BASE}/auth/register`,
+    logout: `${API_BASE}/auth/logout`,
+    session: `${API_BASE}/auth/session`,
+  },
+  users: {
+    profile: (id: string) => `${API_BASE}/users/${id}`,
+    favorites: (id: string) => `${API_BASE}/users/${id}/favorites`,
+    favorite: (id: string, animeId: number) => `${API_BASE}/users/${id}/favorites/${animeId}`,
+    reviews: (id: string) => `${API_BASE}/users/${id}/reviews`,
+    updateProfile: (id: string) => `${API_BASE}/users/${id}/profile`,
+    avatar: (id: string) => `${API_BASE}/users/${id}/avatar`,
+    kinCount: (characterId: number) => `${API_BASE}/users/kin-count/${characterId}`,
+    usernameAvailability: (id: string) => `${API_BASE}/users/${id}/check-username`,
+  },
+  follows: {
+    follow: (id: string) => `${API_BASE}/follows/${id}`,
+    counts: (id: string) => `${API_BASE}/follows/${id}/counts`,
+    check: (id: string) => `${API_BASE}/follows/${id}/check`,
+    followers: (id: string) => `${API_BASE}/follows/${id}/followers`,
+    following: (id: string) => `${API_BASE}/follows/${id}/following`,
+    search: `${API_BASE}/follows/search`,
+  },
+  anime: {
+    graphql: `${ANILIST_API_BASE}`,
+  },
+  reviews: {
+    byAnime: (animeId: number) => `${API_BASE}/reviews/anime/${animeId}`,
+    create: (userId: string) => `${API_ROUTES.users.reviews(userId)}`,
+  },
+  groups: {
+    base: `${API_BASE}/groups`,
+    byId: (id: string) => `${API_BASE}/groups/${id}`,
+    byOwner: (ownerId: string) => `${API_BASE}/groups/owner/${ownerId}`,
+    items: (id: string) => `${API_BASE}/groups/${id}/items`,
+  },
+  watchlist: {
+    base: `${API_BASE}/watchlist`,
+    byId: (id: string) => `${API_BASE}/watchlist/${id}`,
+  },
+  control: {
+    users: `${API_BASE}/control/users`,
+    userApprove: (id: string) => `${API_BASE}/control/users/${id}/approve`,
+    userDeny: (id: string) => `${API_BASE}/control/users/${id}/deny`,
+  },
 };

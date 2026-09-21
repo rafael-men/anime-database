@@ -1,0 +1,95 @@
+<div class="search-card">
+  <div class="search-card-header">
+    <span class="material-symbols-outlined text-[1.25rem] text-[#a82020]">search</span>
+    <div class="flex-1 min-w-0">
+      <h2 class="m-0 text-[0.95rem] font-semibold text-[#f1e8e8]">Buscar pessoas</h2>
+      <p class="m-0 mt-0.5 text-[0.75rem] text-[rgba(200,200,200,0.5)]">
+        Encontre qualquer usuário da plataforma
+      </p>
+    </div>
+  </div>
+
+  <div class="search-input-row">
+    <input
+      type="text"
+      placeholder="Digite o nome de usuário..."
+      [value]="searchQuery()"
+      (input)="onSearchQueryChange($any($event.target).value)"
+      (keyup.enter)="search()"
+      class="search-input"
+      aria-label="Buscar usuário"
+    />
+    <button type="button" class="search-btn" (click)="search()" [disabled]="isLoading()">
+      @if (isLoading()) {
+        <span
+          class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+        ></span>
+      } @else {
+        Buscar
+      }
+    </button>
+  </div>
+
+  @if (searchError()) {
+    <div class="search-feedback error">
+      <span class="material-symbols-outlined text-[1rem]">error</span>
+      <span>{{ searchError() }}</span>
+    </div>
+  }
+
+  @if (!isLoading() && searched() && !searchError() && results().length === 0) {
+    <div class="search-feedback empty">
+      <span class="material-symbols-outlined text-[1.25rem]">person_off</span>
+      <span>Nenhum usuário encontrado.</span>
+    </div>
+  }
+
+  @if (results().length > 0) {
+    <div class="search-results">
+      @for (user of results(); track user.id) {
+        <div class="search-result-row">
+          <button type="button" class="search-result-main" (click)="openProfile(user.id)">
+            @if (user.avatarUrl) {
+              <img
+                [src]="resolveAvatar(user.avatarUrl)"
+                [alt]="user.username"
+                avatarFallback
+                class="search-result-avatar"
+              />
+            } @else {
+              <div class="search-result-avatar fallback">{{ userInitial(user.username) }}</div>
+            }
+            <div class="flex-1 min-w-0 text-left">
+              <p class="m-0 text-sm font-medium text-[#f1e8e8] truncate">{{ user.username }}</p>
+              @if (user.bio) {
+                <p class="m-0 mt-0.5 text-xs text-[rgba(200,200,200,0.45)] truncate">
+                  {{ user.bio }}
+                </p>
+              } @else {
+                <p class="m-0 mt-0.5 text-xs text-[rgba(200,200,200,0.35)]">Sem bio</p>
+              }
+            </div>
+            <span class="material-symbols-outlined text-sm text-white/25">chevron_right</span>
+          </button>
+          <button
+            type="button"
+            class="follow-mini-btn"
+            [class.following]="user.isFollowing"
+            [disabled]="isToggling(user.id)"
+            (click)="toggleFollow(user)"
+          >
+            @if (isToggling(user.id)) {
+              <span
+                class="inline-block w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"
+              ></span>
+            } @else if (user.isFollowing) {
+              <span class="material-symbols-outlined text-base">person_remove</span>
+            } @else {
+              <span class="material-symbols-outlined text-base">person_add</span>
+            }
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

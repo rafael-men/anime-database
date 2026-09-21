@@ -6,6 +6,15 @@ import { User } from '../../domain/models/user.model';
 import { ValidationException } from '../exceptions/validation.exception';
 import { ResourceNotFoundException } from '../exceptions/resource-not-found.exception';
 
+export interface UserFollowSearchItem {
+  id: string;
+  username: string;
+  avatarUrl: string | null;
+  bio: string | null;
+  createdAt: Date;
+  isFollowing: boolean;
+}
+
 @Injectable()
 export class FollowService {
   constructor(
@@ -98,5 +107,37 @@ export class FollowService {
       order: { createdAt: 'DESC' },
     });
     return follows.map((f) => f.following);
+  }
+
+  async searchUsers(
+    query: string,
+    requesterId: string,
+  ): Promise<UserFollowSearchItem[]> {
+    const term = (query ?? '').trim().toLowerCase();
+
+    if (!term) {
+      return [];
+    }
+
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .where('LOWER(user.username) LIKE :like', { like: `%${term}%` })
+      .andWhere('user.id != :requesterId', { requesterId })
+      .orderBy('user.username', 'ASC')
+      .take(20)
+      .getMany();
+
+    const followingIds = new Set(
+      (await this.getFollowing(requesterId)).map((u) => u.id),
+    );
+
+    return users.map((u) => ({
+      id: u.id,
+      username: u.username,
+      avatarUrl: u.avatarUrl ?? null,
+      bio: u.bio ?? null,
+      createdAt: u.createdAt,
+      isFollowing: followingIds.has(u.id),
+    }));
   }
 }

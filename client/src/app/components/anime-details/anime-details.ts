@@ -1,10 +1,7 @@
 import { Component, inject, OnInit, signal, computed, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import {
-  AnimeService,
-  AnimeDetailsData,
-} from '../../../api/services/anime.service';
+import { AnimeService, AnimeDetailsData } from '../../../api/services/anime.service';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
 import { UsersService } from '../../../api/services/users.service';
@@ -12,11 +9,12 @@ import { ReviewsService, AnimeReview } from '../../../api/services/reviews.servi
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { resolveAssetUrl } from '../../../api/routes/routes';
 import { TranslatePipe } from '../../../utils/translate-pipe';
+import { AvatarFallbackDirective } from '../../directives/avatar-fallback.directive';
 
 @Component({
   selector: 'app-anime-details',
   standalone: true,
-  imports: [CommonModule, Navbar, TranslatePipe],
+  imports: [CommonModule, Navbar, TranslatePipe, AvatarFallbackDirective],
   templateUrl: './anime-details.html',
   styleUrl: './anime-details.css',
 })
@@ -62,14 +60,17 @@ export class AnimeDetails implements OnInit {
     const season = this.seasonLabel(a.season, a.seasonYear);
 
     if (a.startDate) items.push({ label: 'Lançamento', value: a.startDate });
-    if (a.format == "TV" && a.endDate) items.push({ label: 'Término', value: a.endDate });
+    if (a.format == 'TV' && a.endDate) items.push({ label: 'Término', value: a.endDate });
     if (season) items.push({ label: 'Temporada', value: season });
-    if (a.format == "TV" && a.episodes) items.push({ label: 'Episódios', value: String(a.episodes) });
+    if (a.format == 'TV' && a.episodes)
+      items.push({ label: 'Episódios', value: String(a.episodes) });
     if (a.duration) items.push({ label: 'Duração', value: `${a.duration} min` });
     if (a.format) items.push({ label: 'Formato', value: this.formatLabel(a.format) });
     if (a.studios.length > 0) items.push({ label: 'Estúdio', value: a.studios.join(', ') });
-    if (a.popularity > 0) items.push({ label: 'Popularidade', value: this.formatNumber(a.popularity) });
-    if (a.favourites > 0) items.push({ label: 'Favoritos', value: this.formatNumber(a.favourites) });
+    if (a.popularity > 0)
+      items.push({ label: 'Popularidade', value: this.formatNumber(a.popularity) });
+    if (a.favourites > 0)
+      items.push({ label: 'Favoritos', value: this.formatNumber(a.favourites) });
 
     return items;
   });
@@ -266,6 +267,10 @@ export class AnimeDetails implements OnInit {
 
   toggleProfileMenu(): void {
     this.showProfileMenu.update((v) => !v);
+  }
+
+  openReviewerProfile(userId: string): void {
+    this.router.navigate(['/profile', userId]);
   }
 
   closeProfileMenu(): void {

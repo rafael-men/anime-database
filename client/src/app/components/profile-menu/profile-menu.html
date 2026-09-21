@@ -1,8 +1,5 @@
 @if (isOpen()) {
-  <div
-    class="profile-menu"
-    (mouseleave)="close.emit()">
-
+  <div class="profile-menu" (mouseleave)="close.emit()">
     <div class="profile-menu-header">
       <p class="profile-menu-name">{{ username() || 'Usuário' }}</p>
       <p class="profile-menu-sub">Minha conta</p>
@@ -16,15 +13,17 @@
       <span class="material-symbols-outlined text-lg">bookmark</span>
       Minha Lista
     </button>
+    <button class="profile-menu-item" (click)="goToFollowing()">
+      <span class="material-symbols-outlined text-lg">group</span>
+      Seguindo
+    </button>
     <button class="profile-menu-item" (click)="goToSettings()">
       <span class="material-symbols-outlined text-lg">settings</span>
       Configurações
     </button>
 
     <div class="profile-menu-divider">
-      <button
-        (click)="logout.emit()"
-        class="profile-menu-item logout">
+      <button (click)="logout.emit()" class="profile-menu-item logout">
         <span class="material-symbols-outlined text-lg">logout</span>
         Sair
       </button>

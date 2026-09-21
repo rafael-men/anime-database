@@ -1,0 +1,56 @@
+<app-navbar
+  [activeTab]="'todos'"
+  [selectedCategory]="''"
+  [searchQuery]="searchQuery()"
+  [username]="username()"
+  [userInitial]="userInitial()"
+  [avatarUrl]="avatarUrl()"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="[]"
+  (tabChange)="onTabChange($event)"
+  (search)="onSearch()"
+  (searchQueryChange)="onSearchQueryChange($event)"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()"
+/>
+
+<main class="pb-12 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto pt-28">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Amizades</h1>
+      <p class="page-subtitle">Encontre e acompanhe outros usuários da plataforma</p>
+    </div>
+  </div>
+
+  <app-add-user-page />
+
+  <div class="settings-card mt-4 p-5 sm:p-6">
+    <div class="friend-tabs">
+      <button
+        type="button"
+        class="friend-tab"
+        [class.active]="activeTab() === 'following'"
+        (click)="setTab('following')"
+      >
+        Seguindo
+      </button>
+      <button
+        type="button"
+        class="friend-tab"
+        [class.active]="activeTab() === 'followers'"
+        (click)="setTab('followers')"
+      >
+        Seguidores
+      </button>
+    </div>
+
+    @if (currentUserId()) {
+      <app-follow-users-component
+        [userId]="currentUserId()"
+        [type]="activeTab()"
+        (userClick)="openProfile($event)"
+      />
+    }
+  </div>
+</main>

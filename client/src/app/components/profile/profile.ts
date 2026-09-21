@@ -1,4 +1,12 @@
-import { Component, computed, DestroyRef, inject, OnInit, PLATFORM_ID, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  OnInit,
+  PLATFORM_ID,
+  signal,
+} from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -7,17 +15,31 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { debounceTime, map, switchMap } from 'rxjs/operators';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService, FavoriteItem } from '../../../api/services/favorites.service';
-import { UpdateProfilePayload, UserProfile, UserReview, UsersService } from '../../../api/services/users.service';
+import {
+  UpdateProfilePayload,
+  UserProfile,
+  UserReview,
+  UsersService,
+} from '../../../api/services/users.service';
 import { resolveAssetUrl } from '../../../api/routes/routes';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { DiaryComponent } from './sections/diary-component/diary-component';
 import { FavCharactersComponent } from './sections/fav-characters-component/fav-characters-component';
 import { FollowComponent } from './follow-component/follow-component';
+import { AvatarFallbackDirective } from '../../directives/avatar-fallback.directive';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, FormsModule, Navbar, DiaryComponent, FavCharactersComponent, FollowComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    Navbar,
+    DiaryComponent,
+    FavCharactersComponent,
+    FollowComponent,
+    AvatarFallbackDirective,
+  ],
   templateUrl: './profile.html',
   styleUrl: './profile.css',
 })
@@ -115,16 +137,14 @@ export class Profile implements OnInit {
 
     this.sessionUserId.set(user.userId);
 
-    this.route.paramMap
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe((params) => {
-        const targetId = params.get('id');
-        const userId = targetId ?? user.userId;
-        this.viewedUserId.set(userId);
-        this.loadProfile(userId);
-        this.loadUserFavorites(userId);
-        this.loadUserReviews(userId);
-      });
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const targetId = params.get('id');
+      const userId = targetId ?? user.userId;
+      this.viewedUserId.set(userId);
+      this.loadProfile(userId);
+      this.loadUserFavorites(userId);
+      this.loadUserReviews(userId);
+    });
 
     this.usernameCheck$
       .pipe(
@@ -348,7 +368,10 @@ export class Profile implements OnInit {
     });
   }
 
-  private resolveSaveError(err?: { status?: number; error?: { message?: string; error?: string } }): string {
+  private resolveSaveError(err?: {
+    status?: number;
+    error?: { message?: string; error?: string };
+  }): string {
     if (err?.status === 400 && err.error?.error === 'USERNAME_CHANGE_LIMIT') {
       return 'Você só pode mudar seu nome de usuário a cada 4 meses.';
     }

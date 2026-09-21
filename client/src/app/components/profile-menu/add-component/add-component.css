@@ -1,0 +1,33 @@
+.friend-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.friend-tab {
+  padding: 0.5rem 1.1rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  color: rgba(200, 200, 200, 0.7);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.friend-tab:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #f1e8e8;
+}
+
+.friend-tab.active {
+  background: rgba(168, 32, 32, 0.85);
+  border-color: rgba(168, 32, 32, 0.9);
+  color: #fff;
+}

@@ -1,6 +1,8 @@
 @if (isLoading()) {
   <div class="flex items-center justify-center py-8">
-    <span class="inline-block w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+    <span
+      class="inline-block w-6 h-6 border-2 border-white/20 border-t-white rounded-full animate-spin"
+    ></span>
   </div>
 } @else if (users().length === 0) {
   <div class="text-center py-8">
@@ -11,15 +13,14 @@
 } @else {
   <div class="flex flex-col gap-1">
     @for (user of users(); track user.id) {
-      <button
-        type="button"
-        class="follow-user-row"
-        (click)="onUserClick(user.id)">
+      <button type="button" class="follow-user-row" (click)="onUserClick(user.id)">
         @if (user.avatarUrl) {
           <img
             [src]="resolveAvatar(user.avatarUrl)"
             [alt]="user.username"
-            class="w-10 h-10 rounded-full object-cover shrink-0" />
+            avatarFallback
+            class="w-10 h-10 rounded-full object-cover shrink-0"
+          />
         } @else {
           <div class="follow-user-avatar">{{ userInitial(user.username) }}</div>
         }
