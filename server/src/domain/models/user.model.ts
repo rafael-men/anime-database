@@ -7,6 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import * as constants from './../../utils/constants';
 import { Group } from './group.model';
 import { Review } from './review.model';
 import { WatchlistItem } from './watchlist-item.model';
@@ -44,8 +45,12 @@ export class User {
   @Column({ type: 'boolean', default: false })
   adultContentEnabled!: boolean;
 
-  @Column({ type: 'varchar', length: 20, default: 'none' })
-  adultRequestStatus!: string;
+  @Column({
+    type: 'varchar',
+    length: 20,
+    default: constants.DEFAULT_ADULT_REQUEST_STATUS,
+  })
+  adultRequestStatus!: constants.AdultRequestStatus;
 
   @CreateDateColumn({ type: 'datetime' })
   createdAt!: Date;

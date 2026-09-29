@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { IsNull, Not, Repository } from 'typeorm';
+import { DEFAULT_ADULT_REQUEST_STATUS } from '../../utils/constants';
 import { User } from '../../domain/models/user.model';
 import { ValidationException } from '../exceptions/validation.exception';
 import { DuplicateResourceException } from '../exceptions/duplicate-resource.exception';
@@ -268,10 +269,11 @@ export class UserService {
       }
    }
 
-   async listAdultRequests(): Promise<User[]> {
+   async listAdultRequests(limit: number): Promise<User[]> {
       return this.userRepository.find({
-         where: { adultRequestStatus: Not('none') },
+         where: { adultRequestStatus: Not(DEFAULT_ADULT_REQUEST_STATUS) },
          order: { updatedAt: 'DESC' },
+         take: limit,
       });
    }
 

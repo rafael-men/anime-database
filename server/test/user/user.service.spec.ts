@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Not } from 'typeorm';
 import { User } from '../../src/domain/models/user.model';
+import { DEFAULT_ADULT_REQUEST_STATUS } from '../../src/utils/constants';
 import { UserService } from '../../src/use-cases/user/user.service';
 import { ValidationException } from '../../src/use-cases/exceptions/validation.exception';
 
@@ -169,11 +170,12 @@ describe('UserService', () => {
       { id: 'b', adultRequestStatus: 'approved' },
     ]);
 
-    const result = await service.listAdultRequests();
+    const result = await service.listAdultRequests(50);
 
     expect(userRepository.find).toHaveBeenCalledWith({
-      where: { adultRequestStatus: Not('none') },
+      where: { adultRequestStatus: Not(DEFAULT_ADULT_REQUEST_STATUS) },
       order: { updatedAt: 'DESC' },
+      take: 50,
     });
     expect(result).toHaveLength(2);
   });
