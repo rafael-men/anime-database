@@ -36,6 +36,18 @@ export class AuthService {
     return this.http.post<AuthResponse>(API_ROUTES.auth.register, payload);
   }
 
+  checkUsername(username: string): Observable<{ available: boolean }> {
+    return this.http.get<{ available: boolean }>(API_ROUTES.auth.checkUsername, {
+      params: { username },
+    });
+  }
+
+  checkEmail(email: string): Observable<{ available: boolean }> {
+    return this.http.get<{ available: boolean }>(API_ROUTES.auth.checkEmail, {
+      params: { email },
+    });
+  }
+
   logout(): Observable<void> {
     return this.http.post<void>(API_ROUTES.auth.logout, {});
   }

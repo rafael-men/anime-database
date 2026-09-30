@@ -32,6 +32,8 @@ export const API_ROUTES = {
   auth: {
     login: `${API_BASE}/auth/login`,
     register: `${API_BASE}/auth/register`,
+    checkUsername: `${API_BASE}/auth/check-username`,
+    checkEmail: `${API_BASE}/auth/check-email`,
     logout: `${API_BASE}/auth/logout`,
     session: `${API_BASE}/auth/session`,
   },

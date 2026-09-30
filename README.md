@@ -1,150 +1,145 @@
 # Anime Database
 
-A full-stack, "[Letterboxd](https://letterboxd.com) like" web application for tracking, reviewing, and organizing anime. Users can browse anime from the [AniList API](https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/getting-started), build watchlists, write reviews, create custom lists, follow other users, and manage their profiles. An admin panel allows approval of adult content access.
+Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com), para acompanhar, avaliar e organizar animes. Os usuários podem navegar pelos animes da [API AniList](https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/getting-started), criar listas de acompanhamento, escrever avaliações, criar listas personalizadas, seguir outros usuários e gerenciar seus perfis. 
 
-## Features
+## Funcionalidades
 
-### Authentication & Security
+### Autenticação e Segurança
 
-- Server-side session management via **Redis** with secure, httpOnly cookies
-- **CSRF protection** on every mutating request (double-submit token pattern)
-- **Rate limiting** globally (100 req/min) and per-route (login: 5/min, register: 10/min)
-- **Helmet** security headers with `cross-origin` resource policy
-- **CORS** restricted to configured frontend origin(s)
-- Input validation and sanitization via `class-validator` + NestJS `ValidationPipe` with `whitelist` and `forbidNonWhitelisted`
-- Password hashing with **bcrypt**
+- Sessões no servidor via **Redis**, com cookies seguros e `httpOnly`.
+- Proteção **CSRF** em requisições que alteram dados.
+- Rate limiting global e por rota para login, cadastro e verificações de disponibilidade.
+- Headers de segurança com **Helmet** e CORS restrito às origens configuradas.
+- Validação de entrada com `class-validator` e `ValidationPipe` do NestJS.
+- Hash de senhas com **bcrypt**.
+- Verificação da disponibilidade de nome de usuário e email durante o cadastro.
+- Restrições finais de unicidade no banco de dados.
+- Endpoint `/health` para verificações de disponibilidade e deploy.
 
-### Anime Catalog (AniList)
+### Catálogo de Animes
 
-- Browse and search anime directly from the AniList GraphQL API
-- View detailed anime pages (synopsis, characters, stats, status)
-- Character detail pages with kin count ("who considers this character their kin?")
+- Busca e navegação pela API GraphQL da AniList.
+- Filtros por gênero, formato, ano, status, ordenação, conteúdo adulto e exclusões NSFW.
+- Sugestões de busca com debounce e cancelamento de requisições antigas.
+- Páginas detalhadas de animes com sinopse, personagens, estatísticas e status.
+- Páginas de detalhes de personagens com contagem de kins.
+- Cache, compartilhamento de requisições duplicadas, limite de concorrência e retry controlado para erros `429`.
+- Skeleton loading para grids e páginas de detalhes.
 
-### Profile & Social
+### Perfil e Social
 
-- Public user profiles with username, bio, and avatar
-- **Follow/unfollow** system with follower/following counts and lists
-- View other users' profiles by ID
-- Username availability check
+- Perfis públicos com nome de usuário, biografia e avatar.
+- Sistema de seguir/deixar de seguir, com contagens e listas.
+- Visualização de perfis por ID.
+- Edição de perfil com intervalo mínimo para alteração do nome.
+- Feedback de disponibilidade de username durante a edição e o cadastro.
 
-### Favorites & Watchlist
+### Favoritos e Lista de Acompanhamento
 
-- Add anime to personal favorites with a watch status (Watching, Completed, On Hold, Dropped, Planned)
-- Remove anime from favorites
-- Full watchlist per user with status management
+- Adição de animes aos favoritos com status: assistindo, concluído, em espera, abandonado e planejado.
+- Remoção de animes dos favoritos.
+- Lista de acompanhamento por usuário com gerenciamento de status.
 
-### Reviews & Ratings
+### Avaliações e Notas
 
-- Rate anime on a 0-10 scale with optional comments
-- Mark reviews as containing **spoilers**
-- View all reviews for a given anime
-- Track rewatch status
+- Avaliação de animes em uma escala de 0 a 10.
+- Comentários opcionais e marcação de spoilers.
+- Visualização das avaliações de um anime.
+- Registro de reassistidas.
 
-### Groups (Custom Lists)
+### Grupos e Listas Personalizadas
 
-- Create, edit, and delete custom groups (named lists of anime)
-- Add and remove anime items within groups with ordering and notes
-- Public/private group visibility
+- Criação, edição e exclusão de grupos.
+- Adição e remoção de animes com ordenação e observações.
+- Visibilidade pública ou privada.
 
-### Avatar Upload
+### Tradução
 
-- Upload avatar images (JPEG, PNG, GIF, WebP)
-- **Magic-byte validation** verifies actual file content matches declared MIME type (prevents extension spoofing)
-- 2 MB file size limit, single file per upload
-- Pluggable storage backends:
-  - **Local filesystem** (default) - files stored with `0644` permissions, served via `/uploads/` static route
-  - **AWS S3** (or compatible) - optional public URL for CDN, presigned URL fallback, configurable ACL
+- Tradução opcional de descrições do inglês para o português.
+- Cache em memória e `localStorage`, indexado pelo texto e idioma.
+- Fallback para o texto original em caso de erro, CORS, `429` ou texto muito grande.
 
-### Admin Panel (`/control`)
+### Upload de Avatar
 
-- Basic-auth-protected admin route
-- View pending adult content access requests
-- Approve or deny requests per user
+- Upload de imagens JPEG, PNG, GIF e WebP.
+- Validação por magic bytes para confirmar o conteúdo real do arquivo.
+- Limite de 2 MB e um arquivo por upload.
+- Armazenamento local ou AWS S3 compatível, com URLs públicas ou pré-assinadas.
 
-## Tech Stack
+### Painel Administrativo
 
-| Layer    | Technology                                                        |
-| -------- | ----------------------------------------------------------------- |
-| Client   | Angular 21, TypeScript 5.9, Vitest, Tailwind CSS 4, Angular SSR  |
-| Server   | NestJS 11, TypeScript 5.7, Jest, class-validator                 |
-| Database | MySQL (via TypeORM, mysql2)                                       |
-| Sessions | Redis (via ioredis)                                               |
-| Storage  | Local AWS S3 (via @aws-sdk/client-s3)              |
-| API Data | AniList GraphQL API (client-side calls)                           |
+- Rota `/control` protegida por Basic Auth.
+- Visualização de solicitações de acesso a certos conteudos.
+- Aprovação ou recusa das solicitações por usuário.
 
-## Project Structure
+### Experiência do Frontend
 
-```
+- Angular SSR com layouts responsivos para desktop e mobile.
+- Cards de anime com dimensões uniformes em grids e carrosséis.
+- Telas de login e cadastro com o asset público `logo.jpg`.
+- Skeleton loading e estados de vazio/erro nas telas de recursos.
+
+## Stack Tecnológica
+
+| Camada | Tecnologia |
+| ------ | ---------- |
+| Cliente | Angular 21, TypeScript 5.9, Vitest, Tailwind CSS 4 e Angular SSR |
+| Servidor | NestJS 11, TypeScript 5.7, Jest e class-validator |
+| Banco de dados | MySQL via TypeORM e mysql2 |
+| Sessões | Redis via ioredis |
+| Armazenamento | Sistema local ou storage compatível com AWS S3 |
+| Dados externos | API GraphQL da AniList |
+
+## Estrutura do Projeto
+
+```text
 anime-database/
-├── client/                          # Angular frontend
+├── .github/workflows/                # Workflow de CI/CD
+├── client/                           # Frontend Angular
+│   └── src/app/
+│       ├── components/               # Páginas e componentes da interface
+│       ├── guards/                   # Guards de rota
+│       ├── api/                      # Rotas, serviços e interceptors HTTP
+│       └── server.ts                 # Servidor SSR do cliente
+├── server/                           # Backend NestJS
 │   └── src/
-│       └── app/
-│           ├── components/          # Page and UI components
-│           │   ├── admin/           # Admin validation page
-│           │   ├── anime-details/   # Anime detail view
-│           │   ├── auth-page/       # Login & register
-│           │   ├── character-details/
-│           │   ├── characters-page/
-│           │   ├── favourites-page/
-│           │   ├── groups-component/
-│           │   ├── home/
-│           │   ├── profile/
-│           │   ├── profile-menu/    # User settings
-│           │   └── shared/          # Reusable UI components
-│           ├── guards/              # Route guards (authGuard)
-│           ├── app.routes.ts        # Client routes
-│           └── app.routes.server.ts # SSR render modes
-│
-├── server/                          # NestJS backend
-│   └── src/
-│       ├── application/
-│       │   ├── auth/                # Auth controller, guards, service
-│       │   ├── controllers/         # REST controllers + DTOs
-│       │   └── sessions/            # Redis session management
-│       ├── data/
-│       │   └── config/              # Database configuration
-│       ├── domain/
-│       │   └── models/              # TypeORM entity models
-│       ├── storage/                 # File storage providers (local/S3)
-│       ├── use-cases/               # Business logic services
-│       │   ├── follow/
-│       │   ├── group/
-│       │   └── user/
-│       ├── utils/                   # File validation, upload config
-│       ├── app.module.ts            # Root module
-│       └── main.ts                  # Bootstrap
-│
-├── LICENSE                          # Apache 2.0
+│       ├── application/              # Auth, controllers e sessões
+│       ├── data/                     # Configuração de banco e migrações
+│       ├── domain/                   # Modelos TypeORM
+│       ├── storage/                  # Provedores local/S3
+│       ├── use-cases/                # Regras de negócio
+│       └── utils/                    # Segurança e upload
+├── LICENSE
 └── README.md
 ```
 
-## Getting Started
+## Primeiros Passos
 
-### Prerequisites
+### Pré-requisitos
 
 - **Node.js** >= 20
 - **npm** >= 10
-- **MySQL** 8.x (or compatible)
+- **MySQL** 8.x ou compatível
 - **Redis** 7.x
 
-### 1. Clone the repository
+### 1. Clonar o repositório
 
 ```bash
 git clone <repository-url>
 cd anime-database
 ```
 
-### 2. Set up the server
+### 2. Configurar o servidor
 
 ```bash
 cd server
 npm install
 ```
 
-Create a `.env` file in the `server/` directory:
+Crie um arquivo `.env` no diretório `server/`:
 
 ```env
-# Database
+# Banco de dados
 DB_HOST=localhost
 DB_PORT=3306
 DB_USERNAME=root
@@ -153,61 +148,57 @@ DB_NAME=animelog
 DB_SYNC=true
 
 # Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
+REDIS_URL=redis://localhost:6379
 
-# Session
+# Sessão
 SESSION_SECRET=a-strong-random-secret
 
 # Frontend
 FRONTEND_URL=http://localhost:4200
 
-# Admin credentials (Basic Auth for /control)
-ADMIN_USER=admin
+# Credenciais administrativas. Use HTTPS em produção.
+ADMIN_EMAIL=admin@example.com
 ADMIN_PASSWORD=changeme
 
-# Storage
+# Armazenamento
 STORAGE_DRIVER=local
 UPLOADS_DIR=./uploads
 
-# Rate limiting (optional, default 100)
+# Rate limiting. Padrão: 100 requisições por minuto.
 RATE_LIMIT=100
 
-# Port (optional, default 3000)
+# Porta. Padrão: 3000.
 PORT=3000
 ```
 
-Run database migrations and start the server:
+Inicie o servidor:
 
 ```bash
-# Development (with file watching)
+# Desenvolvimento
 npm run start:dev
 
-# Production
+# Produção
 npm run build
 npm run start:prod
 ```
 
-The server starts on **http://localhost:3000** by default.
+O servidor inicia por padrão em <http://localhost:3000>.
 
-### 3. Set up the client
+### 3. Configurar o cliente
 
 ```bash
 cd client
 npm install
-```
-
-Start the development server:
-
-```bash
 npm start
 ```
 
-The client starts on **http://localhost:4200** and proxies API calls to the backend.
+O cliente inicia em <http://localhost:4200> e encaminha as chamadas para o backend.
 
-### S3 Storage (optional)
+Para builds SSR de produção, defina `API_BASE_URL` e, quando necessário, `CSP_CONNECT_SRC` antes de executar `npm run build` em `client/`.
 
-To use S3-compatible storage for avatars instead of the local filesystem, add these to the server `.env`:
+### Storage S3 (opcional)
+
+Para usar S3 ou um serviço compatível nos avatares, adicione ao `.env` do servidor:
 
 ```env
 STORAGE_DRIVER=s3
@@ -216,108 +207,120 @@ AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
 
-# Optional
-S3_ENDPOINT=https://your-s3-endpoint.com   # For S3-compatible services (MinIO, R2, etc.)
-S3_PUBLIC_URL=https://cdn.example.com       # Public URL base for served files
-S3_FORCE_PATH_STYLE=true                     # Required for MinIO and some S3-compatible services
-S3_ACL=public-read                           # Object ACL (if bucket policy doesn't enforce)
-S3_URL_TTL_SECONDS=3600                      # Presigned URL expiry (when no public URL)
+# Opcionais
+S3_ENDPOINT=https://your-s3-endpoint.com
+S3_PUBLIC_URL=https://cdn.example.com
+S3_FORCE_PATH_STYLE=true
+S3_ACL=public-read
+S3_URL_TTL_SECONDS=3600
 ```
 
-When `S3_PUBLIC_URL` is set, returned URLs use that as the base. Otherwise, presigned URLs are generated per request.
+Quando `S3_PUBLIC_URL` é definido, as URLs retornadas usam esse endereço. Caso contrário, URLs pré-assinadas são geradas por requisição.
 
-## Testing
+## Testes
 
-### Server
+### Servidor
 
 ```bash
 cd server
-npm test              # Run all tests
-npm run test:cov      # With coverage
-npm run test:e2e      # End-to-end tests
+npm test
+npm run test:cov
+npm run test:e2e
 ```
 
-### Client
+### Cliente
 
 ```bash
 cd client
 npx ng test --watch=false --no-progress
 ```
 
-## API Reference
+Comandos equivalentes aos executados no CI:
 
-All endpoints (except auth) require an active session cookie. Mutating requests require a valid `X-CSRF-Token` header.
+```bash
+cd server && npm run test:ci && npm run build
+cd ../client && npm run test:ci && npm run build
+```
 
-### Auth
+## Referência da API
 
-| Method | Endpoint         | Description                  | Rate Limit |
-| ------ | ---------------- | ---------------------------- | ---------- |
-| POST   | `/auth/register` | Register a new account       | 10/min     |
-| POST   | `/auth/login`    | Log in                       | 5/min      |
-| GET    | `/auth/session`  | Get current session          | -          |
-| POST   | `/auth/logout`   | Destroy session              | -          |
+A maioria dos endpoints exige um cookie de sessão ativo. As rotas de autenticação, verificações de disponibilidade e `/health` são públicas. Requisições que alteram dados exigem um header `X-CSRF-Token` válido.
 
-### Users
+### Autenticação
 
-| Method | Endpoint                       | Description                        |
-| ------ | ------------------------------ | ---------------------------------- |
-| GET    | `/users/:id`                   | Get user profile by ID             |
-| GET    | `/users/:id/check-username`    | Check username availability        |
-| POST   | `/users/:id/profile`           | Update profile                     |
-| POST   | `/users/:id/avatar`            | Upload avatar image                |
-| POST   | `/users/:id/favorites`         | Add anime to favorites             |
-| DELETE | `/users/:id/favorites/:animeId`| Remove anime from favorites        |
-| GET    | `/users/:id/favorites`         | List user favorites                |
-| POST   | `/users/:id/reviews`           | Create a review                    |
-| GET    | `/users/:id/reviews`           | List user reviews                  |
-| GET    | `/users/kin-count/:characterId`| Get kin count for a character      |
+| Método | Endpoint | Descrição | Limite |
+| ------ | -------- | --------- | ------ |
+| POST | `/auth/register` | Criar uma conta | 10/min |
+| POST | `/auth/login` | Entrar | 5/min |
+| GET | `/auth/check-username?username=...` | Verificar disponibilidade do nome | 30/min |
+| GET | `/auth/check-email?email=...` | Verificar disponibilidade do email | 30/min |
+| GET | `/auth/session` | Obter sessão atual | - |
+| POST | `/auth/logout` | Encerrar sessão | - |
 
-### Follows
+### Usuários
 
-| Method | Endpoint               | Description           |
-| ------ | ---------------------- | --------------------- |
-| POST   | `/follows/:id`         | Follow a user         |
-| DELETE | `/follows/:id`         | Unfollow a user       |
-| GET    | `/follows/:id/check`   | Check if following    |
-| GET    | `/follows/:id/counts`  | Follower/following counts |
-| GET    | `/follows/:id/followers` | List followers      |
-| GET    | `/follows/:id/following` | List following      |
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| GET | `/users/:id` | Obter perfil pelo ID |
+| GET | `/users/:id/check-username` | Verificar disponibilidade do nome |
+| POST | `/users/:id/profile` | Atualizar perfil |
+| POST | `/users/:id/avatar` | Enviar imagem de avatar |
+| POST | `/users/:id/favorites` | Adicionar anime aos favoritos |
+| DELETE | `/users/:id/favorites/:animeId` | Remover anime dos favoritos |
+| GET | `/users/:id/favorites` | Listar favoritos |
+| POST | `/users/:id/reviews` | Criar avaliação |
+| GET | `/users/:id/reviews` | Listar avaliações |
+| GET | `/users/kin-count/:characterId` | Obter contagem de kins |
 
-### Reviews
+### Seguidores
 
-| Method | Endpoint                  | Description             |
-| ------ | ------------------------- | ----------------------- |
-| GET    | `/reviews/anime/:animeId` | Get all reviews for anime|
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| POST | `/follows/:id` | Seguir usuário |
+| DELETE | `/follows/:id` | Deixar de seguir usuário |
+| GET | `/follows/:id/check` | Verificar se segue |
+| GET | `/follows/:id/counts` | Obter contagens |
+| GET | `/follows/:id/followers` | Listar seguidores |
+| GET | `/follows/:id/following` | Listar usuários seguidos |
 
-### Groups
+### Avaliações
 
-| Method | Endpoint                | Description              |
-| ------ | ----------------------- | ------------------------ |
-| POST   | `/groups`               | Create a group           |
-| GET    | `/groups/owner/:ownerId`| List groups by owner     |
-| GET    | `/groups/:id`           | Get group by ID          |
-| PATCH  | `/groups/:id`           | Update a group           |
-| DELETE | `/groups/:id`           | Delete a group           |
-| POST   | `/groups/:id/items`     | Add anime to group       |
-| DELETE | `/groups/:id/items/:animeId` | Remove anime from group |
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| GET | `/reviews/anime/:animeId` | Obter avaliações do anime |
 
-### Watchlist
+### Grupos
 
-| Method | Endpoint                      | Description              |
-| ------ | ----------------------------- | ------------------------ |
-| POST   | `/watchlist/:userId`          | Add anime to watchlist   |
-| GET    | `/watchlist/:userId`          | Get user watchlist       |
-| PATCH  | `/watchlist/:userId/:animeId` | Update watch status      |
-| DELETE | `/watchlist/:userId/:animeId` | Remove from watchlist    |
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| POST | `/groups` | Criar grupo |
+| GET | `/groups/owner/:ownerId` | Listar grupos do proprietário |
+| GET | `/groups/:id` | Obter grupo pelo ID |
+| PATCH | `/groups/:id` | Atualizar grupo |
+| DELETE | `/groups/:id` | Excluir grupo |
+| POST | `/groups/:id/items` | Adicionar anime ao grupo |
+| DELETE | `/groups/:id/items/:animeId` | Remover anime do grupo |
 
-### Admin
+### Lista de Acompanhamento
 
-| Method | Endpoint                      | Description                    |
-| ------ | ----------------------------- | ------------------------------ |
-| GET    | `/control/users`              | List pending adult requests    |
-| POST   | `/control/users/:id/approve`  | Approve adult content access   |
-| POST   | `/control/users/:id/deny`     | Deny adult content access      |
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| POST | `/watchlist/:userId` | Adicionar anime à lista |
+| GET | `/watchlist/:userId` | Obter lista do usuário |
+| PATCH | `/watchlist/:userId/:animeId` | Atualizar status |
+| DELETE | `/watchlist/:userId/:animeId` | Remover da lista |
 
-## License
+### Administração
 
-[Apache License 2.0](LICENSE)
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| GET | `/control/users` | Listar solicitações adultas pendentes |
+| POST | `/control/users/:id/approve` | Aprovar acesso a conteúdo adulto |
+| POST | `/control/users/:id/deny` | Recusar acesso a conteúdo adulto |
+
+### Saúde da aplicação
+
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| GET | `/health` | Resposta de disponibilidade para verificações de deploy |
+

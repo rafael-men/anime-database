@@ -14,7 +14,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) {}
+  ) { }
 
   async createUser(data: {
     username: string;
@@ -232,6 +232,19 @@ export class UserService {
     });
 
     return !existing || existing.id === excludeUserId;
+  }
+
+  async isEmailAvailable(email: string): Promise<boolean> {
+    const normalized = email?.trim().toLowerCase();
+    if (!normalized) {
+      return false;
+    }
+
+    const existing = await this.userRepository.findOne({
+      where: { email: normalized },
+    });
+
+    return !existing;
   }
 
   private assertUsernameChangeAllowed(user: User): void {

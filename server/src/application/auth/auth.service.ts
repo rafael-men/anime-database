@@ -21,7 +21,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly sessionsService: SessionsService,
-  ) {}
+  ) { }
 
   async register(data: {
     username: string;
@@ -63,6 +63,14 @@ export class AuthService {
       user.email,
       user.avatarUrl,
     );
+  }
+
+  isUsernameAvailable(username: string): Promise<boolean> {
+    return this.userService.isUsernameAvailable(username);
+  }
+
+  isEmailAvailable(email: string): Promise<boolean> {
+    return this.userService.isEmailAvailable(email);
   }
 
   private async buildSessionResult(

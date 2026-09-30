@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Query,
   Req,
   Res,
   UnauthorizedException,
@@ -12,7 +13,12 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
-import { LoginDto, RegisterDto } from '../controllers/dto/auth.dto';
+import {
+  CheckEmailDto,
+  CheckUsernameDto,
+  LoginDto,
+  RegisterDto,
+} from '../controllers/dto/auth.dto';
 import { SessionsService } from '../sessions/sessions.service';
 
 interface AuthRequest {
@@ -24,7 +30,7 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly sessionsService: SessionsService,
-  ) {}
+  ) { }
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -53,6 +59,26 @@ export class AuthController {
       email: user.email,
       avatarUrl: user.avatarUrl ?? null,
       csrfToken,
+    };
+  }
+
+  @Get('check-username')
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  async checkUsername(
+    @Query() query: CheckUsernameDto,
+  ): Promise<{ available: boolean }> {
+    return {
+      available: await this.authService.isUsernameAvailable(query.username),
+    };
+  }
+
+  @Get('check-email')
+  @Throttle({ default: { limit: 30, ttl: 60_000 } })
+  async checkEmail(
+    @Query() query: CheckEmailDto,
+  ): Promise<{ available: boolean }> {
+    return {
+      available: await this.authService.isEmailAvailable(query.email),
     };
   }
 

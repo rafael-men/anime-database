@@ -24,6 +24,50 @@ export class RegisterCard {
   username = '';
   email = '';
   password = '';
+  usernameAvailable: boolean | null = null;
+  emailAvailable: boolean | null = null;
+  isCheckingUsername = false;
+  isCheckingEmail = false;
+
+  checkUsernameAvailability(): void {
+    const username = this.username.trim();
+    if (!username) {
+      this.usernameAvailable = null;
+      return;
+    }
+
+    this.isCheckingUsername = true;
+    this.authService.checkUsername(username).subscribe({
+      next: (result) => {
+        this.usernameAvailable = result.available;
+        this.isCheckingUsername = false;
+      },
+      error: () => {
+        this.usernameAvailable = null;
+        this.isCheckingUsername = false;
+      },
+    });
+  }
+
+  checkEmailAvailability(): void {
+    const email = this.email.trim().toLowerCase();
+    if (!email || !email.includes('@')) {
+      this.emailAvailable = null;
+      return;
+    }
+
+    this.isCheckingEmail = true;
+    this.authService.checkEmail(email).subscribe({
+      next: (result) => {
+        this.emailAvailable = result.available;
+        this.isCheckingEmail = false;
+      },
+      error: () => {
+        this.emailAvailable = null;
+        this.isCheckingEmail = false;
+      },
+    });
+  }
 
   onSubmit(): void {
     const username = this.username.trim();
@@ -32,6 +76,16 @@ export class RegisterCard {
 
     if (!username || !email || !password) {
       this.errorMessage = 'Preencha todos os campos para criar sua conta.';
+      return;
+    }
+
+    if (this.usernameAvailable === false) {
+      this.errorMessage = 'Este nome de usuário já está em uso.';
+      return;
+    }
+
+    if (this.emailAvailable === false) {
+      this.errorMessage = 'Este email já está cadastrado.';
       return;
     }
 
