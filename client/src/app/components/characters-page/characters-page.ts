@@ -22,6 +22,7 @@ export class CharactersPage implements OnInit {
   private readonly usersService = inject(UsersService);
 
   characters = signal<CharacterResult[]>([]);
+  readonly skeletonCards = Array.from({ length: 12 });
   isLoading = signal(false);
   errorMessage = signal('');
   currentPage = signal(1);
@@ -59,7 +60,7 @@ export class CharactersPage implements OnInit {
           avatarUrl: profile.avatarUrl ?? null,
         });
       },
-      error: () => {},
+      error: () => { },
     });
   }
 
@@ -123,7 +124,7 @@ export class CharactersPage implements OnInit {
     this.router.navigate(['/home']);
   }
 
-  noop(): void {}
+  noop(): void { }
 
   toggleProfileMenu(): void {
     this.showProfileMenu.update((v) => !v);

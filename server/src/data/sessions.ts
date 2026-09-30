@@ -55,10 +55,18 @@ export class RedisSessionStore implements SessionStore {
     return `${this.keyPrefix}${token}`;
   }
 
-  async create(token: string, payload: SessionPayload, ttlMs: number): Promise<void> {
+  async create(
+    token: string,
+    payload: SessionPayload,
+    ttlMs: number,
+  ): Promise<void> {
     await this.ensureConnected();
     const ttlSeconds = Math.max(1, Math.ceil(ttlMs / 1000));
-    await this.client.setex(this.key(token), ttlSeconds, JSON.stringify(payload));
+    await this.client.setex(
+      this.key(token),
+      ttlSeconds,
+      JSON.stringify(payload),
+    );
   }
 
   async get(token: string): Promise<SessionPayload | null> {
@@ -93,7 +101,11 @@ export class InMemorySessionStore implements SessionStore {
     { payload: SessionPayload; expiresAt: number }
   >();
 
-  async create(token: string, payload: SessionPayload, ttlMs: number): Promise<void> {
+  async create(
+    token: string,
+    payload: SessionPayload,
+    ttlMs: number,
+  ): Promise<void> {
     this.store.set(token, { payload, expiresAt: Date.now() + ttlMs });
   }
 
@@ -164,7 +176,7 @@ export const sessionStoreProvider = {
 
     Logger.warn(
       'REDIS_URL/UPSTASH_REDIS_REST_URL não configurados ou inválidos. ' +
-        'Usando armazenamento de sessão em memória (sessões são perdidas no restart).',
+      'Usando armazenamento de sessão em memória (sessões são perdidas no restart).',
       'SessionsStore',
     );
 

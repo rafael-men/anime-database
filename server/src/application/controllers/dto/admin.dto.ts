@@ -5,7 +5,6 @@ import { User } from '../../../domain/models/user.model';
 export const ADMIN_REQUESTS_DEFAULT_LIMIT = 50;
 export const ADMIN_REQUESTS_MAX_LIMIT = 100;
 
-
 export class AdultRequestDto {
   @Expose()
   id!: string;

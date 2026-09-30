@@ -39,7 +39,9 @@ describe('GroupController', () => {
       .compile();
 
     app = moduleRef.createNestApplication();
-    app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+    app.useGlobalPipes(
+      new ValidationPipe({ whitelist: true, transform: true }),
+    );
     await app.init();
   });
 
@@ -145,9 +147,7 @@ describe('GroupController', () => {
   it('DELETE /groups/:id should delete the group', async () => {
     groupServiceMock.deleteGroup.mockResolvedValue(undefined);
 
-    await request(app.getHttpServer())
-      .delete('/groups/group-1')
-      .expect(204);
+    await request(app.getHttpServer()).delete('/groups/group-1').expect(204);
 
     expect(groupServiceMock.deleteGroup).toHaveBeenCalledWith('group-1');
   });

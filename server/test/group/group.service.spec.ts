@@ -34,7 +34,7 @@ describe('GroupService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     groupItems: [],
-  }; 
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -43,7 +43,10 @@ describe('GroupService', () => {
       providers: [
         GroupService,
         { provide: getRepositoryToken(Group), useValue: groupRepository },
-        { provide: getRepositoryToken(GroupItem), useValue: groupItemRepository },
+        {
+          provide: getRepositoryToken(GroupItem),
+          useValue: groupItemRepository,
+        },
       ],
     }).compile();
 

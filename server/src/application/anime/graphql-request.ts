@@ -1,8 +1,8 @@
-import { HttpException,HttpStatus,Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 interface GraphqlRequest {
-   query: string;
-   variables?: Record<string, unknown>;
+  query: string;
+  variables?: Record<string, unknown>;
 }
 
 interface CacheEntry {
@@ -99,9 +99,7 @@ export class AnimeProxyService {
     }
   }
 
-  private async fetchWithRetry(
-    body: GraphqlRequest,
-  ): Promise<unknown> {
+  private async fetchWithRetry(body: GraphqlRequest): Promise<unknown> {
     const maxAttempts = 3;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -131,9 +129,9 @@ export class AnimeProxyService {
           return payload;
         }
 
+        const status = response.status as number;
         const retryable =
-          response.status === HttpStatus.TOO_MANY_REQUESTS ||
-          response.status >= 500;
+          status === HttpStatus.TOO_MANY_REQUESTS || status >= 500;
 
         if (!retryable) {
           throw new AniListError(
@@ -153,9 +151,7 @@ export class AnimeProxyService {
           response.headers.get('retry-after'),
         );
 
-        await this.delay(
-          retryAfter ?? Math.min(1000 * 2 ** attempt, 5000),
-        );
+        await this.delay(retryAfter ?? Math.min(1000 * 2 ** attempt, 5000));
       } catch (error) {
         if (error instanceof AniListError && error.statusCode < 500) {
           throw error;

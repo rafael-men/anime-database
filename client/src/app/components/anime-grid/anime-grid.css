@@ -26,7 +26,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .empty-text {
@@ -73,6 +75,64 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
+}
+
+.anime-grid-skeleton {
+  min-height: 420px;
+}
+
+.anime-skeleton-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.anime-skeleton-image {
+  aspect-ratio: 3 / 4;
+  width: 100%;
+}
+
+.anime-skeleton-body {
+  display: grid;
+  gap: 9px;
+  padding: 14px;
+}
+
+.anime-skeleton-line {
+  height: 10px;
+  border-radius: 999px;
+}
+
+.anime-skeleton-line-title {
+  width: 82%;
+}
+
+.anime-skeleton-line-meta {
+  width: 56%;
+}
+
+.anime-skeleton-line-short {
+  width: 38%;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.04) 25%,
+      rgba(255, 255, 255, 0.1) 50%,
+      rgba(255, 255, 255, 0.04) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  from {
+    background-position: 200% 0;
+  }
+
+  to {
+    background-position: -200% 0;
+  }
 }
 
 @media (min-width: 640px) {

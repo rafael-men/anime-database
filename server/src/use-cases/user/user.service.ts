@@ -206,100 +206,100 @@ export class UserService {
     return user;
   }
 
-   async getKinCount(characterId: number): Promise<number> {
-      const users = await this.userRepository.find({
-         where: { favoriteCharacterIds: Not(IsNull()) },
-         select: { favoriteCharacterIds: true },
-      });
+  async getKinCount(characterId: number): Promise<number> {
+    const users = await this.userRepository.find({
+      where: { favoriteCharacterIds: Not(IsNull()) },
+      select: { favoriteCharacterIds: true },
+    });
 
-      return users.filter((u) => {
-         const ids = u.favoriteCharacterIds;
-         return Array.isArray(ids) && ids.includes(characterId);
-      }).length;
-   }
+    return users.filter((u) => {
+      const ids = u.favoriteCharacterIds;
+      return Array.isArray(ids) && ids.includes(characterId);
+    }).length;
+  }
 
-   async isUsernameAvailable(
-      username: string,
-      excludeUserId?: string,
-   ): Promise<boolean> {
-      const normalized = username?.trim();
-      if (!normalized) {
-         return true;
-      }
+  async isUsernameAvailable(
+    username: string,
+    excludeUserId?: string,
+  ): Promise<boolean> {
+    const normalized = username?.trim();
+    if (!normalized) {
+      return true;
+    }
 
-      const existing = await this.userRepository.findOne({
-         where: { username: normalized },
-      });
+    const existing = await this.userRepository.findOne({
+      where: { username: normalized },
+    });
 
-      return !existing || existing.id === excludeUserId;
-   }
+    return !existing || existing.id === excludeUserId;
+  }
 
-   private assertUsernameChangeAllowed(user: User): void {
-      const lastChange = user.usernameUpdatedAt ?? user.createdAt;
-      if (!lastChange) {
-         return;
-      }
+  private assertUsernameChangeAllowed(user: User): void {
+    const lastChange = user.usernameUpdatedAt ?? user.createdAt;
+    if (!lastChange) {
+      return;
+    }
 
-      const nextAllowed = new Date(lastChange);
-      nextAllowed.setMonth(
-         nextAllowed.getMonth() + this.usernameChangeIntervalMonths,
+    const nextAllowed = new Date(lastChange);
+    nextAllowed.setMonth(
+      nextAllowed.getMonth() + this.usernameChangeIntervalMonths,
+    );
+
+    if (Date.now() < nextAllowed.getTime()) {
+      throw new ValidationException(
+        'Username can only be changed every 4 months.',
+        'USERNAME_CHANGE_LIMIT',
       );
+    }
+  }
 
-      if (Date.now() < nextAllowed.getTime()) {
-         throw new ValidationException(
-            'Username can only be changed every 4 months.',
-            'USERNAME_CHANGE_LIMIT',
-         );
-      }
-   }
+  private async assertUsernameAvailable(
+    username: string,
+    currentUserId: string,
+  ): Promise<void> {
+    const existing = await this.userRepository.findOne({
+      where: { username },
+    });
 
-   private async assertUsernameAvailable(
-      username: string,
-      currentUserId: string,
-   ): Promise<void> {
-      const existing = await this.userRepository.findOne({
-         where: { username },
-      });
+    if (existing && existing.id !== currentUserId) {
+      throw new DuplicateResourceException(
+        'This username is already in use.',
+        'USERNAME_TAKEN',
+      );
+    }
+  }
 
-      if (existing && existing.id !== currentUserId) {
-         throw new DuplicateResourceException(
-            'This username is already in use.',
-            'USERNAME_TAKEN',
-         );
-      }
-   }
+  async listAdultRequests(limit: number): Promise<User[]> {
+    return this.userRepository.find({
+      where: { adultRequestStatus: Not(DEFAULT_ADULT_REQUEST_STATUS) },
+      order: { updatedAt: 'DESC' },
+      take: limit,
+    });
+  }
 
-   async listAdultRequests(limit: number): Promise<User[]> {
-      return this.userRepository.find({
-         where: { adultRequestStatus: Not(DEFAULT_ADULT_REQUEST_STATUS) },
-         order: { updatedAt: 'DESC' },
-         take: limit,
-      });
-   }
+  async approveAdultRequest(userId: string): Promise<User> {
+    const user = await this.findById(userId);
 
-   async approveAdultRequest(userId: string): Promise<User> {
-      const user = await this.findById(userId);
+    await this.userRepository.update(userId, {
+      adultRequestStatus: 'approved',
+      adultContentEnabled: true,
+    });
 
-      await this.userRepository.update(userId, {
-         adultRequestStatus: 'approved',
-         adultContentEnabled: true,
-      });
+    user.adultRequestStatus = 'approved';
+    user.adultContentEnabled = true;
+    return user;
+  }
 
-      user.adultRequestStatus = 'approved';
-      user.adultContentEnabled = true;
-      return user;
-   }
+  async denyAdultRequest(userId: string): Promise<User> {
+    const user = await this.findById(userId);
 
-   async denyAdultRequest(userId: string): Promise<User> {
-      const user = await this.findById(userId);
+    await this.userRepository.update(userId, {
+      adultRequestStatus: 'denied',
+      adultContentEnabled: false,
+    });
 
-      await this.userRepository.update(userId, {
-         adultRequestStatus: 'denied',
-         adultContentEnabled: false,
-      });
-
-      user.adultRequestStatus = 'denied';
-      user.adultContentEnabled = false;
-      return user;
-   }
+    user.adultRequestStatus = 'denied';
+    user.adultContentEnabled = false;
+    return user;
+  }
 }

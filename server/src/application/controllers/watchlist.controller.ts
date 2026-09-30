@@ -26,10 +26,10 @@ export class WatchlistController {
   constructor() {}
 
   @Post(':userId')
-  async addToWatchlist(
+  addToWatchlist(
     @Param('userId') userId: string,
     @Body() body: CreateWatchlistItemDto,
-  ): Promise<WatchlistItem> {
+  ): WatchlistItem {
     const item = new WatchlistItem({
       userId,
       externalAnimeId: body.externalAnimeId,
@@ -40,9 +40,7 @@ export class WatchlistController {
   }
 
   @Get(':userId')
-  async getWatchlist(
-    @Param('userId') userId: string,
-  ): Promise<WatchlistItem[]> {
+  getWatchlist(@Param('userId') userId: string): WatchlistItem[] {
     return [
       new WatchlistItem({
         userId,
@@ -53,11 +51,11 @@ export class WatchlistController {
   }
 
   @Patch(':userId/:animeId')
-  async updateStatus(
+  updateStatus(
     @Param('userId') userId: string,
     @Param('animeId') animeId: string,
     @Body() body: UpdateWatchlistStatusDto,
-  ): Promise<WatchlistItem> {
+  ): WatchlistItem {
     return new WatchlistItem({
       userId,
       externalAnimeId: animeId,
@@ -67,10 +65,7 @@ export class WatchlistController {
 
   @Delete(':userId/:animeId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removeFromWatchlist(
-    @Param('userId') userId: string,
-    @Param('animeId') animeId: string,
-  ): Promise<void> {
+  removeFromWatchlist(): void {
     return;
   }
 }

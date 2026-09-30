@@ -12,11 +12,21 @@
   </button>
 
   @if (isLoading()) {
-  <div class="rounded-2xl border border-white/10 bg-neutral-900/60 flex items-center justify-center py-16 sm:py-24">
-    <span class="h-10 w-10 rounded-full border-4 border-white/10 border-t-red-500 animate-spin"></span>
+  <div class="character-details-skeleton" aria-label="Carregando personagem">
+    <div class="character-details-skeleton-image skeleton-shimmer"></div>
+    <div class="character-details-skeleton-copy">
+      <div class="character-details-skeleton-line character-details-skeleton-title skeleton-shimmer"></div>
+      <div class="character-details-skeleton-line character-details-skeleton-subtitle skeleton-shimmer"></div>
+      <div class="character-details-skeleton-stat skeleton-shimmer"></div>
+      <div class="character-details-skeleton-meta">
+        <span class="character-details-skeleton-box skeleton-shimmer"></span>
+        <span class="character-details-skeleton-box skeleton-shimmer"></span>
+      </div>
+    </div>
   </div>
   } @else if (errorMessage()) {
-  <div class="rounded-2xl border border-white/10 bg-neutral-900/60 flex flex-col items-center justify-center gap-4 py-14 sm:py-20 px-4 text-center">
+  <div
+    class="rounded-2xl border border-white/10 bg-neutral-900/60 flex flex-col items-center justify-center gap-4 py-14 sm:py-20 px-4 text-center">
     <span class="material-symbols-outlined text-[2.5rem] sm:text-[3rem] text-red-500">error</span>
     <p class="text-sm text-neutral-400 m-0">{{ errorMessage() }}</p>
     <button type="button"
@@ -26,7 +36,8 @@
   } @else if (character(); as char) {
 
   <div class="rounded-2xl border border-white/10 bg-neutral-900/60 overflow-hidden">
-    <div class="flex flex-col items-center text-center gap-5 sm:flex-row sm:items-start sm:text-left sm:gap-6 p-4 sm:p-6 lg:p-8">
+    <div
+      class="flex flex-col items-center text-center gap-5 sm:flex-row sm:items-start sm:text-left sm:gap-6 p-4 sm:p-6 lg:p-8">
 
       <div class="shrink-0">
         @if (char.image) {
@@ -75,16 +86,15 @@
     </div>
 
     @if (char.description) {
-  <div class="border-t border-white/10 p-4 sm:p-6 lg:p-8">
-    <h2 class="flex flex-wrap items-center gap-2 text-base sm:text-lg font-semibold mb-3 text-white">
-      <span class="material-symbols-outlined text-red-500">article</span>
-      Sobre
-    </h2>
-    <div
-      class="text-sm sm:text-base leading-relaxed text-neutral-300"
-      [innerHTML]="char.description | bioTranslate | async | bioFormat">
+    <div class="border-t border-white/10 p-4 sm:p-6 lg:p-8">
+      <h2 class="flex flex-wrap items-center gap-2 text-base sm:text-lg font-semibold mb-3 text-white">
+        <span class="material-symbols-outlined text-red-500">article</span>
+        Sobre
+      </h2>
+      <div class="text-sm sm:text-base leading-relaxed text-neutral-300"
+        [innerHTML]="char.description | bioTranslate | async | bioFormat">
+      </div>
     </div>
-  </div>
     }
   </div>
 
@@ -98,7 +108,8 @@
 
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
       @for (anime of char.media; track anime.id) {
-      <article class="cursor-pointer rounded-lg overflow-hidden bg-white/5 hover:bg-white/10 transition-colors" (click)="navigateToAnime(anime.id)">
+      <article class="cursor-pointer rounded-lg overflow-hidden bg-white/5 hover:bg-white/10 transition-colors"
+        (click)="navigateToAnime(anime.id)">
         <div class="relative aspect-[2/3] w-full">
           @if (anime.coverImage) {
           <img [src]="anime.coverImage" [alt]="anime.title" class="w-full h-full object-cover" loading="lazy" />
@@ -108,7 +119,8 @@
           </div>
           }
           @if (anime.format) {
-          <span class="absolute top-1.5 right-1.5 text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-black/70 text-white font-medium">{{
+          <span
+            class="absolute top-1.5 right-1.5 text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-black/70 text-white font-medium">{{
             formatLabel(anime.format) }}</span>
           }
         </div>
@@ -127,8 +139,11 @@
 </main>
 
 @if (selectedImage()) {
-<div class="fixed inset-0 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm z-50" (click)="closeImage()">
-  <button type="button" class="absolute top-3 right-3 sm:top-4 sm:right-4 text-white/70 hover:text-white transition-colors" (click)="closeImage()">
+<div class="fixed inset-0 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm z-50"
+  (click)="closeImage()">
+  <button type="button"
+    class="absolute top-3 right-3 sm:top-4 sm:right-4 text-white/70 hover:text-white transition-colors"
+    (click)="closeImage()">
     <span class="material-symbols-outlined">close</span>
   </button>
   <img [src]="selectedImage()" alt="放大" class="max-w-[90vw] max-h-[85vh] object-contain rounded"

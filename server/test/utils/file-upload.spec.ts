@@ -23,7 +23,11 @@ describe('generateUploadFilename', () => {
     expect(name).not.toContain('\\');
     expect(name).not.toContain(' ');
 
-    const malicious = ['../../etc/passwd', '..\\..\\boot.ini', 'shell.php%00.png'];
+    const malicious = [
+      '../../etc/passwd',
+      '..\\..\\boot.ini',
+      'shell.php%00.png',
+    ];
     for (const original of malicious) {
       expect(original).not.toEqual(name);
     }

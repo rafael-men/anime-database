@@ -15,6 +15,7 @@ describe('TranslateService', () => {
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       providers: [provideHttpClient(), provideHttpClientTesting()],
     });
@@ -24,6 +25,7 @@ describe('TranslateService', () => {
 
   afterEach(() => {
     httpMock.verify();
+    localStorage.clear();
   });
 
   it('deve ser criado', () => {
@@ -87,6 +89,19 @@ describe('TranslateService', () => {
     httpMock.expectNone((r) => hasTranslateRequest(r));
   });
 
+  it('reutiliza uma tradução persistida no localStorage', () => {
+    localStorage.setItem(
+      'anime-database.translation.v1:pt:hello',
+      'olá persistido',
+    );
+
+    let result = '';
+    service.translate('hello').subscribe((res) => (result = res));
+
+    expect(result).toBe('olá persistido');
+    httpMock.expectNone((r) => hasTranslateRequest(r));
+  });
+
   it('não mistura o cache entre idiomas diferentes', () => {
     service.translate('hello', 'es').subscribe();
     httpMock.expectOne((r) => hasTranslateRequest(r)).flush([[['hola', 'hello', null, null, 10]]]);
@@ -110,5 +125,15 @@ describe('TranslateService', () => {
 
     expect(errored).toBe(false);
     expect(result).toBe('manter texto');
+  });
+
+  it('não envia textos muito longos para o endpoint público', () => {
+    const longText = 'texto '.repeat(200);
+    let result = '';
+
+    service.translate(longText).subscribe((res) => (result = res));
+
+    expect(result).toBe(longText.trim());
+    httpMock.expectNone((req) => hasTranslateRequest(req));
   });
 });

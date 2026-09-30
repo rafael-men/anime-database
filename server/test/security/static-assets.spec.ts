@@ -24,7 +24,9 @@ describe('Static assets path traversal protection', () => {
   });
 
   beforeEach(async () => {
-    const moduleRef: TestingModule = await Test.createTestingModule({}).compile();
+    const moduleRef: TestingModule = await Test.createTestingModule(
+      {},
+    ).compile();
     app = moduleRef.createNestApplication<NestExpressApplication>();
     app.useStaticAssets(uploadsDir, {
       prefix: '/uploads/',

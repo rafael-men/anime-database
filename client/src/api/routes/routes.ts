@@ -1,4 +1,11 @@
+import { environment } from '../../environments/environment';
+
 function resolveApiBase(): string {
+  const configured = environment.apiBaseUrl?.trim();
+  if (configured) {
+    return configured.replace(/\/+$/, '');
+  }
+
   if (typeof window !== 'undefined' && window.location?.hostname) {
     return `http://${window.location.hostname}:3000`;
   }

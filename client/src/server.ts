@@ -7,17 +7,40 @@ import {
 import express from 'express';
 import helmet from 'helmet';
 import { join } from 'node:path';
+import { environment } from './environments/environment';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
+const apiOrigins = Array.from(
+  new Set(
+    [
+      environment.apiBaseUrl || 'http://localhost:3000',
+      'http://127.0.0.1:3000',
+      'https://graphql.anilist.co',
+      'https://translate.googleapis.com',
+      ...(environment.cspConnectSrc ?? []),
+    ]
+      .map((value) => value?.trim())
+      .filter(Boolean)
+      .map((value) => {
+        try {
+          return new URL(value).origin;
+        } catch {
+          return null;
+        }
+      })
+      .filter((origin): origin is string => origin !== null),
+  ),
+);
+
 app.use(
   helmet({
     contentSecurityPolicy: {
       useDefaults: true,
       directives: {
-        'script-src': ["'self'"],
+        'script-src': ["'self'", "'unsafe-inline'"],
         'script-src-attr': ["'none'"],
         'object-src': ["'none'"],
         'base-uri': ["'self'"],
@@ -25,8 +48,8 @@ app.use(
         'form-action': ["'self'"],
         'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         'font-src': ["'self'", 'https://fonts.gstatic.com', 'data:'],
-        'img-src': ["'self'", 'data:', 'blob:', 'https:'],
-        'connect-src': ["'self'"],
+        'img-src': ["'self'", 'data:', 'blob:', 'https:', ...apiOrigins],
+        'connect-src': ["'self'", ...apiOrigins],
         'upgrade-insecure-requests': [],
       },
     },
@@ -58,7 +81,7 @@ if (isMainModule(import.meta.url) || process.env['pm_id']) {
       throw error;
     }
 
-    console.log(`Node Express server listening on http://localhost:${port}`);
+    console.log(`server listening on http://localhost:${port}`);
   });
 }
 

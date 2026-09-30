@@ -7,6 +7,7 @@ import { AuthModule } from './application/auth/auth.module';
 import { CsrfGuard } from './application/auth/csrf.guard';
 import { AdminController } from './application/controllers/admin.controller';
 import { GroupController } from './application/controllers/group.controller';
+import { HealthController } from './application/controllers/health.controller';
 import { ReviewController } from './application/controllers/review.controller';
 import { UserController } from './application/controllers/user.controller';
 import { WatchlistController } from './application/controllers/watchlist.controller';
@@ -59,6 +60,7 @@ import { StorageModule } from './storage/storage.module';
     StorageModule,
   ],
   controllers: [
+    HealthController,
     AdminController,
     UserController,
     ReviewController,

@@ -11,6 +11,7 @@ import { AnimeCard } from '../anime-card/anime-card';
   styleUrl: './anime-grid.css',
 })
 export class AnimeGrid {
+  readonly skeletonCards = Array.from({ length: 12 });
   animes = input.required<AnimeResult[]>();
   isLoading = input<boolean>(false);
   errorMessage = input<string>('');

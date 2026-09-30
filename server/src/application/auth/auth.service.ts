@@ -1,7 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../../use-cases/user/user.service';
 import { SessionsService } from '../sessions/sessions.service';
@@ -43,7 +40,12 @@ export class AuthService {
       bio: data.bio,
     });
 
-    return this.buildSessionResult(user.id, user.username, user.email, user.avatarUrl);
+    return this.buildSessionResult(
+      user.id,
+      user.username,
+      user.email,
+      user.avatarUrl,
+    );
   }
 
   async login(email: string, password: string): Promise<SessionResult> {
@@ -55,7 +57,12 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials.');
     }
 
-    return this.buildSessionResult(user.id, user.username, user.email, user.avatarUrl);
+    return this.buildSessionResult(
+      user.id,
+      user.username,
+      user.email,
+      user.avatarUrl,
+    );
   }
 
   private async buildSessionResult(
@@ -64,12 +71,13 @@ export class AuthService {
     email: string,
     avatarUrl?: string | null,
   ): Promise<SessionResult> {
-    const { token: sessionToken, csrfToken } = await this.sessionsService.createSession({
-      userId,
-      username,
-      email,
-      avatarUrl: avatarUrl ?? null,
-    });
+    const { token: sessionToken, csrfToken } =
+      await this.sessionsService.createSession({
+        userId,
+        username,
+        email,
+        avatarUrl: avatarUrl ?? null,
+      });
 
     return {
       sessionToken,

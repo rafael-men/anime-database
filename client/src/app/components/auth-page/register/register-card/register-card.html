@@ -3,26 +3,28 @@
       class="auth-card flex w-full max-w-[900px] min-h-[620px] rounded-xl overflow-hidden border border-white/[0.06] bg-[#111] backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.3),0_25px_50px_rgba(0,0,0,0.4)] max-sm:flex-col max-sm:max-w-[440px] max-sm:min-h-0">
       <div
          class="flex-[1_1_50%] flex items-center justify-center bg-[#0d0d0d] border-r border-white/[0.04] min-h-full max-sm:hidden">
-         <div class="flex flex-col items-center gap-3 text-white/15">
-            <span class="material-symbols-outlined text-[4rem]">image</span>
-            <span class="text-[0.85rem] font-medium tracking-[0.1em] uppercase">Imagem</span>
+         <div class="relative w-full h-full text-white/15">
+            <img src="/logo.jpg" alt="Anime Database" class="block w-full h-full object-cover" />
+            <div class="absolute inset-0 pointer-events-none bg-gradient-to-b from-black/25 via-black/10 to-black/20">
+            </div>
          </div>
       </div>
 
-      <div class="flex-[1_1_50%] flex flex-col justify-center py-12 px-14 bg-[#1a1a1a] max-lg:px-10 max-sm:py-9 max-sm:px-6">
+      <div
+         class="flex-[1_1_50%] flex flex-col justify-center py-12 px-14 bg-[#1a1a1a] max-lg:px-10 max-sm:py-9 max-sm:px-6">
          <div class="mb-8">
             <h1 class="text-[2.15rem] font-semibold text-[#f0f0f0] tracking-tight mb-2 max-sm:text-[1.8rem]">
                Criar conta
             </h1>
             <p class="text-[0.9rem] text-white/45 leading-relaxed m-0">
-               Cadastre-se para começar sua jornada 
+               Cadastre-se para começar sua jornada
             </p>
          </div>
 
          <form class="flex flex-col gap-5" (ngSubmit)="onSubmit()">
             <div class="flex flex-col gap-[0.35rem]">
-               <label for="username"
-                  class="text-[0.75rem] font-semibold text-white/55 uppercase tracking-[0.06em]">Nome de
+               <label for="username" class="text-[0.75rem] font-semibold text-white/55 uppercase tracking-[0.06em]">Nome
+                  de
                   usuario</label>
                <div class="relative flex items-center">
                   <span

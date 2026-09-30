@@ -38,7 +38,8 @@ export class SessionsService {
     return {
       httpOnly: true,
       sameSite: 'lax',
-      secure: this.config.get<string>('NODE_ENV', 'development') === 'production',
+      secure:
+        this.config.get<string>('NODE_ENV', 'development') === 'production',
       path: '/',
       maxAge: this.ttlMs,
     };

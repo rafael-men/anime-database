@@ -1,14 +1,20 @@
 import {
   CanActivate,
   ExecutionContext,
-  Injectable,
   ForbiddenException,
+  Injectable,
 } from '@nestjs/common';
+import type { SessionRequestUser } from './session-auth.guard';
+
+interface OwnershipRequest {
+  params?: Record<string, string | undefined>;
+  user?: SessionRequestUser;
+}
 
 @Injectable()
 export class OwnershipGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<OwnershipRequest>();
     const user = request.user;
 
     if (!user) {
