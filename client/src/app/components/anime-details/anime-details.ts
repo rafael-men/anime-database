@@ -210,7 +210,8 @@ export class AnimeDetails implements OnInit {
 
   private loadFavoriteState(userId: string, animeId: number): void {
     this.favoritesService.getFavorites(userId).subscribe({
-      next: (items) => {
+      next: (response) => {
+        const items = response.items;
         this.isFavorite.set(items.some((i) => Number(i.externalAnimeId) === animeId));
       },
       error: () => {},

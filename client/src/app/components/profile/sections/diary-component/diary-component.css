@@ -76,6 +76,8 @@
 .diary-carousel-item {
   flex: 0 0 auto;
   width: 180px;
+  display: flex;
+  align-items: stretch;
   scroll-snap-align: start;
 }
 
@@ -150,6 +152,10 @@
 }
 
 .diary-card {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 12px;
@@ -166,6 +172,8 @@
 
 .diary-card-cover {
   position: relative;
+  flex: 0 0 auto;
+  width: 100%;
   aspect-ratio: 3 / 4;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.02);
@@ -214,7 +222,11 @@
 }
 
 .diary-card-body {
+  flex: 1;
+  min-height: 76px;
   padding: 10px 12px 12px;
+  display: flex;
+  flex-direction: column;
 }
 
 .diary-card-title {
@@ -227,9 +239,11 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: 33px;
 }
 
 .diary-card-meta {
+  min-height: 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -245,15 +259,4 @@
 .diary-card-date {
   font-size: 0.65rem;
   color: rgba(200, 200, 200, 0.4);
-}
-
-.diary-card-comment {
-  font-size: 0.72rem;
-  color: rgba(210, 210, 210, 0.6);
-  line-height: 1.4;
-  margin: 6px 0 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }

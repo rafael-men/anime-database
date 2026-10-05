@@ -6,6 +6,7 @@ import { FavouritesPage } from './components/favourites-page/favourites-page';
 import { AnimeDetails } from './components/anime-details/anime-details';
 import { CharacterDetails } from './components/character-details/character-details';
 import { Profile } from './components/profile/profile';
+import { ReviewDetails } from './components/profile/review-details/review-details';
 import { CharactersPage } from './components/characters-page/characters-page';
 import { GroupDetail } from './components/groups-component/group-detail/group-detail';
 import { UserSettings } from './components/profile-menu/user-settings/user-settings';
@@ -21,6 +22,7 @@ export const routes: Routes = [
   { path: 'home', component: Home, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },
   { path: 'profile/:id', component: Profile, canActivate: [authGuard] },
+  { path: 'diary/review-details', component: ReviewDetails, canActivate: [authGuard] },
   { path: 'settings', component: UserSettings, canActivate: [authGuard] },
   { path: 'seguindo', component: AddComponent, canActivate: [authGuard] },
   { path: 'favourites', component: FavouritesPage, canActivate: [authGuard] },

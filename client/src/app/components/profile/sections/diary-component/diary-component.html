@@ -32,7 +32,7 @@
           <div class="diary-carousel-item">
             <article
               class="diary-card"
-              (click)="navigateToAnime(entry.review.externalAnimeId)">
+              (click)="navigateToReview(entry.review)">
               <div class="diary-card-cover">
                 @if (entry.anime?.images?.jpg?.image_url) {
                   <img
@@ -61,9 +61,6 @@
                   <span class="diary-card-score">{{ +entry.review.rating }}/10</span>
                   <span class="diary-card-date">{{ formatDate(entry.review.createdAt) }}</span>
                 </div>
-                @if (entry.review.comment) {
-                  <p class="diary-card-comment">{{ entry.review.comment }}</p>
-                }
               </div>
             </article>
           </div>

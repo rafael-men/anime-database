@@ -27,6 +27,7 @@ import {
   Max,
   Min,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 import { User } from '../../domain/models/user.model';
 import {
   WatchlistItem,
@@ -81,6 +82,21 @@ class AddFavoriteDto {
   @IsOptional()
   @IsEnum(WatchlistStatus)
   status?: WatchlistStatus;
+}
+
+class FavoritesPaginationDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  page = 1;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
+  @Max(100)
+  limit = 20;
 }
 
 class CreateReviewDto {
@@ -175,8 +191,16 @@ export class UserController {
   }
 
   @Get(':id/favorites')
-  async getFavorites(@Param('id') userId: string): Promise<WatchlistItem[]> {
-    return this.userAnimeActionsService.getUserFavorites(userId);
+  @UseGuards(OwnershipGuard)
+  async getFavorites(
+    @Param('id') userId: string,
+    @Query() pagination: FavoritesPaginationDto,
+  ) {
+    return this.userAnimeActionsService.getUserFavorites(
+      userId,
+      pagination.page,
+      pagination.limit,
+    );
   }
 
   @Post(':id/reviews')

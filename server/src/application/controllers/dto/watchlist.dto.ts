@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { WatchlistStatus } from '../../../domain/models/watchlist-item.model';
 
 export class CreateWatchlistItemDto {
@@ -6,6 +6,7 @@ export class CreateWatchlistItemDto {
   @IsNotEmpty()
   externalAnimeId!: string;
 
+  @IsOptional()
   @IsEnum(WatchlistStatus)
   status?: WatchlistStatus;
 }

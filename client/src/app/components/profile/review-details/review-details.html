@@ -1,0 +1,88 @@
+<app-navbar
+  [activeTab]="'todos'"
+  [selectedCategory]="''"
+  [searchQuery]="searchQuery()"
+  [username]="profile()?.username ?? ''"
+  [userInitial]="userInitial()"
+  [avatarUrl]="profile()?.avatarUrl ?? null"
+  [showProfileMenu]="showProfileMenu()"
+  [categories]="[]"
+  (tabChange)="onTabChange($event)"
+  (searchQueryChange)="searchQuery.set($event)"
+  (toggleProfile)="toggleProfileMenu()"
+  (closeProfile)="closeProfileMenu()"
+  (logout)="logout()" />
+
+<main class="review-details-page">
+  @if (isLoading()) {
+    <div class="review-state">Carregando avaliação...</div>
+  } @else if (errorMessage()) {
+    <div class="review-state review-error">
+      <p>{{ errorMessage() }}</p>
+      <button type="button" (click)="goBack()">Voltar ao perfil</button>
+    </div>
+  } @else if (review(); as currentReview) {
+    <button type="button" class="back-button" (click)="goBack()">
+      <span class="material-symbols-outlined">arrow_back</span>
+      Voltar ao perfil
+    </button>
+
+    <article class="review-card">
+      @if (anime()?.images?.jpg?.large_image_url || anime()?.images?.jpg?.image_url) {
+        <img
+          class="review-anime-cover"
+          [src]="anime()?.images?.jpg?.large_image_url ?? anime()?.images?.jpg?.image_url"
+          [alt]="anime()?.title ?? 'Anime avaliado'" />
+      }
+
+      <div class="review-content">
+        <div class="review-user">
+          @if (resolveAvatar(profile()?.avatarUrl); as avatar) {
+            <img [src]="avatar" [alt]="profile()?.username ?? 'Usuário'" />
+          } @else {
+            <span class="review-user-initial">{{ userInitial() }}</span>
+          }
+          <div>
+            <strong>{{ profile()?.username ?? 'Usuário' }}</strong>
+            <span>Avaliou em {{ formatDate(currentReview.createdAt) }}</span>
+          </div>
+        </div>
+
+        <h1>{{ anime()?.title ?? 'Anime desconhecido' }}</h1>
+
+        <div class="review-rating" aria-label="Nota da avaliação">
+          @for (star of [1, 2, 3, 4, 5]; track star) {
+            <span
+              class="material-symbols-outlined"
+              [class.star-filled]="star <= ratingToStars(currentReview.rating)"
+              [class.star-empty]="star > ratingToStars(currentReview.rating)">
+              star
+            </span>
+          }
+          <strong>{{ +currentReview.rating }}/10</strong>
+        </div>
+
+        @if (currentReview.comment) {
+          <p class="review-comment">{{ currentReview.comment }}</p>
+        } @else {
+          <p class="review-comment review-comment-empty">Nenhum comentário foi escrito.</p>
+        }
+
+        <dl class="review-meta">
+          <div>
+            <dt>Assistido em</dt>
+            <dd>{{ formatDate(currentReview.watchedAt) }}</dd>
+          </div>
+          <div>
+            <dt>Reassistindo</dt>
+            <dd>{{ currentReview.isRewatch ? 'Sim' : 'Não' }}</dd>
+          </div>
+          <div>
+            <dt>Spoilers</dt>
+            <dd>{{ currentReview.hasSpoilers ? 'Contém spoilers' : 'Sem spoilers' }}</dd>
+          </div>
+        </dl>
+      </div>
+    </article>
+  }
+</main>

@@ -1,0 +1,170 @@
+.review-details-page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 8rem 1.5rem 3rem;
+}
+
+.review-state {
+  display: grid;
+  place-items: center;
+  min-height: 18rem;
+  color: rgba(240, 240, 240, 0.72);
+  text-align: center;
+}
+
+.review-error button,
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.9rem;
+  color: #f0f0f0;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+}
+
+.back-button {
+  margin-bottom: 1rem;
+}
+
+.review-card {
+  display: grid;
+  grid-template-columns: minmax(12rem, 18rem) 1fr;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1rem;
+  background: rgba(20, 20, 20, 0.72);
+}
+
+.review-anime-cover {
+  width: 100%;
+  height: 100%;
+  min-height: 25rem;
+  object-fit: cover;
+}
+
+.review-content {
+  padding: 2rem;
+}
+
+.review-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: #f0f0f0;
+}
+
+.review-user img,
+.review-user-initial {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.review-user-initial {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: #8b1a1a;
+}
+
+.review-user div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.review-user span {
+  color: rgba(200, 200, 200, 0.55);
+  font-size: 0.78rem;
+}
+
+.review-content h1 {
+  margin: 2rem 0 0.75rem;
+  color: #f1e8e8;
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+}
+
+.review-rating {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.review-rating .material-symbols-outlined {
+  font-size: 1.35rem;
+}
+
+.review-rating strong {
+  margin-left: 0.5rem;
+  color: #f5c518;
+}
+
+.star-filled {
+  color: #f5c518;
+  font-variation-settings: 'FILL' 1;
+}
+
+.star-empty {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.review-comment {
+  margin: 2rem 0;
+  color: #f0f0f0;
+  font-size: 1.1rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.review-comment-empty {
+  color: rgba(200, 200, 200, 0.5);
+}
+
+.review-meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin: 0;
+}
+
+.review-meta div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.review-meta dt {
+  color: rgba(200, 200, 200, 0.5);
+  font-size: 0.75rem;
+}
+
+.review-meta dd {
+  margin: 0;
+  color: #f0f0f0;
+  font-size: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .review-details-page {
+    padding-inline: 1rem;
+  }
+
+  .review-card {
+    grid-template-columns: 1fr;
+  }
+
+  .review-anime-cover {
+    min-height: 20rem;
+    max-height: 28rem;
+  }
+
+  .review-content {
+    padding: 1.25rem;
+  }
+
+  .review-meta {
+    grid-template-columns: 1fr;
+  }
+}

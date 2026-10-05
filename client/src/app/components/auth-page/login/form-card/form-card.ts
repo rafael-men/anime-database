@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService, AuthResponse } from '../../../../../api/services/auth.service';
 import { SessionService } from '../../../../../api/services/session.service';
 import { finalize } from 'rxjs';
+import { ToastService } from '../../../../services/toast.service';
 
 @Component({
   selector: 'app-form-card',
@@ -17,6 +18,7 @@ export class FormCard {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly sessionService = inject(SessionService);
+  private readonly toastService = inject(ToastService);
 
   isLoading = false;
   errorMessage = '';
@@ -30,6 +32,7 @@ export class FormCard {
 
     if (!email || !password) {
       this.errorMessage = 'Preencha email e senha para continuar.';
+      this.toastService.error(this.errorMessage);
       return;
     }
 
@@ -59,5 +62,6 @@ export class FormCard {
   private handleError(err: unknown): void {
     const error = err as { error?: { message?: string } };
     this.errorMessage = error?.error?.message ?? 'Erro ao autenticar. Tente novamente.';
+    this.toastService.error(this.errorMessage);
   }
 }

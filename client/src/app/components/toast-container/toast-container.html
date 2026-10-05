@@ -1,0 +1,13 @@
+<section class="toast-container" aria-live="polite" aria-atomic="true">
+  @for (toast of toastService.messages(); track toast.id) {
+    <div class="toast" [class.toast-error]="toast.type === 'error'" [class.toast-success]="toast.type === 'success'">
+      <span class="material-symbols-outlined" aria-hidden="true">
+        {{ toast.type === 'error' ? 'error' : toast.type === 'success' ? 'check_circle' : 'info' }}
+      </span>
+      <p>{{ toast.message }}</p>
+      <button type="button" aria-label="Fechar notificação" (click)="toastService.dismiss(toast.id)">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
+      </button>
+    </div>
+  }
+</section>

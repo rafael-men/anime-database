@@ -17,6 +17,7 @@ export enum WatchlistStatus {
 }
 
 @Entity({ name: 'watchlist_items' })
+@Index(['userId', 'addedAt'])
 @Index(['userId', 'externalAnimeId'], { unique: true })
 export class WatchlistItem {
   @PrimaryGeneratedColumn('uuid')

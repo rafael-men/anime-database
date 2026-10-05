@@ -34,6 +34,10 @@ export class FavouritesPage implements OnInit, AfterViewInit {
 
   canScrollPrev = signal(false);
   canScrollNext = signal(false);
+  currentPage = signal(1);
+  pageSize = signal(20);
+  totalPages = signal(0);
+  totalFavorites = signal(0);
 
   @ViewChild('carouselTrack') carouselTrack?: ElementRef<HTMLDivElement>;
 
@@ -53,6 +57,8 @@ export class FavouritesPage implements OnInit, AfterViewInit {
   isSearching = computed(() => this.searchQuery().trim().length > 0);
 
   favoriteIdSet = computed(() => new Set(this.favorites().map((a) => a.mal_id)));
+  canGoToPreviousPage = computed(() => this.currentPage() > 1);
+  canGoToNextPage = computed(() => this.currentPage() < this.totalPages());
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -80,12 +86,17 @@ export class FavouritesPage implements OnInit, AfterViewInit {
     });
   }
 
-  loadFavorites(userId: string): void {
+  loadFavorites(userId: string, page = this.currentPage()): void {
     this.isLoading.set(true);
     this.errorMessage.set('');
+    this.currentPage.set(page);
 
-    this.favoritesService.getFavorites(userId).subscribe({
-      next: (items) => {
+    this.favoritesService.getFavorites(userId, page, this.pageSize()).subscribe({
+      next: (response) => {
+        this.totalPages.set(response.pagination.totalPages);
+        this.totalFavorites.set(response.pagination.total);
+        const items = response.items;
+
         if (items.length === 0) {
           this.favorites.set([]);
           this.isLoading.set(false);
@@ -149,7 +160,21 @@ export class FavouritesPage implements OnInit, AfterViewInit {
 
   retryLoad(): void {
     const user = this.sessionService.getUser();
-    if (user) this.loadFavorites(user.userId);
+    if (user) this.loadFavorites(user.userId, this.currentPage());
+  }
+
+  goToPreviousPage(): void {
+    const user = this.sessionService.getUser();
+    if (user && this.canGoToPreviousPage()) {
+      this.loadFavorites(user.userId, this.currentPage() - 1);
+    }
+  }
+
+  goToNextPage(): void {
+    const user = this.sessionService.getUser();
+    if (user && this.canGoToNextPage()) {
+      this.loadFavorites(user.userId, this.currentPage() + 1);
+    }
   }
 
   removeFavorite(animeId: number): void {

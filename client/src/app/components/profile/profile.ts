@@ -170,7 +170,7 @@ export class Profile implements OnInit {
 
   private loadUserFavorites(userId: string): void {
     this.favoritesService.getFavorites(userId).subscribe({
-      next: (items) => this.favoriteItems.set(items),
+      next: (response) => this.favoriteItems.set(response.items),
       error: () => {},
     });
   }

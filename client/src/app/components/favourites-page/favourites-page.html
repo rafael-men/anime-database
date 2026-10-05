@@ -101,5 +101,25 @@
     </div>
   }
 
+  @if (!isSearching() && totalPages() > 1) {
+    <nav class="flex items-center justify-center gap-4 mt-6" aria-label="Paginação de favoritos">
+      <button
+        type="button"
+        [disabled]="!canGoToPreviousPage() || isLoading()"
+        (click)="goToPreviousPage()">
+        Página anterior
+      </button>
+
+      <span>Página {{ currentPage() }} de {{ totalPages() }}</span>
+
+      <button
+        type="button"
+        [disabled]="!canGoToNextPage() || isLoading()"
+        (click)="goToNextPage()">
+        Próxima página
+      </button>
+    </nav>
+  }
+
   <app-groups-component />
 </main>

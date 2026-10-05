@@ -85,9 +85,20 @@ export class DiaryComponent implements AfterViewInit {
     );
   }
 
-  navigateToAnime(animeId: string): void {
-    const id = Number(animeId);
-    if (!isNaN(id)) this.router.navigate(['/anime', id]);
+  navigateToReview(review: UserReview): void {
+    const animeId = Number(review.externalAnimeId);
+
+    if (isNaN(animeId)) {
+      return;
+    }
+
+    this.router.navigate(['/diary/review-details'], {
+      queryParams: {
+        reviewId: review.id,
+        animeId,
+        userId: review.userId,
+      },
+    });
   }
 
   ratingToStars(rating: number): number {

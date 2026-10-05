@@ -21,6 +21,16 @@ export interface AnimeReview {
   updatedAt: Date;
 }
 
+export interface UserFavoritesPage {
+  items: WatchlistItem[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 @Injectable()
 export class UserAnimeActionsService {
   constructor(
@@ -225,13 +235,39 @@ export class UserAnimeActionsService {
     );
   }
 
-  async getUserFavorites(userId: string): Promise<WatchlistItem[]> {
+  async getUserFavorites(
+    userId: string,
+    page = 1,
+    limit = 20,
+  ): Promise<UserFavoritesPage> {
     await this.validateUser(userId);
 
-    return this.watchlistRepository.find({
+    const safePage = Math.max(1, Math.trunc(page));
+    const safeLimit = Math.min(100, Math.max(1, Math.trunc(limit)));
+    const [items, total] = await this.watchlistRepository.findAndCount({
       where: { userId },
+      select: {
+        id: true,
+        userId: true,
+        externalAnimeId: true,
+        status: true,
+        addedAt: true,
+        updatedAt: true,
+      },
       order: { addedAt: 'DESC' },
+      skip: (safePage - 1) * safeLimit,
+      take: safeLimit,
     });
+
+    return {
+      items,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        totalPages: Math.ceil(total / safeLimit),
+      },
+    };
   }
 
   async getUserReviews(userId: string): Promise<Review[]> {

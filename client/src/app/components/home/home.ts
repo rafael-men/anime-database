@@ -138,7 +138,8 @@ export class Home implements OnInit {
     if (!user) return;
 
     this.favoritesService.getFavorites(user.userId).subscribe({
-      next: (items) => {
+      next: (response) => {
+        const items = response.items;
         this.favoriteIds.set(new Set(items.map((i) => Number(i.externalAnimeId))));
       },
       error: () => {},

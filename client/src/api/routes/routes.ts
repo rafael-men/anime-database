@@ -70,7 +70,7 @@ export const API_ROUTES = {
   },
   watchlist: {
     base: `${API_BASE}/watchlist`,
-    byId: (id: string) => `${API_BASE}/watchlist/${id}`,
+    byAnimeId: (animeId: string) => `${API_BASE}/watchlist/${encodeURIComponent(animeId)}`,
   },
   control: {
     users: `${API_BASE}/control/users`,

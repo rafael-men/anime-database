@@ -5,6 +5,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService, AuthResponse } from '../../../../../api/services/auth.service';
 import { SessionService } from '../../../../../api/services/session.service';
 import { finalize } from 'rxjs';
+import { ToastService } from '../../../../services/toast.service';
 
 @Component({
   selector: 'app-register-card',
@@ -17,6 +18,7 @@ export class RegisterCard {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly sessionService = inject(SessionService);
+  private readonly toastService = inject(ToastService);
 
   isLoading = false;
   errorMessage = '';
@@ -76,16 +78,19 @@ export class RegisterCard {
 
     if (!username || !email || !password) {
       this.errorMessage = 'Preencha todos os campos para criar sua conta.';
+      this.toastService.error(this.errorMessage);
       return;
     }
 
     if (this.usernameAvailable === false) {
       this.errorMessage = 'Este nome de usuário já está em uso.';
+      this.toastService.error(this.errorMessage);
       return;
     }
 
     if (this.emailAvailable === false) {
       this.errorMessage = 'Este email já está cadastrado.';
+      this.toastService.error(this.errorMessage);
       return;
     }
 
@@ -115,5 +120,6 @@ export class RegisterCard {
   private handleError(err: unknown): void {
     const error = err as { error?: { message?: string } };
     this.errorMessage = error?.error?.message ?? 'Erro ao cadastrar. Tente novamente.';
+    this.toastService.error(this.errorMessage);
   }
 }
