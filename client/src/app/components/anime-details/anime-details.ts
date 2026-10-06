@@ -1,11 +1,14 @@
 import { Component, inject, OnInit, signal, computed, PLATFORM_ID } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AnimeService, AnimeDetailsData } from '../../../api/services/anime.service';
 import { SessionService } from '../../../api/services/session.service';
 import { FavoritesService } from '../../../api/services/favorites.service';
 import { UsersService } from '../../../api/services/users.service';
 import { ReviewsService, AnimeReview } from '../../../api/services/reviews.service';
+import { WatchlistService } from '../../../api/services/watchlist.service';
+import { ToastService } from '../../services/toast.service';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { resolveAssetUrl } from '../../../api/routes/routes';
 import { TranslatePipe } from '../../../utils/translate-pipe';
@@ -14,7 +17,7 @@ import { AvatarFallbackDirective } from '../../directives/avatar-fallback.direct
 @Component({
   selector: 'app-anime-details',
   standalone: true,
-  imports: [CommonModule, Navbar, TranslatePipe, AvatarFallbackDirective],
+  imports: [CommonModule, FormsModule, Navbar, TranslatePipe, AvatarFallbackDirective],
   templateUrl: './anime-details.html',
   styleUrl: './anime-details.css',
 })
@@ -22,8 +25,10 @@ export class AnimeDetails implements OnInit {
   private readonly animeService = inject(AnimeService);
   private readonly favoritesService = inject(FavoritesService);
   private readonly reviewsService = inject(ReviewsService);
+  private readonly watchlistService = inject(WatchlistService);
   private readonly sessionService = inject(SessionService);
   private readonly usersService = inject(UsersService);
+  private readonly toast = inject(ToastService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
@@ -32,6 +37,7 @@ export class AnimeDetails implements OnInit {
   isLoading = signal(false);
   errorMessage = signal('');
   isFavorite = signal(false);
+  isWatchlist = signal(false);
   searchQuery = signal('');
   showProfileMenu = signal(false);
 
@@ -116,7 +122,10 @@ export class AnimeDetails implements OnInit {
         this.isLoading.set(false);
 
         this.loadReviews(animeId);
-        if (userId) this.loadFavoriteState(userId, animeId);
+        if (userId) {
+          this.loadFavoriteState(userId, animeId);
+          this.loadWatchlistState(userId, animeId);
+        }
       },
       error: () => {
         this.errorMessage.set('Erro ao carregar o anime. Tente novamente.');
@@ -218,6 +227,15 @@ export class AnimeDetails implements OnInit {
     });
   }
 
+  private loadWatchlistState(userId: string, animeId: number): void {
+    this.watchlistService.getEntry(animeId).subscribe({
+      next: (entry) => {
+        this.isWatchlist.set(!!entry);
+      },
+      error: () => {},
+    });
+  }
+
   toggleFavorite(): void {
     const a = this.anime();
     const user = this.sessionService.getUser();
@@ -234,6 +252,26 @@ export class AnimeDetails implements OnInit {
         error: () => this.isFavorite.set(false),
       });
     }
+  }
+
+  toggleWatchlist(): void {
+    const a = this.anime();
+    const user = this.sessionService.getUser();
+    if (!a || !user) return;
+
+    if (this.isWatchlist()) {
+      this.isWatchlist.set(false);
+      this.watchlistService.remove(a.mal_id).subscribe({
+        error: () => this.isWatchlist.set(true),
+      });
+      return;
+    }
+
+    this.isWatchlist.set(true);
+    this.watchlistService.add(a.mal_id).subscribe({
+      next: () => this.toast.success('Adicionado à watchlist!'),
+      error: () => this.isWatchlist.set(false),
+    });
   }
 
   retry(): void {

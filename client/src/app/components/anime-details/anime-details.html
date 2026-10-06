@@ -101,6 +101,19 @@
               {{ isFavorite() ? 'Nos favoritos' : 'Adicionar aos favoritos' }}
             </button>
 
+            <button
+              type="button"
+              (click)="toggleWatchlist()"
+              class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold cursor-pointer border transition-all duration-200"
+              [class]="
+                isWatchlist()
+                  ? 'bg-gradient-to-br from-[#2f7d4f] to-[#1f5c39] border-transparent text-white shadow-lg shadow-green-900/20'
+                  : 'bg-white/[0.05] border-white/[0.12] text-[rgba(230,230,230,0.85)] hover:bg-white/[0.09] hover:border-white/[0.2]'
+              ">
+              <span class="material-symbols-outlined text-lg">playlist_add_check</span>
+              {{ isWatchlist() ? 'Na watchlist' : 'Adicionar à watchlist' }}
+            </button>
+
             @if (a.trailerUrl) {
             <a [href]="a.trailerUrl" target="_blank" rel="noopener"
               class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold no-underline bg-white/[0.05] border border-white/[0.12] text-[rgba(230,230,230,0.85)] hover:bg-white/[0.09] hover:border-white/[0.2] transition-all duration-200">

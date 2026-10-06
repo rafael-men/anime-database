@@ -29,10 +29,8 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { User } from '../../domain/models/user.model';
-import {
-  WatchlistItem,
-  WatchlistStatus,
-} from '../../domain/models/watchlist-item.model';
+import { WatchlistItem } from '../../domain/models/watchlist-item.model';
+import { WatchlistStatus } from '../../domain/enums/WatchlistStatus';
 import { Review } from '../../domain/models/review.model';
 import { UserAnimeActionsService } from '../../use-cases/user/user-anime-actions.service';
 import { UserService } from '../../use-cases/user/user.service';
@@ -173,7 +171,7 @@ export class UserController {
     return this.userAnimeActionsService.addAnimeToFavorites(
       userId,
       body.externalAnimeId,
-      body.status ?? WatchlistStatus.WATCHING,
+      body.status ?? WatchlistStatus.PLANNED,
     );
   }
 

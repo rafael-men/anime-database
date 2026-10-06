@@ -1,0 +1,19 @@
+# Dependencias e artefatos de build
+node_modules
+dist
+out-tsc
+tmp
+coverage
+.angular
+
+# Ambiente
+.env
+.env.*
+!.env.example
+
+# IDE / SO / logs
+.vscode
+.idea
+*.log
+.DS_Store
+Thumbs.db

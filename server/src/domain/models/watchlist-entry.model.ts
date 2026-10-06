@@ -11,18 +11,19 @@ import {
 import { User } from './user.model';
 import { WatchlistStatus } from '../enums/WatchlistStatus';
 
+export { WatchlistStatus };
 
-@Entity({ name: 'watchlist_items' })
-@Index(['userId', 'addedAt'])
+@Entity({ name: 'watchlist_entries' })
 @Index(['userId', 'externalAnimeId'], { unique: true })
-export class WatchlistItem {
+@Index(['userId', 'addedAt'])
+export class WatchlistEntry {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ type: 'uuid' })
   userId!: string;
 
-  @ManyToOne(() => User, (user) => user.watchlistItems, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user!: User;
 
@@ -36,32 +37,12 @@ export class WatchlistItem {
   })
   status!: WatchlistStatus;
 
+  @Column({ type: 'datetime', nullable: true })
+  watchedAt?: Date | null;
+
   @CreateDateColumn({ type: 'datetime' })
   addedAt!: Date;
 
   @UpdateDateColumn({ type: 'datetime', nullable: true })
   updatedAt?: Date | null;
-
-  constructor(data: Partial<WatchlistItem> = {}) {
-    Object.assign(this, data);
-    this.externalAnimeId ??= '';
-    this.status ??= WatchlistStatus.PLANNED;
-    this.addedAt ??= new Date();
-  }
-
-  getStatus(): WatchlistStatus {
-    return this.status;
-  }
-
-  setStatus(status: WatchlistStatus): void {
-    this.status = status;
-  }
-
-  getExternalAnimeId(): string {
-    return this.externalAnimeId;
-  }
-
-  setExternalAnimeId(externalAnimeId: string): void {
-    this.externalAnimeId = externalAnimeId;
-  }
 }

@@ -10,11 +10,12 @@ import { UsersService } from '../../../api/services/users.service';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { AnimeCard } from '../anime-card/anime-card';
 import { GroupsComponent } from '../groups-component/groups-component';
+import { WatchlistSection } from './watchlist-section/watchlist-section';
 
 @Component({
   selector: 'app-favourites-page',
   standalone: true,
-  imports: [CommonModule, Navbar, AnimeCard, GroupsComponent],
+  imports: [CommonModule, Navbar, AnimeCard, GroupsComponent, WatchlistSection],
   templateUrl: './favourites-page.html',
   styleUrl: './favourites-page.css',
 })

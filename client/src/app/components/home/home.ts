@@ -8,7 +8,6 @@ import { FavoritesService } from '../../../api/services/favorites.service';
 import { UsersService } from '../../../api/services/users.service';
 import { Navbar, NavbarTab } from '../navbar/navbar';
 import { AnimeGrid } from '../anime-grid/anime-grid';
-import { FormsModule } from '@angular/forms';
 
 const CATEGORY_GENRE_EN: Record<string, string> = {
   'Ação': 'Action',

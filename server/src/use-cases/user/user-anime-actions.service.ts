@@ -2,10 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review } from '../../domain/models/review.model';
-import {
-  WatchlistItem,
-  WatchlistStatus,
-} from '../../domain/models/watchlist-item.model';
+import { WatchlistItem } from '../../domain/models/watchlist-item.model';
+import { WatchlistStatus } from '../../domain/enums/WatchlistStatus';
 import { User } from '../../domain/models/user.model';
 import { ValidationException } from '../exceptions/validation.exception';
 import { ResourceNotFoundException } from '../exceptions/resource-not-found.exception';
@@ -66,7 +64,7 @@ export class UserAnimeActionsService {
   async addAnimeToFavorites(
     userId: string,
     externalAnimeId: string,
-    status: WatchlistStatus = WatchlistStatus.WATCHING,
+    status: WatchlistStatus = WatchlistStatus.PLANNED,
   ): Promise<WatchlistItem> {
     await this.validateUser(userId);
     this.validateAnimeId(externalAnimeId);

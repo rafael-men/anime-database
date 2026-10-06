@@ -20,9 +20,11 @@ import { GroupItem } from './domain/models/group-item.model';
 import { Review } from './domain/models/review.model';
 import { User } from './domain/models/user.model';
 import { WatchlistItem } from './domain/models/watchlist-item.model';
+import { WatchlistEntry } from './domain/models/watchlist-entry.model';
 import { UserModule } from './use-cases/user/user.module';
 import { GroupModule } from './use-cases/group/group.module';
 import { FollowModule } from './use-cases/follow/follow.module';
+import { WatchlistModule } from './use-cases/watchlist/watchlist.module';
 import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.service';
 import { StorageModule } from './storage/storage.module';
 
@@ -48,6 +50,7 @@ import { StorageModule } from './storage/storage.module';
       User,
       Review,
       WatchlistItem,
+      WatchlistEntry,
       Group,
       GroupItem,
       Follow,
@@ -57,6 +60,7 @@ import { StorageModule } from './storage/storage.module';
     UserModule,
     GroupModule,
     FollowModule,
+    WatchlistModule,
     StorageModule,
   ],
   controllers: [

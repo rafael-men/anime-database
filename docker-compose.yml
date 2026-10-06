@@ -1,0 +1,106 @@
+name: anime-database-application
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${DB_NAME:-animelog}
+      MYSQL_USER: ${DB_USERNAME:-animelog}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-animelog}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - anime-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - anime-net
+
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    image: anime-database-server:local
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+
+      # MySQL
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USERNAME: ${DB_USERNAME:-animelog}
+      DB_PASSWORD: ${DB_PASSWORD:-animelog}
+      DB_NAME: ${DB_NAME:-animelog}
+      DB_SYNC: ${DB_SYNC:-true}
+      DB_LOG: ${DB_LOG:-false}
+      SESSION_STORE: redis
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-troque-este-segredo}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      FRONTEND_URLS: ${FRONTEND_URLS:-http://localhost:4000,http://127.0.0.1:4000}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
+      UPLOADS_DIR: /app/uploads
+    volumes:
+      - uploads-data:/app/uploads
+    ports:
+      - "${SERVER_PORT:-3000}:3000"
+    networks:
+      - anime-net
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
+        CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:-}
+    image: anime-database-client:local
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+    ports:
+      - "${CLIENT_PORT:-4000}:4000"
+    networks:
+      - anime-net
+
+volumes:
+  db-data:
+  redis-data:
+  uploads-data:
+
+networks:
+  anime-net:
+    driver: bridge

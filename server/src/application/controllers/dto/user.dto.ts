@@ -1,4 +1,4 @@
-import { WatchlistStatus } from '../../../domain/models/watchlist-item.model';
+import { WatchlistStatus } from '../../../domain/enums/WatchlistStatus';
 
 export class CreateUserDto {
   username!: string;

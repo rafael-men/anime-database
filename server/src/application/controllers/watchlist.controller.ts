@@ -8,56 +8,70 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
-import {
-  WatchlistItem,
-  WatchlistStatus,
-} from '../../domain/models/watchlist-item.model';
+import { WatchlistEntry } from '../../domain/models/watchlist-entry.model';
 import * as sessionAuthGuard from '../auth/session-auth.guard';
 import {
-  CreateWatchlistItemDto,
+  CreateWatchlistEntryDto,
   UpdateWatchlistStatusDto,
+  WatchlistPaginationDto,
 } from './dto/watchlist.dto';
 import {
-  UserAnimeActionsService,
-  UserFavoritesPage,
-} from '../../use-cases/user/user-anime-actions.service';
+  WatchlistPage,
+  WatchlistService,
+} from '../../use-cases/watchlist/watchlist.service';
 
 @Controller('watchlist')
 @UseGuards(sessionAuthGuard.SessionAuthGuard)
 export class WatchlistController {
-  constructor(private  readonly userAnimeActionsService: UserAnimeActionsService,) {}
+  constructor(private readonly watchlistService: WatchlistService) {}
 
   @Post()
-  async addToWatchlist(
+  async add(
     @Req() req: sessionAuthGuard.SessionRequest,
-    @Body() body: CreateWatchlistItemDto,
-  ): Promise<WatchlistItem> {
-    return this.userAnimeActionsService.addAnimeToFavorites(
+    @Body() body: CreateWatchlistEntryDto,
+  ): Promise<WatchlistEntry> {
+    return this.watchlistService.add(
       this.getAuthenticatedUserId(req),
       body.externalAnimeId,
       body.status,
     );
   }
 
-   @Get()
-  async getWatchlist(
+  @Get()
+  async list(
     @Req() req: sessionAuthGuard.SessionRequest,
-  ): Promise<UserFavoritesPage> {
-    return this.userAnimeActionsService.getUserFavorites(
+    @Query() pagination: WatchlistPaginationDto,
+  ): Promise<WatchlistPage> {
+    return this.watchlistService.list(
       this.getAuthenticatedUserId(req),
+      pagination.page,
+      pagination.limit,
     );
   }
 
-   @Patch(':animeId')
+  // atenção: declarado DEPOIS do @Get() para não ser engolido por ':animeId'
+  @Get(':animeId')
+  async getOne(
+    @Req() req: sessionAuthGuard.SessionRequest,
+    @Param('animeId') animeId: string,
+  ): Promise<WatchlistEntry | null> {
+    return this.watchlistService.getEntry(
+      this.getAuthenticatedUserId(req),
+      animeId,
+    );
+  }
+
+  @Patch(':animeId')
   async updateStatus(
     @Req() req: sessionAuthGuard.SessionRequest,
     @Param('animeId') animeId: string,
     @Body() body: UpdateWatchlistStatusDto,
-  ): Promise<WatchlistItem> {
-    return this.userAnimeActionsService.addAnimeToFavorites(
+  ): Promise<WatchlistEntry> {
+    return this.watchlistService.updateStatus(
       this.getAuthenticatedUserId(req),
       animeId,
       body.status,
@@ -66,20 +80,20 @@ export class WatchlistController {
 
   @Delete(':animeId')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async removeFromWatchlist(
+  async remove(
     @Req() req: sessionAuthGuard.SessionRequest,
     @Param('animeId') animeId: string,
   ): Promise<void> {
-    await this.userAnimeActionsService.removeAnimeFromFavorites(
+    await this.watchlistService.remove(
       this.getAuthenticatedUserId(req),
       animeId,
     );
   }
-   private getAuthenticatedUserId(req: sessionAuthGuard.SessionRequest): string {
+
+  private getAuthenticatedUserId(req: sessionAuthGuard.SessionRequest): string {
     if (!req.user?.sub) {
       throw new Error('Usuário não autenticado.');
     }
-
     return req.user.sub;
   }
 }

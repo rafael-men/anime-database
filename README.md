@@ -95,13 +95,17 @@ Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com
 ```text
 anime-database/
 ├── .github/workflows/                # Workflow de CI/CD
+├── docker-compose.yml                # Orquestração local (MySQL, Redis, server, client)
+├── .env.example                      # Modelo de variáveis do Docker Compose
 ├── client/                           # Frontend Angular
+│   ├── Dockerfile                    # Build multi-stage do bundle SSR
 │   └── src/app/
 │       ├── components/               # Páginas e componentes da interface
 │       ├── guards/                   # Guards de rota
 │       ├── api/                      # Rotas, serviços e interceptors HTTP
 │       └── server.ts                 # Servidor SSR do cliente
 ├── server/                           # Backend NestJS
+│   ├── Dockerfile                    # Build multi-stage do backend
 │   └── src/
 │       ├── application/              # Auth, controllers e sessões
 │       ├── data/                     # Configuração de banco e migrações
@@ -216,6 +220,60 @@ S3_URL_TTL_SECONDS=3600
 ```
 
 Quando `S3_PUBLIC_URL` é definido, as URLs retornadas usam esse endereço. Caso contrário, URLs pré-assinadas são geradas por requisição.
+
+## Docker
+
+O `docker-compose.yml` da raiz sobe a stack completa: **MySQL**, **Redis**, **server** (NestJS) e **client** (Angular SSR). Cada aplicação tem um `Dockerfile` multi-stage próprio (`server/Dockerfile` e `client/Dockerfile`).
+
+### Pré-requisitos
+
+- **Docker** >= 24
+- **Docker Compose** v2
+
+### 1. Configurar as variáveis
+
+```bash
+cp .env.example .env
+```
+
+Ajuste `JWT_SECRET`, `ADMIN_PASSWORD` e as credenciais do MySQL antes de qualquer deploy. O arquivo `.env` é ignorado pelo Git.
+
+### 2. Subir a stack
+
+```bash
+docker compose up -d --build
+```
+
+| Serviço | URL |
+| ------- | --- |
+| Frontend (SSR) | <http://localhost:4000> |
+| Backend (API) | <http://localhost:3000> |
+| Health check da API | <http://localhost:3000/health> |
+
+As portas e todos os valores do `.env` podem ser sobrescritos na linha de comando:
+
+```bash
+CLIENT_PORT=8080 SERVER_PORT=8081 docker compose up -d --build
+```
+
+### 3. Comandos úteis
+
+```bash
+docker compose logs -f client server     # Acompanhar logs
+docker compose ps                        # Estado dos serviços e health checks
+docker compose exec server sh            # Shell dentro do container
+docker compose down                      # Derrubar a stack (mantém os volumes)
+docker compose down -v                   # Derrubar e apagar MySQL, Redis e uploads
+```
+
+### Notas importantes
+
+- **Bancos e cache**: os serviços `db`, `redis` e o volume de avatars (`uploads-data`) usam volumes nomeados e sobrevivem a `docker compose down`.
+- **`DB_SYNC`**: por padrão é `true` e o TypeORM cria/atualiza as tabelas automaticamente. Em produção, use `false` e aplique as migrações manualmente.
+- **`API_BASE_URL`**: é embutida no bundle do Angular **no momento do build**, não em runtime. Depois de alterar essa variável, rode `docker compose build client` (ou `up -d --build`) para que o frontend aponte para a nova API.
+- **CORS**: ajuste `FRONTEND_URLS` para o domínio real do frontend. Sem isso, o navegador bloqueia as chamadas à API.
+- **Health checks**: `server` consulta `/health` e `client` consulta a raiz renderizada pelo SSR. O `server` só inicia após MySQL e Redis ficarem saudáveis (`depends_on: service_healthy`).
+- **S3**: com `STORAGE_DRIVER=s3` as variáveis `S3_*`/`AWS_*` devem ser adicionadas ao `environment` do serviço `server` no `docker-compose.yml`, e o volume de uploads pode ser removido.
 
 ## Testes
 

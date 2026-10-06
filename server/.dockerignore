@@ -1,0 +1,25 @@
+# Dependencias e artefatos de build
+node_modules
+dist
+build
+coverage
+.nyc_output
+
+# Dados locais de runtime
+uploads
+certs
+
+# Ambiente (segredos nunca vao para a imagem)
+.env
+.env.*
+!.env.example
+
+# Tests nao sao necessarios para compilar
+test
+
+# IDE / SO / logs
+.idea
+.vscode
+*.log
+.DS_Store
+Thumbs.db

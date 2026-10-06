@@ -1,0 +1,168 @@
+<section class="mt-10">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Minha Watchlist</h1>
+      <p class="page-subtitle">
+        {{ rows().length }} anime{{ rows().length === 1 ? '' : 's' }} na sua lista de acompanhamento
+      </p>
+    </div>
+  </div>
+
+  <!-- filtros removidos -->
+
+  @if (isLoading()) {
+    <div class="wl-empty">
+      <div class="loading-spinner"></div>
+      <p class="empty-text">Carregando watchlist...</p>
+    </div>
+  }
+
+  @if (!isLoading() && errorMessage()) {
+    <div class="wl-empty">
+      <span class="material-symbols-outlined error-icon">error</span>
+      <p class="error-text">{{ errorMessage() }}</p>
+      <button type="button" class="retry-btn" (click)="retryLoad()">Tentar novamente</button>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage() && rows().length === 0) {
+    <div class="wl-empty">
+      <span class="material-symbols-outlined empty-icon">playlist_add</span>
+      <p class="empty-text">Sua watchlist está vazia.</p>
+      <p class="empty-hint">Abra um anime e toque em "Adicionar à watchlist" para começar.</p>
+    </div>
+  }
+
+  @if (!isLoading() && !errorMessage() && rows().length > 0) {
+    <ul class="wl-list">
+      @for (row of rows(); track row.entry.id) {
+        <li class="wl-card">
+          <button
+            type="button"
+            class="wl-poster"
+            (click)="goToDetails(+row.entry.externalAnimeId)"
+            [attr.aria-label]="'Abrir detalhes de ' + (row.anime?.title ?? 'anime')">
+            @if (posterUrl(row.anime); as src) {
+              <img [src]="src" [alt]="row.anime?.title ?? ''" loading="lazy" />
+            } @else {
+              <span class="material-symbols-outlined">movie</span>
+            }
+          </button>
+
+          <div class="wl-body">
+            <div class="wl-top">
+              <div class="wl-title-block">
+                <h3
+                  class="wl-title"
+                  role="button"
+                  tabindex="0"
+                  (click)="goToDetails(+row.entry.externalAnimeId)"
+                  (keydown.enter)="goToDetails(+row.entry.externalAnimeId)">
+                  {{ row.anime?.title ?? 'Anime ' + row.entry.externalAnimeId }}
+                </h3>
+                <!-- status removido -->
+              </div>
+
+              <div class="wl-actions">
+                <!-- marcar assistido removido -->
+                <button type="button" class="wl-icon-btn" title="Editar" (click)="openEdit(row)">
+                  <span class="material-symbols-outlined">edit</span>
+                </button>
+                <button
+                  type="button"
+                  class="wl-icon-btn wl-icon-danger"
+                  title="Remover da watchlist"
+                  (click)="remove(row)">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="wl-meta">
+              <div class="wl-stars" role="group" aria-label="Avaliação">
+                @for (star of [1, 2, 3, 4, 5]; track star) {
+                  <button
+                    type="button"
+                    class="wl-star"
+                    [class.wl-star-on]="star <= (hoverStars() || row.stars)"
+                    title="Avaliar com {{ star }} estrela(s)"
+                    (mouseenter)="hoverStars.set(star)"
+                    (mouseleave)="hoverStars.set(0)"
+                    (click)="setRating(row, star)">
+                    <span class="material-symbols-outlined">star</span>
+                  </button>
+                }
+                @if (row.stars > 0) {
+                  <span class="wl-stars-label">{{ row.stars }}/5</span>
+                } @else {
+                  <span class="wl-stars-label wl-stars-empty">Sem nota</span>
+                }
+              </div>
+
+              <!-- status/select/data removidos -->
+            </div>
+
+            @if (row.comment) {
+              <p class="wl-comment">"{{ row.comment }}"</p>
+            }
+          </div>
+          @if (editingId() === row.entry.id) {
+            <div class="wl-editor" (click)="$event.stopPropagation()">
+              <div class="wl-editor-head">
+                <p class="wl-editor-title">Editar item</p>
+                <button type="button" class="wl-icon-btn" (click)="closeEdit()" title="Fechar">
+                  <span class="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <!-- status no editor removido -->
+
+              <div class="wl-editor-field">
+                <label class="wl-label">Nota</label>
+                <div class="wl-stars wl-stars-lg">
+                  @for (star of [1, 2, 3, 4, 5]; track star) {
+                    <button
+                      type="button"
+                      class="wl-star"
+                      [class.wl-star-on]="star <= (hoverStars() || draftStars())"
+                      (mouseenter)="hoverStars.set(star)"
+                      (mouseleave)="hoverStars.set(0)"
+                      (click)="draftStars.set(star); hoverStars.set(0)">
+                      <span class="material-symbols-outlined">star</span>
+                    </button>
+                  }
+                  @if (draftStars() > 0) {
+                    <button type="button" class="wl-clear" (click)="draftStars.set(0)">limpar</button>
+                  }
+                </div>
+              </div>
+
+              <div class="wl-editor-field">
+                <label class="wl-label" for="wl-comment-{{ row.entry.id }}">Comentário (opcional)</label>
+                <textarea
+                  id="wl-comment-{{ row.entry.id }}"
+                  class="wl-textarea"
+                  rows="3"
+                  maxlength="2000"
+                  [ngModel]="draftComment()"
+                  (ngModelChange)="draftComment.set($event)"
+                  placeholder="O que você achou?"></textarea>
+              </div>
+
+              <div class="wl-editor-actions">
+                <button
+                  type="button"
+                  class="retry-btn"
+                  [disabled]="isSaving()"
+                  (click)="saveEdit(row)">
+                  @if (isSaving()) { Salvando... } @else { Salvar }
+                </button>
+                <button type="button" class="wl-cancel" (click)="closeEdit()">Cancelar</button>
+              </div>
+            </div>
+          }
+        </li>
+      }
+    </ul>
+  }
+</section>
