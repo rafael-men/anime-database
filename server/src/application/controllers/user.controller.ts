@@ -19,7 +19,6 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
-  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -30,7 +29,6 @@ import {
 import { Type } from 'class-transformer';
 import { User } from '../../domain/models/user.model';
 import { WatchlistItem } from '../../domain/models/watchlist-item.model';
-import { WatchlistStatus } from '../../domain/enums/WatchlistStatus';
 import { Review } from '../../domain/models/review.model';
 import { UserAnimeActionsService } from '../../use-cases/user/user-anime-actions.service';
 import { UserService } from '../../use-cases/user/user.service';
@@ -78,8 +76,9 @@ class AddFavoriteDto {
   externalAnimeId!: string;
 
   @IsOptional()
-  @IsEnum(WatchlistStatus)
-  status?: WatchlistStatus;
+  @IsString()
+  @IsNotEmpty()
+  status?: string;
 }
 
 class FavoritesPaginationDto {
@@ -171,7 +170,7 @@ export class UserController {
     return this.userAnimeActionsService.addAnimeToFavorites(
       userId,
       body.externalAnimeId,
-      body.status ?? WatchlistStatus.PLANNED,
+      body.status ?? 'PLANNED',
     );
   }
 

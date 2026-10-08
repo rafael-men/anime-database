@@ -1,40 +1,43 @@
 name: anime-database-application
-
 services:
-  db:
-    image: mysql:8.4
+  minio:
+    image: minio/minio:latest
     restart: unless-stopped
+    command: server /data --console-address ":9001"
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
-      MYSQL_DATABASE: ${DB_NAME:-animelog}
-      MYSQL_USER: ${DB_USERNAME:-animelog}
-      MYSQL_PASSWORD: ${DB_PASSWORD:-animelog}
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     volumes:
-      - db-data:/var/lib/mysql
+      - minio-data:/data
+    ports:
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      test: ["CMD", "mc", "ready", "local"]
       interval: 10s
       timeout: 5s
-      retries: 12
-      start_period: 30s
+      retries: 5
+      start_period: 20s
     networks:
       - anime-net
 
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD &&
+      (mc mb local/$$S3_BUCKET || true) &&
+      mc anonymous set download local/$$S3_BUCKET &&
+      echo 'bucket $$S3_BUCKET pronto com leitura publica'
+      "
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3_BUCKET: ${S3_BUCKET:-anime-uploads}
+    restart: "no"
     networks:
       - anime-net
 
@@ -44,34 +47,29 @@ services:
       dockerfile: Dockerfile
     image: anime-database-server:local
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
+    env_file:
+      - ./server/.env
     environment:
       NODE_ENV: production
       PORT: 3000
-
-      # MySQL
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_USERNAME: ${DB_USERNAME:-animelog}
-      DB_PASSWORD: ${DB_PASSWORD:-animelog}
-      DB_NAME: ${DB_NAME:-animelog}
-      DB_SYNC: ${DB_SYNC:-true}
-      DB_LOG: ${DB_LOG:-false}
-      SESSION_STORE: redis
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-troque-este-segredo}
-      JWT_EXPIRATION: ${JWT_EXPIRATION:-7d}
-      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
-      FRONTEND_URLS: ${FRONTEND_URLS:-http://localhost:4000,http://127.0.0.1:4000}
-      STORAGE_DRIVER: ${STORAGE_DRIVER:-local}
       UPLOADS_DIR: /app/uploads
+      FRONTEND_URLS: ${FRONTEND_URLS:-http://localhost:4000,http://127.0.0.1:4000}
+      STORAGE_DRIVER: s3
+      S3_BUCKET: ${S3_BUCKET:-anime-uploads}
+      S3_ENDPOINT: http://minio:9000
+      S3_PUBLIC_URL: ${S3_PUBLIC_URL:-http://localhost:9000}
+      S3_ACL: ${S3_ACL:-public-read}
+      S3_FORCE_PATH_STYLE: "true"
+      S3_REGION: ${S3_REGION:-us-east-1}
+      AWS_REGION: ${AWS_REGION:-us-east-1}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
     volumes:
       - uploads-data:/app/uploads
+      - ./server/certs:/app/certs:ro
     ports:
       - "${SERVER_PORT:-3000}:3000"
     networks:
@@ -83,23 +81,24 @@ services:
       dockerfile: Dockerfile
       args:
         API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
-        CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:-}
+        CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:-http://localhost:9000}
     image: anime-database-client:local
     restart: unless-stopped
     depends_on:
-      - server
+      server:
+        condition: service_healthy
     environment:
       NODE_ENV: production
       PORT: 4000
+      NG_ALLOWED_HOSTS: ${NG_ALLOWED_HOSTS:-localhost,127.0.0.1}
     ports:
       - "${CLIENT_PORT:-4000}:4000"
     networks:
       - anime-net
 
 volumes:
-  db-data:
-  redis-data:
   uploads-data:
+  minio-data:
 
 networks:
   anime-net:

@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 import {
-  IsEnum,
   IsNotEmpty,
   IsNumber,
   IsOptional,
@@ -8,7 +7,6 @@ import {
   Max,
   Min,
 } from 'class-validator';
-import { WatchlistStatus } from '../../../domain/models/watchlist-entry.model';
 
 export class CreateWatchlistEntryDto {
   @IsString()
@@ -16,14 +14,15 @@ export class CreateWatchlistEntryDto {
   externalAnimeId!: string;
 
   @IsOptional()
-  @IsEnum(WatchlistStatus)
-  status?: WatchlistStatus;
+  @IsString()
+  @IsNotEmpty()
+  status?: string;
 }
 
 export class UpdateWatchlistStatusDto {
-  @IsEnum(WatchlistStatus)
+  @IsString()
   @IsNotEmpty()
-  status!: WatchlistStatus;
+  status!: string;
 }
 
 export class WatchlistPaginationDto {

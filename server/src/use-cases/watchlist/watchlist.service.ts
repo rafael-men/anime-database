@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  WatchlistEntry,
-  WatchlistStatus,
-} from '../../domain/models/watchlist-entry.model';
+import { WatchlistEntry } from '../../domain/models/watchlist-entry.model';
 import { ResourceNotFoundException } from '../exceptions/resource-not-found.exception';
 import { ValidationException } from '../exceptions/validation.exception';
 
@@ -28,7 +25,7 @@ export class WatchlistService {
   async add(
     userId: string,
     externalAnimeId: string,
-    status: WatchlistStatus = WatchlistStatus.PLANNED,
+    status = 'PLANNED',
   ): Promise<WatchlistEntry> {
     this.validateAnimeId(externalAnimeId);
     const normalized = this.normalizeStatus(status);
@@ -85,7 +82,7 @@ export class WatchlistService {
   async updateStatus(
     userId: string,
     animeId: string,
-    status: WatchlistStatus,
+    status: string,
   ): Promise<WatchlistEntry> {
     this.validateAnimeId(animeId);
 
@@ -125,10 +122,10 @@ export class WatchlistService {
   }
 
   private resolveWatchedAt(
-    status: WatchlistStatus,
+    status: string,
     current: Date | null | undefined,
   ): Date | null {
-    if (status !== WatchlistStatus.COMPLETED) return null;
+    if (status !== 'COMPLETED') return null;
     return current ?? new Date();
   }
 
@@ -138,14 +135,7 @@ export class WatchlistService {
     }
   }
 
-  private normalizeStatus(status?: WatchlistStatus): WatchlistStatus {
-    const value = status ?? WatchlistStatus.PLANNED;
-    if (!Object.values(WatchlistStatus).includes(value)) {
-      throw new ValidationException(
-        'Invalid watchlist status.',
-        'WATCHLIST_STATUS_INVALID',
-      );
-    }
-    return value;
+  private normalizeStatus(status?: string): string {
+    return status?.trim() || 'PLANNED';
   }
 }

@@ -41,7 +41,7 @@ app.use(
       useDefaults: true,
       directives: {
         'script-src': ["'self'", "'unsafe-inline'"],
-        'script-src-attr': ["'none'"],
+        'script-src-attr': ["'unsafe-inline'"],
         'object-src': ["'none'"],
         'base-uri': ["'self'"],
         'frame-ancestors': ["'self'"],

@@ -19,7 +19,8 @@
     "test:cov": "jest --coverage",
     "test:ci": "jest --ci --runInBand --coverage --coverageReporters=text-summary --coverageReporters=lcov",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migrate:avatars": "ts-node --transpile-only scripts/migrate-avatars-to-s3.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",
