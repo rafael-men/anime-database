@@ -34,7 +34,9 @@ export const getDatabaseConfig = (): TypeOrmModuleOptions => {
     ],
     synchronize: process.env.DB_SYNC === 'true',
     logging: process.env.DB_LOG === 'true',
-    migrations: [__dirname + '/../../database/migrations/*{.ts,.js}'],
+    migrations: [__dirname + '/../migrations/*{.ts,.js}'],
+    migrationsRun: process.env.DB_MIGRATIONS_RUN === 'true',
+    migrationsTableName: 'migrations',
     ssl: sslConfig,
     charset: 'utf8mb4',
     extra: {

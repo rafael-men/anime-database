@@ -19,4 +19,3 @@ export class CreateReviewDto {
   isRewatch?: boolean;
   hasSpoilers?: boolean;
 }
-

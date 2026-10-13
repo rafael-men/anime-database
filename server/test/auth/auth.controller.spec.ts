@@ -1,10 +1,15 @@
-import { INestApplication, UnauthorizedException } from '@nestjs/common';
+import {
+  INestApplication,
+  UnauthorizedException,
+  ValidationPipe,
+} from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { AuthController } from '../../src/application/auth/auth.controller';
 import { AuthService } from '../../src/application/auth/auth.service';
 import { SessionsService } from '../../src/application/sessions/sessions.service';
+import { PasswordResetService } from '../../src/application/auth/password-reset.service';
 
 describe('AuthController', () => {
   let app: INestApplication;
@@ -12,6 +17,11 @@ describe('AuthController', () => {
   const authServiceMock = {
     register: jest.fn(),
     login: jest.fn(),
+  };
+
+  const passwordResetServiceMock = {
+    requestReset: jest.fn(),
+    resetPassword: jest.fn(),
   };
 
   const sessionsServiceMock = {
@@ -32,11 +42,20 @@ describe('AuthController', () => {
       providers: [
         { provide: AuthService, useValue: authServiceMock },
         { provide: SessionsService, useValue: sessionsServiceMock },
+        { provide: PasswordResetService, useValue: passwordResetServiceMock },
       ],
     }).compile();
 
     app = moduleRef.createNestApplication();
     app.use(cookieParser());
+    // Espelha src/main.ts para que os DTOs sejam validados de verdade.
+    app.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
     await app.init();
   });
 
@@ -121,7 +140,7 @@ describe('AuthController', () => {
 
     await request(app.getHttpServer())
       .post('/auth/login')
-      .send({ email: 'rafael@email.com', password: 'wrong' })
+      .send({ email: 'rafael@email.com', password: 'senha-errada' })
       .expect(401);
   });
 
@@ -161,5 +180,78 @@ describe('AuthController', () => {
       .expect(204);
 
     expect(sessionsServiceMock.revoke).toHaveBeenCalledWith('opaque-token');
+  });
+
+  describe('recuperacao de senha', () => {
+    beforeEach(() => {
+      passwordResetServiceMock.requestReset.mockResolvedValue(undefined);
+      passwordResetServiceMock.resetPassword.mockResolvedValue(undefined);
+    });
+
+    it('POST /auth/forgot-password should return 202 with a neutral message', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/forgot-password')
+        .send({ email: 'rafael@email.com' })
+        .expect(202);
+
+      expect(passwordResetServiceMock.requestReset).toHaveBeenCalledWith(
+        'rafael@email.com',
+      );
+      expect(response.body.message).toBe(
+        'Se o e-mail estiver cadastrado, enviaremos o link.',
+      );
+    });
+
+    it('POST /auth/forgot-password returns the same message for unknown emails', async () => {
+      // O service engole o erro; a resposta precisa ser identica de qualquer forma.
+      const response = await request(app.getHttpServer())
+        .post('/auth/forgot-password')
+        .send({ email: 'ninguem@email.com' })
+        .expect(202);
+
+      expect(response.body.message).toBe(
+        'Se o e-mail estiver cadastrado, enviaremos o link.',
+      );
+    });
+
+    it('POST /auth/forgot-password should reject an invalid email with 400', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/forgot-password')
+        .send({ email: 'nao-e-email' })
+        .expect(400);
+
+      expect(passwordResetServiceMock.requestReset).not.toHaveBeenCalled();
+    });
+
+    it('POST /auth/reset-password should return 200 on success', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({ token: 'abc123', password: 'nova-senha-123' })
+        .expect(200);
+
+      expect(passwordResetServiceMock.resetPassword).toHaveBeenCalledWith(
+        'abc123',
+        'nova-senha-123',
+      );
+      expect(response.body.message).toBe('Senha alterada com sucesso.');
+    });
+
+    it('POST /auth/reset-password should reject a short password with 400', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({ token: 'abc123', password: '123' })
+        .expect(400);
+
+      expect(passwordResetServiceMock.resetPassword).not.toHaveBeenCalled();
+    });
+
+    it('POST /auth/reset-password should reject a missing token with 400', async () => {
+      await request(app.getHttpServer())
+        .post('/auth/reset-password')
+        .send({ password: 'nova-senha-123' })
+        .expect(400);
+
+      expect(passwordResetServiceMock.resetPassword).not.toHaveBeenCalled();
+    });
   });
 });

@@ -16,10 +16,13 @@ import { AuthService } from './auth.service';
 import {
   CheckEmailDto,
   CheckUsernameDto,
+  ForgotPasswordDto,
   LoginDto,
   RegisterDto,
+  ResetPasswordDto,
 } from '../controllers/dto/auth.dto';
 import { SessionsService } from '../sessions/sessions.service';
+import { PasswordResetService } from './password-reset.service';
 
 interface AuthRequest {
   cookies?: Record<string, string>;
@@ -30,7 +33,8 @@ export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly sessionsService: SessionsService,
-  ) { }
+    private readonly passwordResetService: PasswordResetService,
+  ) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -130,6 +134,25 @@ export class AuthController {
       avatarUrl: session.avatarUrl ?? null,
       csrfToken: session.csrfToken,
     };
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.ACCEPTED)
+  @Throttle({ default: { limit: 3, ttl: 15 * 60_000 } })
+  async forgotPassword(@Body() body: ForgotPasswordDto) {
+    await this.passwordResetService.requestReset(body.email);
+
+    // Resposta neutra: nao revela se o e-mail existe.
+    return { message: 'Se o e-mail estiver cadastrado, enviaremos o link.' };
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 15 * 60_000 } })
+  async resetPassword(@Body() body: ResetPasswordDto) {
+    await this.passwordResetService.resetPassword(body.token, body.password);
+
+    return { message: 'Senha alterada com sucesso.' };
   }
 
   @Post('logout')

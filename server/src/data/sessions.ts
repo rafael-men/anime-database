@@ -13,6 +13,14 @@ export interface SessionUser {
   avatarUrl?: string | null;
 }
 
+export interface SessionStore {
+  create(token: string, payload: SessionPayload, ttlMs: number): Promise<void>;
+  get(token: string): Promise<SessionPayload | null>;
+  revoke(token: string): Promise<void>;
+  revokeAllForUser?(userId: string): Promise<void>;
+  close?(): Promise<void>;
+}
+
 export interface SessionPayload extends SessionUser {
   csrfToken: string;
   createdAt: number;
@@ -22,6 +30,8 @@ export interface SessionStore {
   create(token: string, payload: SessionPayload, ttlMs: number): Promise<void>;
   get(token: string): Promise<SessionPayload | null>;
   revoke(token: string): Promise<void>;
+  /** Revoga todas as sessoes de um usuario. Usado ao trocar a senha. */
+  revokeAllForUser?(userId: string): Promise<void>;
   close?(): Promise<void>;
 }
 
@@ -30,6 +40,7 @@ export const SESSION_STORE = 'SESSION_STORE';
 export class RedisSessionStore implements SessionStore {
   private readonly client: Redis;
   private readonly keyPrefix = 'session:';
+  private readonly userIndexPrefix = 'user-sessions:';
   private connectPromise?: Promise<void>;
 
   constructor(url: string) {
@@ -67,6 +78,24 @@ export class RedisSessionStore implements SessionStore {
       ttlSeconds,
       JSON.stringify(payload),
     );
+
+    // Indice inverso usuario -> tokens, para revogacao em massa ao trocar a senha.
+    const indexKey = `${this.userIndexPrefix}${payload.userId}`;
+    await this.client.sadd(indexKey, token);
+    await this.client.expire(indexKey, ttlSeconds);
+  }
+
+  async revokeAllForUser(userId: string): Promise<void> {
+    await this.ensureConnected();
+    const indexKey = `${this.userIndexPrefix}${userId}`;
+    const tokens = await this.client.smembers(indexKey);
+
+    if (tokens.length > 0) {
+      const keys = tokens.map((token) => this.key(token));
+      await this.client.del(...keys);
+    }
+
+    await this.client.del(indexKey);
   }
 
   async get(token: string): Promise<SessionPayload | null> {
@@ -128,6 +157,15 @@ export class InMemorySessionStore implements SessionStore {
     this.store.delete(token);
   }
 
+  revokeAllForUser(userId: string): Promise<void> {
+    for (const [token, entry] of this.store) {
+      if (entry.payload.userId === userId) {
+        this.store.delete(token);
+      }
+    }
+    return Promise.resolve();
+  }
+
   async close(): Promise<void> {
     this.store.clear();
   }
@@ -176,7 +214,7 @@ export const sessionStoreProvider = {
 
     Logger.warn(
       'REDIS_URL/UPSTASH_REDIS_REST_URL não configurados ou inválidos. ' +
-      'Usando armazenamento de sessão em memória (sessões são perdidas no restart).',
+        'Usando armazenamento de sessão em memória (sessões são perdidas no restart).',
       'SessionsStore',
     );
 

@@ -21,7 +21,7 @@ export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly sessionsService: SessionsService,
-  ) { }
+  ) {}
 
   async register(data: {
     username: string;

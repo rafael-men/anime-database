@@ -129,7 +129,7 @@ export class AnimeProxyService {
           return payload;
         }
 
-        const status = response.status as number;
+        const status = response.status;
         const retryable =
           status === HttpStatus.TOO_MANY_REQUESTS || status >= 500;
 

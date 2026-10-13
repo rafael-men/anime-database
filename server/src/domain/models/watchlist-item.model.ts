@@ -10,7 +10,6 @@ import {
 } from 'typeorm';
 import { User } from './user.model';
 
-
 @Entity({ name: 'watchlist_items' })
 @Index(['userId', 'addedAt'])
 @Index(['userId', 'externalAnimeId'], { unique: true })

@@ -75,6 +75,16 @@ export class SessionsService {
     await this.store.revoke(token);
   }
 
+  /**
+   * Revoga todas as sessoes do usuario. Chamado ao redefinir a senha, para que
+   * quem tenha acesso indevido a conta perca o acesso imediatamente.
+   */
+  async revokeAllForUser(userId: string): Promise<void> {
+    if (this.store.revokeAllForUser) {
+      await this.store.revokeAllForUser(userId);
+    }
+  }
+
   async close(): Promise<void> {
     if (this.store.close) {
       await this.store.close();

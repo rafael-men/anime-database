@@ -36,7 +36,10 @@ export class WatchlistService {
 
     if (existing) {
       existing.status = normalized;
-      existing.watchedAt = this.resolveWatchedAt(normalized, existing.watchedAt);
+      existing.watchedAt = this.resolveWatchedAt(
+        normalized,
+        existing.watchedAt,
+      );
       existing.updatedAt = new Date();
       return this.repository.save(existing);
     }
@@ -73,7 +76,10 @@ export class WatchlistService {
     };
   }
 
-  async getEntry(userId: string, animeId: string): Promise<WatchlistEntry | null> {
+  async getEntry(
+    userId: string,
+    animeId: string,
+  ): Promise<WatchlistEntry | null> {
     return this.repository.findOne({
       where: { userId, externalAnimeId: animeId },
     });
@@ -131,7 +137,10 @@ export class WatchlistService {
 
   private validateAnimeId(externalAnimeId: string): void {
     if (!externalAnimeId || !externalAnimeId.trim()) {
-      throw new ValidationException('Anime id is required.', 'ANIME_ID_REQUIRED');
+      throw new ValidationException(
+        'Anime id is required.',
+        'ANIME_ID_REQUIRED',
+      );
     }
   }
 

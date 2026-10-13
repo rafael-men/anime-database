@@ -8,7 +8,14 @@ import { timingSafeEqual } from 'crypto';
 import { SessionsService } from '../sessions/sessions.service';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
-const CSRF_EXEMPT_PATHS = new Set(['/auth/login', '/auth/register']);
+const CSRF_EXEMPT_PATHS = new Set([
+  '/auth/login',
+  '/auth/register',
+  // Recuperacao de senha: o usuario pode estar logado em outra aba e ainda
+  // assim precisa concluir o fluxo a partir do e-mail.
+  '/auth/forgot-password',
+  '/auth/reset-password',
+]);
 
 interface CsrfRequest {
   method?: string;

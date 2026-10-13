@@ -14,7 +14,7 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async createUser(data: {
     username: string;
@@ -79,6 +79,15 @@ export class UserService {
     }
 
     return user;
+  }
+
+  /**
+   * Troca apenas o hash da senha. Usado pelo fluxo de recuperacao de senha,
+   * que ja validou o token antes de chegar aqui.
+   */
+  async setPasswordHash(userId: string, passwordHash: string): Promise<void> {
+    const user = await this.findById(userId);
+    await this.userRepository.update({ id: user.id }, { passwordHash });
   }
 
   async findByEmail(email: string): Promise<User> {

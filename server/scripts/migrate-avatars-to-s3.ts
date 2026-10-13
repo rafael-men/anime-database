@@ -38,11 +38,7 @@ interface Outcome {
   detail?: string;
 }
 
-/**
- * Carrega server/.env sem sobrescrever variaveis ja definidas no ambiente
- * (docker compose injeta env_file e isso tem precedencia). Evita depender do
- * `dotenv`, que hoje so existe como dependencia transitiva do @nestjs/config.
- */
+
 function loadEnvFile() {
   const file =
     process.env.STORAGE_ENV_FILE ?? path.resolve(process.cwd(), '.env');
@@ -96,10 +92,6 @@ function buildPool(): Pool {
   });
 }
 
-/**
- * Deriva o caminho a partir do basename do avatarUrl e recusa qualquer tentativa
- * de escapar da pasta (ex.: `../../etc/passwd` gravado no banco).
- */
 function safeLocalPath(uploadsDir: string, avatarUrl: string): string | null {
   const filename = avatarUrl.slice(UPLOADS_PREFIX.length);
   if (
@@ -112,10 +104,6 @@ function safeLocalPath(uploadsDir: string, avatarUrl: string): string | null {
   return join(uploadsDir, filename);
 }
 
-/**
- * Key deterministica por conteudo: reexecutar o script nao duplica objetos e
- * nao gera orphans quando o mesmo arquivo e migrado duas vezes.
- */
 function buildKey(buffer: Buffer, ext: string): string {
   const digest = createHash('sha256').update(buffer).digest('hex').slice(0, 32);
   return `avatars/${digest}${ext}`;

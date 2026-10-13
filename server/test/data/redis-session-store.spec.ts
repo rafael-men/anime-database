@@ -4,6 +4,10 @@ jest.mock('ioredis', () => {
     setex = jest.fn().mockResolvedValue('OK');
     get = jest.fn().mockResolvedValue(null);
     del = jest.fn().mockResolvedValue(1);
+    sadd = jest.fn().mockResolvedValue(1);
+    srem = jest.fn().mockResolvedValue(1);
+    smembers = jest.fn().mockResolvedValue([]);
+    expire = jest.fn().mockResolvedValue(1);
     quit = jest.fn().mockResolvedValue(undefined);
   }
 
@@ -12,12 +16,18 @@ jest.mock('ioredis', () => {
 
 import { RedisSessionStore, SessionPayload } from '../../src/data/sessions';
 
+// jest.Mock (e nao ReturnType<typeof jest.fn>) para que mockResolvedValue
+// aceite qualquer valor, em vez de inferir `never`.
 type MockRedisInstance = {
-  connect: ReturnType<typeof jest.fn>;
-  setex: ReturnType<typeof jest.fn>;
-  get: ReturnType<typeof jest.fn>;
-  del: ReturnType<typeof jest.fn>;
-  quit: ReturnType<typeof jest.fn>;
+  connect: jest.Mock;
+  setex: jest.Mock;
+  get: jest.Mock;
+  del: jest.Mock;
+  sadd: jest.Mock;
+  srem: jest.Mock;
+  smembers: jest.Mock;
+  expire: jest.Mock;
+  quit: jest.Mock;
 };
 
 const payload: SessionPayload = {
@@ -72,6 +82,40 @@ describe('RedisSessionStore', () => {
 
     await store.revoke('tok1');
     expect(client.del).toHaveBeenCalledWith('session:tok1');
+  });
+
+  it('indexa o token por usuário ao criar a sessão', async () => {
+    const store = new RedisSessionStore('rediss://default:token@host:6379');
+    const client = clientOf(store);
+
+    await store.create('tok1', payload, 60_000);
+
+    expect(client.sadd).toHaveBeenCalledWith('user-sessions:u1', 'tok1');
+    expect(client.expire).toHaveBeenCalledWith('user-sessions:u1', 60);
+  });
+
+  it('revoga todas as sessões de um usuário e limpa o índice', async () => {
+    const store = new RedisSessionStore('rediss://default:token@host:6379');
+    const client = clientOf(store);
+    client.smembers.mockResolvedValue(['tok1', 'tok2']);
+
+    await store.revokeAllForUser('u1');
+
+    expect(client.smembers).toHaveBeenCalledWith('user-sessions:u1');
+    // Uma unica chamada del com todas as chaves, e nao uma por token.
+    expect(client.del).toHaveBeenCalledWith('session:tok1', 'session:tok2');
+    expect(client.del).toHaveBeenCalledWith('user-sessions:u1');
+  });
+
+  it('não tenta apagar chaves quando o usuário não tem sessões', async () => {
+    const store = new RedisSessionStore('rediss://default:token@host:6379');
+    const client = clientOf(store);
+    client.smembers.mockResolvedValue([]);
+
+    await store.revokeAllForUser('u1');
+
+    expect(client.del).toHaveBeenCalledTimes(1);
+    expect(client.del).toHaveBeenCalledWith('user-sessions:u1');
   });
 
   it('fecha o cliente sem duplicar conexão', async () => {
