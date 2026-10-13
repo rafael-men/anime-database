@@ -19,7 +19,12 @@
     "test:cov": "jest --coverage",
     "test:ci": "jest --ci --runInBand --coverage --coverageReporters=text-summary --coverageReporters=lcov",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "migrate:avatars": "ts-node --transpile-only scripts/migrate-avatars-to-s3.ts",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/data/data-source.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/data/data-source.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/data/data-source.ts",
+    "migration:show": "typeorm-ts-node-commonjs migration:show -d src/data/data-source.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1131.0",
@@ -39,6 +44,7 @@
     "helmet": "^8.3.0",
     "ioredis": "^5.11.1",
     "mysql2": "^3.23.3",
+    "nodemailer": "^10.1.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
@@ -57,6 +63,7 @@
     "@types/jest": "^30.0.0",
     "@types/multer": "^2.2.0",
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^7.0.0",
     "eslint": "^9.18.0",

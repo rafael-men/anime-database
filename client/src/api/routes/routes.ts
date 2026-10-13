@@ -36,6 +36,8 @@ export const API_ROUTES = {
     checkEmail: `${API_BASE}/auth/check-email`,
     logout: `${API_BASE}/auth/logout`,
     session: `${API_BASE}/auth/session`,
+    forgotPassword: `${API_BASE}/auth/forgot-password`,
+    resetPassword: `${API_BASE}/auth/reset-password`,
   },
   users: {
     profile: (id: string) => `${API_BASE}/users/${id}`,

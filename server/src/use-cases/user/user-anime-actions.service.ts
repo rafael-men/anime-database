@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Review } from '../../domain/models/review.model';
 import { WatchlistItem } from '../../domain/models/watchlist-item.model';
-import { WatchlistStatus } from '../../domain/enums/WatchlistStatus';
 import { User } from '../../domain/models/user.model';
 import { ValidationException } from '../exceptions/validation.exception';
 import { ResourceNotFoundException } from '../exceptions/resource-not-found.exception';
@@ -64,7 +63,7 @@ export class UserAnimeActionsService {
   async addAnimeToFavorites(
     userId: string,
     externalAnimeId: string,
-    status: WatchlistStatus = WatchlistStatus.PLANNED,
+    status = 'PLANNED',
   ): Promise<WatchlistItem> {
     await this.validateUser(userId);
     this.validateAnimeId(externalAnimeId);
@@ -303,17 +302,8 @@ export class UserAnimeActionsService {
     }
   }
 
-  private normalizeStatus(status?: WatchlistStatus): WatchlistStatus {
-    const value = status ?? WatchlistStatus.PLANNED;
-
-    if (!Object.values(WatchlistStatus).includes(value)) {
-      throw new ValidationException(
-        'Invalid watchlist status.',
-        'WATCHLIST_STATUS_INVALID',
-      );
-    }
-
-    return value;
+  private normalizeStatus(status?: string): string {
+    return status?.trim() || 'PLANNED';
   }
 
   private normalizeRating(rating: number): number {

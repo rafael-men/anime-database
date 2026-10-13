@@ -1,8 +1,4 @@
-import {
-  CanActivate,
-  INestApplication,
-  ValidationPipe,
-} from '@nestjs/common';
+import { CanActivate, INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import { UserController } from '../../src/application/controllers/user.controller';

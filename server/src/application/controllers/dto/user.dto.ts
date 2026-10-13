@@ -1,5 +1,3 @@
-import { WatchlistStatus } from '../../../domain/enums/WatchlistStatus';
-
 export class CreateUserDto {
   username!: string;
   email!: string;
@@ -8,15 +6,9 @@ export class CreateUserDto {
   bio?: string | null;
 }
 
-export class UpdateUserDto {
-  username?: string;
-  bio?: string | null;
-  avatarUrl?: string | null;
-}
-
 export class AddFavoriteDto {
   externalAnimeId!: string;
-  status?: WatchlistStatus;
+  status?: string;
 }
 
 export class CreateReviewDto {

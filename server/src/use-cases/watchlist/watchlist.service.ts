@@ -1,10 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import {
-  WatchlistEntry,
-  WatchlistStatus,
-} from '../../domain/models/watchlist-entry.model';
+import { WatchlistEntry } from '../../domain/models/watchlist-entry.model';
 import { ResourceNotFoundException } from '../exceptions/resource-not-found.exception';
 import { ValidationException } from '../exceptions/validation.exception';
 
@@ -28,7 +25,7 @@ export class WatchlistService {
   async add(
     userId: string,
     externalAnimeId: string,
-    status: WatchlistStatus = WatchlistStatus.PLANNED,
+    status = 'PLANNED',
   ): Promise<WatchlistEntry> {
     this.validateAnimeId(externalAnimeId);
     const normalized = this.normalizeStatus(status);
@@ -39,7 +36,10 @@ export class WatchlistService {
 
     if (existing) {
       existing.status = normalized;
-      existing.watchedAt = this.resolveWatchedAt(normalized, existing.watchedAt);
+      existing.watchedAt = this.resolveWatchedAt(
+        normalized,
+        existing.watchedAt,
+      );
       existing.updatedAt = new Date();
       return this.repository.save(existing);
     }
@@ -76,7 +76,10 @@ export class WatchlistService {
     };
   }
 
-  async getEntry(userId: string, animeId: string): Promise<WatchlistEntry | null> {
+  async getEntry(
+    userId: string,
+    animeId: string,
+  ): Promise<WatchlistEntry | null> {
     return this.repository.findOne({
       where: { userId, externalAnimeId: animeId },
     });
@@ -85,7 +88,7 @@ export class WatchlistService {
   async updateStatus(
     userId: string,
     animeId: string,
-    status: WatchlistStatus,
+    status: string,
   ): Promise<WatchlistEntry> {
     this.validateAnimeId(animeId);
 
@@ -125,27 +128,23 @@ export class WatchlistService {
   }
 
   private resolveWatchedAt(
-    status: WatchlistStatus,
+    status: string,
     current: Date | null | undefined,
   ): Date | null {
-    if (status !== WatchlistStatus.COMPLETED) return null;
+    if (status !== 'COMPLETED') return null;
     return current ?? new Date();
   }
 
   private validateAnimeId(externalAnimeId: string): void {
     if (!externalAnimeId || !externalAnimeId.trim()) {
-      throw new ValidationException('Anime id is required.', 'ANIME_ID_REQUIRED');
+      throw new ValidationException(
+        'Anime id is required.',
+        'ANIME_ID_REQUIRED',
+      );
     }
   }
 
-  private normalizeStatus(status?: WatchlistStatus): WatchlistStatus {
-    const value = status ?? WatchlistStatus.PLANNED;
-    if (!Object.values(WatchlistStatus).includes(value)) {
-      throw new ValidationException(
-        'Invalid watchlist status.',
-        'WATCHLIST_STATUS_INVALID',
-      );
-    }
-    return value;
+  private normalizeStatus(status?: string): string {
+    return status?.trim() || 'PLANNED';
   }
 }

@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { FormCard } from './components/auth-page/login/form-card/form-card';
 import { RegisterCard } from './components/auth-page/register/register-card/register-card';
+import { ForgotPassword } from './components/auth-page/forgot-password/forgot-password';
+import { ResetPassword } from './components/auth-page/reset-password/reset-password';
 import { Home } from './components/home/home';
 import { FavouritesPage } from './components/favourites-page/favourites-page';
 import { AnimeDetails } from './components/anime-details/anime-details';
@@ -18,6 +20,8 @@ import { authGuard } from './guards/auth.guard';
 export const routes: Routes = [
   { path: 'login', component: FormCard },
   { path: 'register', component: RegisterCard },
+  { path: 'esqueci-senha', component: ForgotPassword },
+  { path: 'redefinir-senha', component: ResetPassword },
   { path: 'control', component: ValidationPage },
   { path: 'home', component: Home, canActivate: [authGuard] },
   { path: 'profile', component: Profile, canActivate: [authGuard] },

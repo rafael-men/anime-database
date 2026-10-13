@@ -53,7 +53,7 @@ export class WatchlistController {
     );
   }
 
-  // atenção: declarado DEPOIS do @Get() para não ser engolido por ':animeId'
+
   @Get(':animeId')
   async getOne(
     @Req() req: sessionAuthGuard.SessionRequest,

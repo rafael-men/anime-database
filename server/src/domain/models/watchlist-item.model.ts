@@ -9,8 +9,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from './user.model';
-import { WatchlistStatus } from '../enums/WatchlistStatus';
-
 
 @Entity({ name: 'watchlist_items' })
 @Index(['userId', 'addedAt'])
@@ -29,12 +27,8 @@ export class WatchlistItem {
   @Column({ type: 'varchar', length: 255 })
   externalAnimeId!: string;
 
-  @Column({
-    type: 'enum',
-    enum: WatchlistStatus,
-    default: WatchlistStatus.PLANNED,
-  })
-  status!: WatchlistStatus;
+  @Column({ type: 'varchar', length: 32, default: 'PLANNED' })
+  status!: string;
 
   @CreateDateColumn({ type: 'datetime' })
   addedAt!: Date;
@@ -45,15 +39,15 @@ export class WatchlistItem {
   constructor(data: Partial<WatchlistItem> = {}) {
     Object.assign(this, data);
     this.externalAnimeId ??= '';
-    this.status ??= WatchlistStatus.PLANNED;
+    this.status ??= 'PLANNED';
     this.addedAt ??= new Date();
   }
 
-  getStatus(): WatchlistStatus {
+  getStatus(): string {
     return this.status;
   }
 
-  setStatus(status: WatchlistStatus): void {
+  setStatus(status: string): void {
     this.status = status;
   }
 

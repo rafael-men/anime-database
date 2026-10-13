@@ -55,4 +55,16 @@ export class AuthService {
   getSession(): Observable<AuthResponse> {
     return this.http.get<AuthResponse>(API_ROUTES.auth.session);
   }
+
+  /** O backend responde igual exista ou nao o e-mail, para nao vazar quem tem conta. */
+  forgotPassword(email: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(API_ROUTES.auth.forgotPassword, { email });
+  }
+
+  resetPassword(token: string, password: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(API_ROUTES.auth.resetPassword, {
+      token,
+      password,
+    });
+  }
 }

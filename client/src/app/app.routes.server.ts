@@ -6,6 +6,14 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender,
   },
   {
+    path: 'esqueci-senha',
+    renderMode: RenderMode.Client,
+  },
+  {
+    path: 'redefinir-senha',
+    renderMode: RenderMode.Client,
+  },
+  {
     path: 'anime/:id',
     renderMode: RenderMode.Client,
   },
