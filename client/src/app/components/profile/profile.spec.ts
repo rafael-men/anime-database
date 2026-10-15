@@ -84,7 +84,12 @@ describe('Profile', () => {
     );
     uploadAvatarMock = vi.fn(() => of(makeProfile()));
     getReviewsMock = vi.fn().mockReturnValue(of([makeReview(1), makeReview(2), makeReview(3)]));
-    getFavoritesMock = vi.fn().mockReturnValue(of([makeFavorite(1), makeFavorite(2)]));
+    getFavoritesMock = vi.fn().mockReturnValue(
+      of({
+        items: [makeFavorite(1), makeFavorite(2)],
+        pagination: { page: 1, limit: 20, total: 2, totalPages: 1 },
+      }),
+    );
     followCountsMock = vi.fn().mockReturnValue(of({ followers: 1, following: 2 }));
     isFollowingMock = vi.fn().mockReturnValue(of(false));
 

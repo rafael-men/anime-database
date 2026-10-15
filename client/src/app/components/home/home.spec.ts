@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { afterEach } from 'vitest';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
 import { vi } from 'vitest';
@@ -27,6 +28,12 @@ describe('Home', () => {
     fixture = TestBed.createComponent(Home);
     component = fixture.componentInstance;
     await fixture.whenStable();
+  });
+
+  afterEach(() => {
+    // Sem o teardown do TestBed, o modulo fica instanciado entre arquivos e o
+    // proximo configureTestingModule falha com "already been instantiated".
+    TestBed.resetTestingModule();
   });
 
   it('should create', () => {

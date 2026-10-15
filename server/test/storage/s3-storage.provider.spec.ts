@@ -11,7 +11,7 @@ describe('S3StorageProvider', () => {
     ).toThrow(/S3_BUCKET/);
   });
 
-  it('expõe url pública quando S3_PUBLIC_URL é configurado', () => {
+  it('inclui o bucket na url pública', () => {
     const provider = new S3StorageProvider({
       bucket: 'my-bucket',
       region: 'us-east-1',
@@ -20,8 +20,33 @@ describe('S3StorageProvider', () => {
       secretAccessKey: 'secret',
     });
 
+    // Sem o bucket no caminho, o acesso anônimo devolve 403 no MinIO/S3.
     expect(provider.resolveUrl('avatars/x.png')).toBe(
-      'https://cdn.example.com/avatars/x.png',
+      'https://cdn.example.com/my-bucket/avatars/x.png',
+    );
+  });
+
+  it('não duplica o bucket se S3_PUBLIC_URL já o incluir', () => {
+    const provider = new S3StorageProvider({
+      bucket: 'anime-uploads',
+      region: 'us-east-1',
+      publicUrl: 'http://localhost:9000/anime-uploads',
+    });
+
+    expect(provider.resolveUrl('avatars/x.jpg')).toBe(
+      'http://localhost:9000/anime-uploads/avatars/x.jpg',
+    );
+  });
+
+  it('aceita S3_PUBLIC_URL com barra final junto do bucket', () => {
+    const provider = new S3StorageProvider({
+      bucket: 'anime-uploads',
+      region: 'us-east-1',
+      publicUrl: 'http://localhost:9000/anime-uploads/',
+    });
+
+    expect(provider.resolveUrl('avatars/x.jpg')).toBe(
+      'http://localhost:9000/anime-uploads/avatars/x.jpg',
     );
   });
 
