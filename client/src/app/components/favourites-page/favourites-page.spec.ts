@@ -60,7 +60,12 @@ describe('FavouritesPage', () => {
   }
 
   beforeEach(async () => {
-    getFavoritesMock = vi.fn().mockReturnValue(of([makeFavorite(1), makeFavorite(2)]));
+    getFavoritesMock = vi.fn().mockReturnValue(
+      of({
+        items: [makeFavorite(1), makeFavorite(2)],
+        pagination: { page: 1, limit: 20, total: 2, totalPages: 1 },
+      }),
+    );
     removeFavoriteMock = vi.fn().mockReturnValue(of(void 0));
     getByIdMock = vi.fn((id: number) => of(id === 1 ? animeA : animeB));
 
@@ -73,7 +78,11 @@ describe('FavouritesPage', () => {
         { provide: AnimeService, useValue: { getById: getByIdMock } },
         {
           provide: UsersService,
-          useValue: { getProfile: vi.fn().mockReturnValue(of({ username: 'rafael', avatarUrl: null })) },
+          useValue: {
+            getProfile: vi.fn().mockReturnValue(of({ username: 'rafael', avatarUrl: null })),
+            // Chamado pelo template para as estatisticas do usuario.
+            getReviews: vi.fn().mockReturnValue(of([])),
+          },
         },
       ],
     }).compileComponents();
@@ -88,7 +97,8 @@ describe('FavouritesPage', () => {
     createComponent();
 
     expect(component).toBeTruthy();
-    expect(getFavoritesMock).toHaveBeenCalledWith('u1');
+    // Desde a paginacao, o componente chama com (userId, page, limit).
+    expect(getFavoritesMock).toHaveBeenCalledWith('u1', 1, expect.any(Number));
     expect(getByIdMock).toHaveBeenCalledTimes(2);
     expect(component.favorites().length).toBe(2);
     expect(component.isLoading()).toBe(false);
@@ -105,7 +115,9 @@ describe('FavouritesPage', () => {
 
   it('should keep the list empty when user has no favorites', () => {
     seedSession();
-    getFavoritesMock.mockReturnValue(of([]));
+    getFavoritesMock.mockReturnValue(
+      of({ items: [], pagination: { page: 1, limit: 20, total: 0, totalPages: 0 } }),
+    );
     createComponent();
 
     expect(component.favorites().length).toBe(0);

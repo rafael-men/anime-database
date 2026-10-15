@@ -35,11 +35,25 @@ describe('FavoritesService', () => {
 
   it('getFavorites faz GET na rota de favoritos do usuário', () => {
     service.getFavorites('u1').subscribe((res) => {
-      expect(res).toEqual([favorite]);
+      expect(res.items).toEqual([favorite]);
+      expect(res.pagination.total).toBe(1);
     });
 
-    const req = httpMock.expectOne(API_ROUTES.users.favorites('u1'));
-    expect(req.request.method).toBe('GET');
+    const req = httpMock.expectOne(
+      (r) => r.url === API_ROUTES.users.favorites('u1') && r.method === 'GET',
+    );
+    req.flush({ items: [favorite], pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
+  });
+
+  it('getFavorites normaliza resposta em array puro', () => {
+    service.getFavorites('u1').subscribe((res) => {
+      expect(res.items).toEqual([favorite]);
+      expect(res.pagination.totalPages).toBe(1);
+    });
+
+    const req = httpMock.expectOne(
+      (r) => r.url === API_ROUTES.users.favorites('u1') && r.method === 'GET',
+    );
     req.flush([favorite]);
   });
 
@@ -48,7 +62,9 @@ describe('FavoritesService', () => {
       expect(res).toEqual(favorite);
     });
 
-    const req = httpMock.expectOne(API_ROUTES.users.favorites('u1'));
+    const req = httpMock.expectOne(
+      (r) => r.url === API_ROUTES.users.favorites('u1') && r.method === 'POST',
+    );
     expect(req.request.method).toBe('POST');
     expect(req.request.body).toEqual({ externalAnimeId: '10', status: 'WATCHING' });
     req.flush(favorite);
@@ -57,7 +73,9 @@ describe('FavoritesService', () => {
   it('addFavorite omite o status quando não informado', () => {
     service.addFavorite('u1', 10).subscribe();
 
-    const req = httpMock.expectOne(API_ROUTES.users.favorites('u1'));
+    const req = httpMock.expectOne(
+      (r) => r.url === API_ROUTES.users.favorites('u1') && r.method === 'POST',
+    );
     expect(req.request.body).toEqual({ externalAnimeId: '10' });
     req.flush(favorite);
   });
@@ -66,7 +84,9 @@ describe('FavoritesService', () => {
     let completed = false;
     service.removeFavorite('u1', 10).subscribe(() => (completed = true));
 
-    const req = httpMock.expectOne(API_ROUTES.users.favorite('u1', 10));
+    const req = httpMock.expectOne(
+      (r) => r.url === API_ROUTES.users.favorite('u1', 10) && r.method === 'DELETE',
+    );
     expect(req.request.method).toBe('DELETE');
     req.flush(null);
 
