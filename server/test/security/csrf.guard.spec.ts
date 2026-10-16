@@ -11,6 +11,7 @@ import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { CsrfGuard } from '../../src/application/auth/csrf.guard';
 import { SessionsService } from '../../src/application/sessions/sessions.service';
+import { AdminSessionsService } from '../../src/application/admin/admin-session-service';
 
 @Controller('control')
 export class ControlTestController {
@@ -34,6 +35,12 @@ describe('CsrfGuard on /control (security active on all endpoints)', () => {
       controllers: [ControlTestController],
       providers: [
         { provide: SessionsService, useValue: sessionsServiceMock },
+        {
+          // O CsrfGuard tambem injeta o servico de sessao de admin para as
+          // rotas /control; sem stub o modulo de teste nao resolve.
+          provide: AdminSessionsService,
+          useValue: { cookieName: 'admin_sid', getSession: jest.fn() },
+        },
         { provide: APP_GUARD, useClass: CsrfGuard },
       ],
     }).compile();

@@ -17,11 +17,9 @@ import {
 export class ValidationPage {
   private readonly adminService = inject(AdminService);
 
-  email = '';
-  password = '';
   isAuthenticating = signal(false);
-  loginError = signal('');
   isLoggedIn = signal(false);
+  adminUsername = signal('');
 
   requests = signal<AdultRequest[]>([]);
   isLoading = signal(false);
@@ -34,36 +32,30 @@ export class ValidationPage {
     () => this.requests().filter((r) => r.adultRequestStatus === 'pending').length,
   );
 
+  
   ngOnInit(): void {
-    if (this.adminService.hasCredentials()) {
-      this.refreshRequests();
-    }
+    this.checkSession();
   }
 
-  login(): void {
-    const email = this.email.trim();
-    const password = this.password;
-
-    if (!email || !password) {
-      this.loginError.set('Informe e-mail e senha de administrador.');
-      return;
-    }
-
+  private checkSession(): void {
     this.isAuthenticating.set(true);
-    this.loginError.set('');
 
-    this.adminService.login(email, password).subscribe({
-      next: (requests) => {
-        this.adminService.setCredentials(email, password);
+    this.adminService.getSession().subscribe({
+      next: (session) => {
         this.isLoggedIn.set(true);
-        this.requests.set(requests);
+        this.adminUsername.set(session.username);
         this.isAuthenticating.set(false);
+        this.refreshRequests();
       },
       error: () => {
         this.isAuthenticating.set(false);
-        this.loginError.set('Credenciais inválidas ou serviço indisponível.');
+        this.adminService.startLogin();
       },
     });
+  }
+
+  login(): void {
+    this.adminService.startLogin();
   }
 
   refreshRequests(): void {
@@ -71,7 +63,7 @@ export class ValidationPage {
     this.errorMessage.set('');
 
     this.adminService.listRequests().subscribe({
-      next: (requests) => {
+      next: (requests: AdultRequest[]) => {
         this.requests.set(requests);
         this.isLoggedIn.set(true);
         this.isLoading.set(false);
@@ -119,11 +111,7 @@ export class ValidationPage {
   }
 
   logout(): void {
-    this.adminService.clearCredentials();
-    this.isLoggedIn.set(false);
-    this.email = '';
-    this.password = '';
-    this.requests.set([]);
+    this.adminService.startLogout();
   }
 
   formatDate(date?: string | null): string {

@@ -16,33 +16,58 @@ export interface AdultRequest {
   updatedAt?: string | null;
 }
 
+export interface AdminSession {
+  username: string;
+  email: string;
+  roles: string[];
+}
+
+export const ADMIN_CSRF_COOKIE = 'admin_csrf';
+
+function readCsrfCookie(): string {
+  if (typeof document === 'undefined') {
+    return '';
+  }
+
+  const match = document.cookie.match(
+    new RegExp('(?:^|; )' + ADMIN_CSRF_COOKIE + '=([^;]*)'),
+  );
+
+  return match ? decodeURIComponent(match[1]) : '';
+}
+
 @Injectable({ providedIn: 'root' })
 export class AdminService {
   private readonly http = inject(HttpClient);
-  private encodedCredentials: string | null = null;
 
-  setCredentials(email: string, password: string): void {
-    this.encodedCredentials = btoa(`${email}:${password}`);
+  startLogin(): void {
+    this.navigate(API_ROUTES.control.users.replace(/\/users\/?$/, '/login'));
   }
 
-  clearCredentials(): void {
-    this.encodedCredentials = null;
+  startLogout(): void {
+    this.navigate(API_ROUTES.control.users.replace(/\/users\/?$/, '/logout'));
   }
 
-  hasCredentials(): boolean {
-    return this.encodedCredentials !== null;
+  private navigate(url: string): void {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    window.location.href = url;
+
   }
 
-  login(email: string, password: string): Observable<AdultRequest[]> {
-    const encoded = btoa(`${email}:${password}`);
-    return this.http.get<AdultRequest[]>(API_ROUTES.control.users, {
-      headers: new HttpHeaders({ Authorization: `Basic ${encoded}` }),
+  getSession(): Observable<AdminSession> {
+    const sessionRoute = API_ROUTES.control.users.replace(/\/users\/?$/, '/session');
+
+    return this.http.get<AdminSession>(sessionRoute, {
+      withCredentials: true,
     });
   }
 
   listRequests(): Observable<AdultRequest[]> {
     return this.http.get<AdultRequest[]>(API_ROUTES.control.users, {
-      headers: this.authHeaders(),
+      withCredentials: true,
     });
   }
 
@@ -50,7 +75,10 @@ export class AdminService {
     return this.http.post<AdultRequest>(
       API_ROUTES.control.userApprove(userId),
       {},
-      { headers: this.authHeaders() },
+      {
+        withCredentials: true,
+        headers: this.csrfHeaders(),
+      },
     );
   }
 
@@ -58,13 +86,15 @@ export class AdminService {
     return this.http.post<AdultRequest>(
       API_ROUTES.control.userDeny(userId),
       {},
-      { headers: this.authHeaders() },
+      {
+        withCredentials: true,
+        headers: this.csrfHeaders(),
+      },
     );
   }
 
-  private authHeaders(): HttpHeaders {
-    return this.encodedCredentials
-      ? new HttpHeaders({ Authorization: `Basic ${this.encodedCredentials}` })
-      : new HttpHeaders();
+  private csrfHeaders(): HttpHeaders {
+    const token = readCsrfCookie();
+    return token ? new HttpHeaders({ 'X-CSRF-Token': token }) : new HttpHeaders();
   }
 }

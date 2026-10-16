@@ -5,13 +5,13 @@ services:
     restart: unless-stopped
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?defina MINIO_ROOT_USER no .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD no .env}
     volumes:
       - minio-data:/data
     ports:
-      - "${MINIO_API_PORT:-9000}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - "${MINIO_API_PORT:?defina MINIO_API_PORT no .env}:9000"
+      - "${MINIO_CONSOLE_PORT:?defina MINIO_CONSOLE_PORT no .env}:9001"
     healthcheck:
       test: ["CMD", "mc", "ready", "local"]
       interval: 10s
@@ -34,9 +34,9 @@ services:
       echo bucket $$S3_BUCKET pronto com leitura publica
       "
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
-      S3_BUCKET: ${S3_BUCKET:-anime-uploads}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:?defina MINIO_ROOT_USER no .env}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD no .env}
+      S3_BUCKET: ${S3_BUCKET}
     restart: "no"
     networks:
       - anime-net
@@ -50,20 +50,20 @@ services:
     env_file:
       - ./server/.env
     environment:
-      NODE_ENV: production
-      PORT: 3000
-      UPLOADS_DIR: /app/uploads
-      FRONTEND_URLS: ${FRONTEND_URLS:-http://localhost:4000,http://127.0.0.1:4000}
-      STORAGE_DRIVER: s3
-      S3_BUCKET: ${S3_BUCKET:-anime-uploads}
-      S3_ENDPOINT: http://minio:9000
+      NODE_ENV: ${NODE_ENV:?defina NODE_ENV no .env}
+      PORT: ${SERVER_INTERNAL_PORT:?defina SERVER_INTERNAL_PORT no .env}
+      UPLOADS_DIR: ${UPLOADS_DIR:?defina UPLOADS_DIR no .env}
+      FRONTEND_URLS: ${FRONTEND_URLS:?defina FRONTEND_URLS no .env}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:?defina STORAGE_DRIVER no .env}
+      S3_BUCKET: ${S3_BUCKET}
+      S3_ENDPOINT: ${S3_ENDPOINT}
       S3_PUBLIC_URL: ${S3_PUBLIC_URL}
-      S3_ACL: ${S3_ACL:-public-read}
-      S3_FORCE_PATH_STYLE: "true"
-      S3_REGION: ${S3_REGION:-us-east-1}
-      AWS_REGION: ${AWS_REGION:-us-east-1}
-      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:-minioadmin}
-      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:-minioadmin}
+      S3_ACL: ${S3_ACL}
+      S3_FORCE_PATH_STYLE: ${S3_FORCE_PATH_STYLE}
+      S3_REGION: ${S3_REGION}
+      AWS_REGION: ${AWS_REGION:?defina AWS_REGION no .env}
+      AWS_ACCESS_KEY_ID: ${MINIO_ROOT_USER:?defina MINIO_ROOT_USER no .env}
+      AWS_SECRET_ACCESS_KEY: ${MINIO_ROOT_PASSWORD:?defina MINIO_ROOT_PASSWORD no .env}
     depends_on:
       minio-init:
         condition: service_completed_successfully
@@ -71,7 +71,32 @@ services:
       - uploads-data:/app/uploads
       - ./server/certs:/app/certs:ro
     ports:
-      - "${SERVER_PORT:-3000}:3000"
+      - "${SERVER_PORT:?defina SERVER_PORT no .env}:3000"
+    networks:
+      - anime-net
+
+  keycloak:
+    image: keycloak/keycloak:latest
+    restart: unless-stopped
+    command: start-dev --import-realm
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN:?defina KEYCLOAK_ADMIN no .env}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?defina KEYCLOAK_ADMIN_PASSWORD no .env}
+      KC_DB: ${KC_DB:?defina KC_DB no .env}
+      KC_HEALTH_ENABLED: ${KC_HEALTH_ENABLED:?defina KC_HEALTH_ENABLED no .env}
+      KC_HOSTNAME_STRICT_BACKCHANNEL: ${KC_HOSTNAME_STRICT_BACKCHANNEL:?defina KC_HOSTNAME_STRICT_BACKCHANNEL no .env}
+      KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:?defina KC_HOSTNAME_STRICT no .env}
+      KC_PROXY: ${KC_PROXY:?defina KC_PROXY no .env}
+    healthcheck:
+      test: ["CMD-SHELL", "exec3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3; cat <&3 | grep -q '\"status\": \"UP\"'"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    volumes:
+      - ./keycloak/realm-anidb.json:/opt/keycloak/data/import/realm-anidb.json:ro
+    ports:
+      - "${KEYCLOAK_PORT:?defina KEYCLOAK_PORT no .env}:8080"
     networks:
       - anime-net
 
@@ -80,19 +105,19 @@ services:
       context: ./client
       dockerfile: Dockerfile
       args:
-        API_BASE_URL: ${API_BASE_URL:-http://localhost:3000}
-        CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:-http://localhost:9000}
+        API_BASE_URL: ${API_BASE_URL:?defina API_BASE_URL no .env}
+        CSP_CONNECT_SRC: ${CSP_CONNECT_SRC:?defina CSP_CONNECT_SRC no .env}
     image: anime-database-client:local
     restart: unless-stopped
     depends_on:
       server:
         condition: service_healthy
     environment:
-      NODE_ENV: production
-      PORT: 4000
-      NG_ALLOWED_HOSTS: ${NG_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      NODE_ENV: ${NODE_ENV:?defina NODE_ENV no .env}
+      PORT: ${CLIENT_INTERNAL_PORT:?defina CLIENT_INTERNAL_PORT no .env}
+      NG_ALLOWED_HOSTS: ${NG_ALLOWED_HOSTS:?defina NG_ALLOWED_HOSTS no .env}
     ports:
-      - "${CLIENT_PORT:-4000}:4000"
+      - "${CLIENT_PORT:?defina CLIENT_PORT no .env}:4000"
     networks:
       - anime-net
 

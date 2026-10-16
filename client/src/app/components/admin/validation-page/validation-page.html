@@ -10,43 +10,24 @@
       </div>
     </div>
     @if (isLoggedIn()) {
+      <span class="admin-subtitle">{{ adminUsername() }}</span>
       <button type="button" class="admin-logout-btn" (click)="logout()">Sair</button>
     }
   </div>
 
-  @if (!isLoggedIn()) {
+  @if (isAuthenticating()) {
+    <div class="admin-card flex items-center justify-center py-20">
+      <span class="admin-spinner-lg"></span>
+    </div>
+  } @else if (!isLoggedIn()) {
     <section class="admin-card p-6 sm:p-8 max-w-md mx-auto">
       <h2 class="admin-section-title mb-1">Acesso do administrador</h2>
-      <p class="admin-section-desc mb-6">Use as credenciais de administrador predefinidas.</p>
+      <p class="admin-section-desc mb-6">
+        A autenticação é feita pela conta corporativa. Você será redirecionado ao provedor de identidade.
+      </p>
 
-      <div class="flex flex-col gap-3">
-        <input
-          type="email"
-          [(ngModel)]="email"
-          placeholder="E-mail do administrador"
-          autocomplete="username"
-          class="admin-input" />
-        <input
-          type="password"
-          [(ngModel)]="password"
-          placeholder="Senha"
-          autocomplete="current-password"
-          class="admin-input" />
-      </div>
-
-      @if (loginError()) {
-        <p class="admin-error mt-4">{{ loginError() }}</p>
-      }
-
-      <button
-        type="button"
-        class="admin-primary-btn w-full mt-5"
-        [disabled]="isAuthenticating()"
-        (click)="login()">
-        @if (isAuthenticating()) {
-          <span class="admin-spinner"></span>
-        }
-        Entrar
+      <button type="button" class="admin-primary-btn w-full mt-2" (click)="login()">
+        Entrar com conta corporativa
       </button>
     </section>
   } @else if (isLoading()) {

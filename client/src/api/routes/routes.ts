@@ -78,5 +78,8 @@ export const API_ROUTES = {
     users: `${API_BASE}/control/users`,
     userApprove: (id: string) => `${API_BASE}/control/users/${id}/approve`,
     userDeny: (id: string) => `${API_BASE}/control/users/${id}/deny`,
+    login: `${API_BASE}/control/login`,
+    session: `${API_BASE}/control/session`,
+    logout: `${API_BASE}/control/logout`,
   },
 };
