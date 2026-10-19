@@ -1,6 +1,6 @@
 # Anime Database
 
-Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com), para acompanhar, avaliar e organizar animes. Os usuários podem navegar pelos animes da [API AniList](https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/getting-started), criar listas de acompanhamento, escrever avaliações, criar listas personalizadas, seguir outros usuários e gerenciar seus perfis. 
+Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com), para acompanhar animes. Os usuários podem navegar pelos animes da [API AniList](https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/getting-started), criar listas de acompanhamento, escrever avaliações, criar listas personalizadas, seguir outros usuários e gerenciar seus perfis. 
 
 ## Funcionalidades
 
@@ -12,6 +12,9 @@ Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com
 - Headers de segurança com **Helmet** e CORS restrito às origens configuradas.
 - Validação de entrada com `class-validator` e `ValidationPipe` do NestJS.
 - Hash de senhas com **bcrypt**.
+- Fluxos de recuperação e redefinição de senha por email.
+- Guards separados para sessão, ownership e administração.
+- Sessões administrativas federadas com **Keycloak/OIDC**, incluindo callback, logout e roles.
 - Verificação da disponibilidade de nome de usuário e email durante o cadastro.
 - Restrições finais de unicidade no banco de dados.
 - Endpoint `/health` para verificações de disponibilidade e deploy.
@@ -36,9 +39,12 @@ Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com
 
 ### Favoritos e Lista de Acompanhamento
 
-- Adição de animes aos favoritos com status: assistindo, concluído, em espera, abandonado e planejado.
+- Adição de animes aos favoritos com status de acompanhamento.
 - Remoção de animes dos favoritos.
-- Lista de acompanhamento por usuário com gerenciamento de status.
+- Lista de acompanhamento separada, com consulta individual e gerenciamento de status.
+- Paginação de favoritos e watchlist com `page`, `limit`, `total` e `totalPages`.
+- Consultas otimizadas com `findAndCount`, seleção de colunas e índices compostos.
+- Ownership derivado da sessão autenticada, sem aceitar `userId` arbitrário no corpo das operações.
 
 ### Avaliações e Notas
 
@@ -46,6 +52,8 @@ Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com
 - Comentários opcionais e marcação de spoilers.
 - Visualização das avaliações de um anime.
 - Registro de reassistidas.
+- Diário de avaliações no perfil, com cards uniformes e estrelas.
+- Tela `/diary/review-details` com comentário completo, anime, nota, usuário, datas, reassistida e spoilers.
 
 ### Grupos e Listas Personalizadas
 
@@ -68,7 +76,8 @@ Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com
 
 ### Painel Administrativo
 
-- Rota `/control` protegida por Basic Auth.
+- Login federado pela rota `/control/login`, usando Keycloak/OIDC.
+- Sessão administrativa própria, protegida por cookie e guard administrativo.
 - Visualização de solicitações de acesso a certos conteudos.
 - Aprovação ou recusa das solicitações por usuário.
 
@@ -78,6 +87,10 @@ Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com
 - Cards de anime com dimensões uniformes em grids e carrosséis.
 - Telas de login e cadastro com o asset público `logo.jpg`.
 - Skeleton loading e estados de vazio/erro nas telas de recursos.
+- Serviço global de toasts para erros, sucesso e informações.
+- Interceptor HTTP global para mensagens de rede, sessão expirada, autorização, rate limit e erros do servidor.
+- Cache, deduplicação, limite de concorrência e retry controlado para consultas AniList.
+- Rota protegida para detalhes completos de uma avaliação.
 
 ## Stack Tecnológica
 
@@ -117,6 +130,68 @@ anime-database/
 └── README.md
 ```
 
+## Mapa arquitetural
+
+
+
+### Fluxos principais
+
+#### Autenticação do usuário
+
+```text
+Login/Cadastro
+  -> AuthController
+  -> AuthService + UserService
+  -> bcrypt
+  -> SessionsService
+  -> Redis
+  -> cookie sid httpOnly + csrfToken
+```
+
+Nas requisições seguintes, `SessionAuthGuard` lê o cookie, carrega a sessão no Redis e
+preenche `req.user.sub`. Operações privadas usam esse identificador, e não um
+`userId` enviado pelo cliente.
+
+#### Operações protegidas
+
+```text
+Angular HttpClient
+  -> authInterceptor
+  -> cookie sid + X-CSRF-Token
+  -> ThrottlerGuard
+  -> CsrfGuard
+  -> SessionAuthGuard
+  -> OwnershipGuard quando a operação é do próprio usuário
+  -> Controller
+  -> Use case/service
+  -> TypeORM repository
+  -> MySQL
+```
+
+#### Catálogo de animes
+
+```text
+Componente Angular
+  -> AnimeService
+  -> anilistInterceptor
+  -> cache/deduplicação/limite de concorrência/retry
+  -> AniList GraphQL
+```
+
+#### Diário e detalhes da avaliação
+
+```text
+Perfil
+  -> UsersService.getReviews(userId)
+  -> DiaryComponent
+  -> card com anime, nota, data e estrelas
+  -> /diary/review-details?reviewId=...&animeId=...&userId=...
+  -> ReviewDetails
+  -> review + profile no backend
+  -> anime na AniList
+  -> comentário completo e metadados
+```
+
 ## Primeiros Passos
 
 ### Pré-requisitos
@@ -151,18 +226,33 @@ DB_PASSWORD=yourpassword
 DB_NAME=animelog
 DB_SYNC=true
 
-# Redis
+# Redis e sessões
 REDIS_URL=redis://localhost:6379
-
-# Sessão
-SESSION_SECRET=a-strong-random-secret
+SESSION_STORE=redis
+SESSION_TTL_MS=86400000
 
 # Frontend
-FRONTEND_URL=http://localhost:4200
+FRONTEND_URLS=http://localhost:4200
 
-# Credenciais administrativas. Use HTTPS em produção.
-ADMIN_EMAIL=admin@example.com
-ADMIN_PASSWORD=changeme
+# Ambiente
+NODE_ENV=development
+DB_MIGRATIONS_RUN=false
+
+# Email para recuperação de senha (opcional em desenvolvimento)
+MAIL_HOST=
+MAIL_PORT=587
+MAIL_SECURE=false
+MAIL_USER=
+MAIL_PASS=
+MAIL_FROM=nao-responda@anidb.local
+
+# Keycloak/OIDC do painel administrativo
+KEYCLOAK_ISSUER=http://localhost:8080/realms/anidb
+KEYCLOAK_CLIENT_ID=anidb-admin
+KEYCLOAK_CLIENT_SECRET=
+KEYCLOAK_REDIRECT_URI=http://localhost:3000/control/callback
+KEYCLOAK_ADMIN_ROLE=admin
+ADMIN_FRONTEND_URL=http://localhost:4000
 
 # Armazenamento
 STORAGE_DRIVER=local
@@ -198,7 +288,7 @@ npm start
 
 O cliente inicia em <http://localhost:4200> e encaminha as chamadas para o backend.
 
-Para builds SSR de produção, defina `API_BASE_URL` e, quando necessário, `CSP_CONNECT_SRC` antes de executar `npm run build` em `client/`.
+Para builds SSR de produção, defina `API_BASE_URL` e, quando necessário, `CSP_CONNECT_SRC` antes de executar `npm run build` em `client/`. O `API_BASE_URL` é embutido no bundle durante o build.
 
 ### Storage S3 (opcional)
 
@@ -236,7 +326,7 @@ O `docker-compose.yml` da raiz sobe a stack completa: **MySQL**, **Redis**, **se
 cp .env.example .env
 ```
 
-Ajuste `JWT_SECRET`, `ADMIN_PASSWORD` e as credenciais do MySQL antes de qualquer deploy. O arquivo `.env` é ignorado pelo Git.
+Ajuste as credenciais do MySQL, Redis, email e Keycloak antes de qualquer deploy. O arquivo `.env` é ignorado pelo Git e nunca deve conter valores reais versionados.
 
 ### 2. Subir a stack
 
@@ -325,7 +415,7 @@ A maioria dos endpoints exige um cookie de sessão ativo. As rotas de autentica�
 | POST | `/users/:id/avatar` | Enviar imagem de avatar |
 | POST | `/users/:id/favorites` | Adicionar anime aos favoritos |
 | DELETE | `/users/:id/favorites/:animeId` | Remover anime dos favoritos |
-| GET | `/users/:id/favorites` | Listar favoritos |
+| GET | `/users/:id/favorites?page=1&limit=20` | Listar favoritos paginados; exige ownership |
 | POST | `/users/:id/reviews` | Criar avaliação |
 | GET | `/users/:id/reviews` | Listar avaliações |
 | GET | `/users/kin-count/:characterId` | Obter contagem de kins |
@@ -363,10 +453,11 @@ A maioria dos endpoints exige um cookie de sessão ativo. As rotas de autentica�
 
 | Método | Endpoint | Descrição |
 | ------ | -------- | --------- |
-| POST | `/watchlist/:userId` | Adicionar anime à lista |
-| GET | `/watchlist/:userId` | Obter lista do usuário |
-| PATCH | `/watchlist/:userId/:animeId` | Atualizar status |
-| DELETE | `/watchlist/:userId/:animeId` | Remover da lista |
+| POST | `/watchlist` | Adicionar ou atualizar anime da lista do usuário autenticado |
+| GET | `/watchlist?page=1&limit=20` | Obter lista paginada do usuário autenticado |
+| GET | `/watchlist/:animeId` | Obter item específico do usuário autenticado |
+| PATCH | `/watchlist/:animeId` | Atualizar status |
+| DELETE | `/watchlist/:animeId` | Remover da lista |
 
 ### Administração
 
@@ -381,4 +472,50 @@ A maioria dos endpoints exige um cookie de sessão ativo. As rotas de autentica�
 | Método | Endpoint | Descrição |
 | ------ | -------- | --------- |
 | GET | `/health` | Resposta de disponibilidade para verificações de deploy |
+
+## Contratos de paginação
+
+Endpoints paginados retornam o formato:
+
+```json
+{
+  "items": [],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 0,
+    "totalPages": 0
+  }
+}
+```
+
+O backend normaliza `page` para no mínimo `1` e limita `limit` a `100`.
+No frontend, `FavoritesService` também normaliza respostas antigas em formato de
+array para manter compatibilidade durante a atualização dos serviços.
+
+## Convenções de segurança
+
+- Nunca commitar `.env`, tokens, senhas ou certificados privados.
+- Use segredos fortes e diferentes por ambiente.
+- Em produção, use HTTPS, `Secure` nos cookies e `DB_SYNC=false`.
+- Execute migrations com `npm run migration:run` em vez de habilitar sincronização automática.
+- Mantenha `FRONTEND_URLS`, `API_BASE_URL` e `CSP_CONNECT_SRC` restritos aos domínios reais.
+- Não confie em `userId` vindo do frontend para operações privadas; derive o usuário da sessão.
+- Requisições mutáveis devem enviar `X-CSRF-Token`.
+
+## Verificação local
+
+```bash
+# Backend
+cd server
+npm run typecheck
+npm run build
+npm test
+
+# Frontend
+cd ../client
+npm run typecheck
+npm run build
+npm run test:ci
+```
 

@@ -66,12 +66,19 @@ export class KeycloakService {
             throw new BadRequestException(`Falha ao consultar o Keycloak: HTTP ${res.status}`);
          }
          const body = (await res.json()) as OidcMetadata;
-         if (body.issuer !== this.issuer) {
-            throw new BadRequestException('Issuer do Keycloak diverge do configurado.');
+         // O host pode diferir: o backend alcanca o Keycloak por `keycloak:8080`,
+         // mas o Keycloak anuncia a URL publica (localhost:8080) porque e ela
+         if (this.realmOf(body.issuer) !== this.realmOf(this.issuer)) {
+            throw new BadRequestException('Realm do Keycloak diverge do configurado.');
          }
          this.metadata = body;
       }
       return this.metadata;
+   }
+
+   private realmOf(issuer: string): string {
+      const match = /\/realms\/([^/?#]+)/.exec(issuer);
+      return match ? match[1] : issuer;
    }
 
    private getJwks() {
@@ -160,8 +167,10 @@ export class KeycloakService {
       }
 
       const tokens = (await res.json()) as KeycloakTokens;
+      // O issuer do id_token e o anunciado pelo Keycloak (URL publica), que
+      // difere do host interno usado para buscar o token.
       const { payload } = await jwtVerify(tokens.id_token, this.getJwks(), {
-         issuer: this.issuer,
+         issuer: metadata.issuer,
          audience: this.clientId,
       });
 
@@ -178,6 +187,8 @@ export class KeycloakService {
          email: claims.email ?? '',
          username: claims.preferred_username ?? claims.sub,
          roles,
+         // Necessario no logout federado (id_token_hint).
+         idToken: tokens.id_token,
       };
    }
 
@@ -197,4 +208,5 @@ export interface AdminIdentity {
    email: string;
    username: string;
    roles: string[];
+   idToken?: string;
 }

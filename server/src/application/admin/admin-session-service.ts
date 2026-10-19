@@ -11,6 +11,7 @@ export interface AdminSession {
   username: string;
   email: string;
   roles: string[];
+  idToken?: string;
   csrfToken: string;
   createdAt: number;
 }

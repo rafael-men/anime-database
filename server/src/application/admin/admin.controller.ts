@@ -69,6 +69,7 @@ export class AdminAuthController {
       username: identity.username,
       email: identity.email,
       roles: identity.roles,
+      idToken: identity.idToken,
     });
 
     res.cookie(this.adminSessions.cookieName, token, this.adminSessions.getCookieOptions());
@@ -77,21 +78,40 @@ export class AdminAuthController {
     res.redirect(302, `${frontend}/control?csrf=${csrfToken}`);
   }
 
-  @Post('logout')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(AdminGuard)
-  async logout(
+  /**
+ * Logout federado. E GET de proposito: o client navega ate aqui e o backend
+ * responde com redirect para o end_session_endpoint do Keycloak. Um POST via
+ * XHR nao serviria, porque o redirect final precisa acontecer no navegador.
+ */
+@Get('logout')
+async logout(
     @Req() req: AdminAuthRequest,
-    @Res({ passthrough: true }) res: Response,
+    @Res() res: Response,
   ): Promise<void> {
     const token = req.cookies?.[this.adminSessions.cookieName];
+    let logoutUrl: string | null = null;
+
     if (token) {
+      const session = await this.adminSessions.getSession(token);
       await this.adminSessions.revoke(token);
+
+      // Sem o id_token_hint o Keycloak exibe uma tela de confirmacao de logout.
+      if (session?.idToken) {
+        try {
+          logoutUrl = await this.keycloak.buildLogoutUrl(session.idToken);
+        } catch {
+          logoutUrl = null;
+        }
+      }
     }
+
     res.clearCookie(
       this.adminSessions.cookieName,
       this.adminSessions.getCookieOptions(),
     );
+
+    const frontend = this.config.get('ADMIN_FRONTEND_URL', 'http://localhost:4000');
+    res.redirect(302, logoutUrl ?? `${frontend}/login`);
   }
 
   @Get('session')
