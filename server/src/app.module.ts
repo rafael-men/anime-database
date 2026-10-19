@@ -5,7 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './application/auth/auth.module';
 import { CsrfGuard } from './application/auth/csrf.guard';
-import { AdminController } from './application/controllers/admin.controller';
+
 import { GroupController } from './application/controllers/group.controller';
 import { HealthController } from './application/controllers/health.controller';
 import { ReviewController } from './application/controllers/review.controller';
@@ -27,6 +27,7 @@ import { FollowModule } from './use-cases/follow/follow.module';
 import { WatchlistModule } from './use-cases/watchlist/watchlist.module';
 import { UserAnimeActionsService } from './use-cases/user/user-anime-actions.service';
 import { StorageModule } from './storage/storage.module';
+import { AdminModule } from './application/admin/admin.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { StorageModule } from './storage/storage.module';
       GroupItem,
       Follow,
     ]),
+    AdminModule,
     AuthModule,
     SessionsModule,
     UserModule,
@@ -65,7 +67,6 @@ import { StorageModule } from './storage/storage.module';
   ],
   controllers: [
     HealthController,
-    AdminController,
     UserController,
     ReviewController,
     GroupController,
@@ -84,4 +85,4 @@ import { StorageModule } from './storage/storage.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

@@ -9,6 +9,6 @@ export interface AppEnvironment {
 }
 
 export const environment: AppEnvironment = {
-  apiBaseUrl: "",
-  cspConnectSrc: [],
+  apiBaseUrl: "http://localhost:3000",
+  cspConnectSrc: ["http://localhost:9000"],
 };

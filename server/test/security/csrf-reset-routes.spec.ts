@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { CsrfGuard } from '../../src/application/auth/csrf.guard';
 import { SessionsService } from '../../src/application/sessions/sessions.service';
+import { AdminSessionsService } from '../../src/application/admin/admin-session-service';
 
 @Controller('auth')
 class AuthTestController {
@@ -46,6 +47,7 @@ describe('CsrfGuard nas rotas de recuperacao de senha', () => {
       controllers: [AuthTestController],
       providers: [
         { provide: SessionsService, useValue: sessionsServiceMock },
+        { provide: AdminSessionsService, useValue: { cookieName: 'admin_sid', getSession: jest.fn() } },
         { provide: APP_GUARD, useClass: CsrfGuard },
       ],
     }).compile();

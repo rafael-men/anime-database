@@ -1,18 +1,15 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
+import cookieParser from 'cookie-parser';
 import request from 'supertest';
-import { AdminController } from '../../src/application/controllers/admin.controller';
+import { AdminAuthController } from '../../src/application/admin/admin.controller';
+import { AdminSessionsService, adminSessionStoreProvider } from '../../src/application/admin/admin-session-service';
+import { KeycloakService } from '../../src/application/admin/keycloak.service';
 import { UserService } from '../../src/use-cases/user/user.service';
+import { AdminGuard } from '../../src/application/auth/admin.guard';
 
-const ADMIN_EMAIL = 'admin@test.com';
-const ADMIN_PASSWORD = 'secret123';
-
-function buildAuthHeader(): string {
-  const credentials = Buffer.from(`${ADMIN_EMAIL}:${ADMIN_PASSWORD}`).toString(
-    'base64',
-  );
-  return `Basic ${credentials}`;
-}
+const ADMIN_COOKIE = 'admin_sid';
 
 function buildUser(overrides: Record<string, unknown> = {}) {
   return {
@@ -45,8 +42,11 @@ const ALLOWED_LIST_FIELDS = [
   'updatedAt',
 ];
 
-describe('AdminController', () => {
+describe('AdminAuthController (moderation)', () => {
   let app: INestApplication;
+  let adminSessions: AdminSessionsService;
+  let csrfToken: string;
+  let authToken: string;
 
   const userServiceMock = {
     listAdultRequests: jest.fn(),
@@ -54,16 +54,58 @@ describe('AdminController', () => {
     denyAdultRequest: jest.fn(),
   };
 
+  const keycloakMock = {
+    createAuthorizationRequest: jest.fn(),
+    exchangeCode: jest.fn(),
+    buildLogoutUrl: jest.fn(),
+  };
+
   beforeEach(async () => {
-    process.env.ADMIN_EMAIL = ADMIN_EMAIL;
-    process.env.ADMIN_PASSWORD = ADMIN_PASSWORD;
+    userServiceMock.listAdultRequests.mockResolvedValue([]);
+    userServiceMock.approveAdultRequest.mockResolvedValue({ id: 'a' });
+    userServiceMock.denyAdultRequest.mockResolvedValue({ id: 'a' });
+    keycloakMock.createAuthorizationRequest.mockResolvedValue({
+      url: 'https://keycloak.test/auth',
+      state: 'state-1',
+    });
+
+    const config = {
+      get: (key: string, fallback?: unknown) =>
+        process.env[key] !== undefined ? process.env[key] : fallback,
+    } as unknown as ConfigService;
+
+    // SESSION_STORE=memory evita depender do Redis Upstash no teste.
+    const store = adminSessionStoreProvider.useFactory({
+      ...config,
+      get: (key: string, fallback?: unknown) =>
+        key === 'SESSION_STORE' ? 'memory' : config.get(key, fallback),
+    } as ConfigService);
+
+    adminSessions = new AdminSessionsService(store, config);
+
+    const created = await adminSessions.create({
+      sub: 'kc-sub-1',
+      username: 'admin',
+      email: 'admin@test.com',
+      roles: ['admin'],
+    });
+    csrfToken = created.csrfToken;
+    authToken = created.token;
 
     const moduleRef: TestingModule = await Test.createTestingModule({
-      controllers: [AdminController],
-      providers: [{ provide: UserService, useValue: userServiceMock }],
+      controllers: [AdminAuthController],
+      providers: [
+        AdminGuard,
+        { provide: AdminSessionsService, useValue: adminSessions },
+        { provide: KeycloakService, useValue: keycloakMock },
+        { provide: UserService, useValue: userServiceMock },
+        { provide: ConfigService, useValue: config },
+      ],
     }).compile();
 
     app = moduleRef.createNestApplication();
+    // O AdminGuard le request.cookies; sem o cookieParser o cookie nao chega.
+    app.use(cookieParser());
     await app.init();
   });
 
@@ -72,37 +114,39 @@ describe('AdminController', () => {
     await app.close();
   });
 
-  it('GET /control/users requires admin credentials', async () => {
+  it('GET /control/users exige sessao de admin', async () => {
     await request(app.getHttpServer()).get('/control/users').expect(401);
   });
 
-  it('GET /control/users rejects wrong admin credentials', async () => {
+  it('GET /control/users rejeita token invalido', async () => {
     await request(app.getHttpServer())
       .get('/control/users')
-      .set('Authorization', `Basic ${Buffer.from('x:y').toString('base64')}`)
+      .set('Cookie', `${ADMIN_COOKIE}=token-que-nao-existe`)
       .expect(401);
+
+    expect(userServiceMock.listAdultRequests).not.toHaveBeenCalled();
   });
 
-  it('GET /control/users lists adult requests', async () => {
+  it('GET /control/users lista as solicitacoes', async () => {
     userServiceMock.listAdultRequests.mockResolvedValue([
       { id: 'a', adultRequestStatus: 'pending' },
     ]);
 
     const response = await request(app.getHttpServer())
       .get('/control/users')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(200);
 
     expect(response.body).toEqual([{ id: 'a', adultRequestStatus: 'pending' }]);
     expect(userServiceMock.listAdultRequests).toHaveBeenCalled();
   });
 
-  it('GET /control/users never exposes fields outside the moderation DTO', async () => {
+  it('GET /control/users nunca expoe campos fora do DTO de moderacao', async () => {
     userServiceMock.listAdultRequests.mockResolvedValue([buildUser()]);
 
     const response = await request(app.getHttpServer())
       .get('/control/users')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(200);
 
     expect(Object.keys(response.body[0]).sort()).toEqual(
@@ -115,62 +159,52 @@ describe('AdminController', () => {
     expect(response.body[0]).not.toHaveProperty('usernameUpdatedAt');
   });
 
-  it('GET /control/users caps the result set with a default limit', async () => {
-    userServiceMock.listAdultRequests.mockResolvedValue([]);
-
+  it('GET /control/users limita o resultado com o limite padrao', async () => {
     await request(app.getHttpServer())
       .get('/control/users')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(200);
 
     expect(userServiceMock.listAdultRequests).toHaveBeenCalledWith(50);
   });
 
-  it('GET /control/users accepts an explicit limit', async () => {
-    userServiceMock.listAdultRequests.mockResolvedValue([]);
-
+  it('GET /control/users aceita limite explicito', async () => {
     await request(app.getHttpServer())
       .get('/control/users?limit=10')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(200);
 
     expect(userServiceMock.listAdultRequests).toHaveBeenCalledWith(10);
   });
 
-  it('GET /control/users rejects a non-numeric limit', async () => {
-    userServiceMock.listAdultRequests.mockResolvedValue([]);
-
+  it('GET /control/users recusa limite nao numerico', async () => {
     await request(app.getHttpServer())
       .get('/control/users?limit=all')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(400);
 
     expect(userServiceMock.listAdultRequests).not.toHaveBeenCalled();
   });
 
-  it('GET /control/users rejects a limit above the maximum', async () => {
-    userServiceMock.listAdultRequests.mockResolvedValue([]);
-
+  it('GET /control/users recusa limite acima do maximo', async () => {
     await request(app.getHttpServer())
       .get('/control/users?limit=100000')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(400);
 
     expect(userServiceMock.listAdultRequests).not.toHaveBeenCalled();
   });
 
-  it('GET /control/users rejects a negative limit', async () => {
-    userServiceMock.listAdultRequests.mockResolvedValue([]);
-
+  it('GET /control/users recusa limite negativo', async () => {
     await request(app.getHttpServer())
       .get('/control/users?limit=-1')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(400);
 
     expect(userServiceMock.listAdultRequests).not.toHaveBeenCalled();
   });
 
-  it('POST /control/users/:id/approve approves a request', async () => {
+  it('POST /control/users/:id/approve aprova', async () => {
     userServiceMock.approveAdultRequest.mockResolvedValue({
       id: 'a',
       adultRequestStatus: 'approved',
@@ -179,19 +213,19 @@ describe('AdminController', () => {
 
     const response = await request(app.getHttpServer())
       .post('/control/users/a/approve')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(200);
 
     expect(userServiceMock.approveAdultRequest).toHaveBeenCalledWith('a');
     expect(response.body.adultRequestStatus).toBe('approved');
   });
 
-  it('POST /control/users/:id/approve returns only the moderation DTO', async () => {
+  it('POST approve devolve somente o DTO de moderacao', async () => {
     userServiceMock.approveAdultRequest.mockResolvedValue(buildUser());
 
     const response = await request(app.getHttpServer())
       .post('/control/users/a/approve')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(200);
 
     expect(Object.keys(response.body).sort()).toEqual(
@@ -201,7 +235,7 @@ describe('AdminController', () => {
     expect(response.body).not.toHaveProperty('passwordHash');
   });
 
-  it('POST /control/users/:id/deny denies a request', async () => {
+  it('POST /control/users/:id/deny nega', async () => {
     userServiceMock.denyAdultRequest.mockResolvedValue({
       id: 'a',
       adultRequestStatus: 'denied',
@@ -210,18 +244,18 @@ describe('AdminController', () => {
 
     await request(app.getHttpServer())
       .post('/control/users/a/deny')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(200);
 
     expect(userServiceMock.denyAdultRequest).toHaveBeenCalledWith('a');
   });
 
-  it('POST /control/users/:id/deny returns only the moderation DTO', async () => {
+  it('POST deny devolve somente o DTO de moderacao', async () => {
     userServiceMock.denyAdultRequest.mockResolvedValue(buildUser());
 
     const response = await request(app.getHttpServer())
       .post('/control/users/a/deny')
-      .set('Authorization', buildAuthHeader())
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
       .expect(200);
 
     expect(Object.keys(response.body).sort()).toEqual(
@@ -231,11 +265,22 @@ describe('AdminController', () => {
     expect(response.body).not.toHaveProperty('passwordHash');
   });
 
-  it('POST /control/users/:id/approve requires admin credentials', async () => {
-    await request(app.getHttpServer())
-      .post('/control/users/a/approve')
-      .expect(401);
+  it('POST approve exige sessao de admin', async () => {
+    await request(app.getHttpServer()).post('/control/users/a/approve').expect(401);
 
     expect(userServiceMock.approveAdultRequest).not.toHaveBeenCalled();
+  });
+
+  it('GET /control/session devolve a identidade do admin', async () => {
+    const response = await request(app.getHttpServer())
+      .get('/control/session')
+      .set('Cookie', `${ADMIN_COOKIE}=${authToken}`)
+      .expect(200);
+
+    expect(response.body).toEqual({
+      username: 'admin',
+      email: 'admin@test.com',
+      roles: ['admin'],
+    });
   });
 });

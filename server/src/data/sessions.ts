@@ -30,7 +30,6 @@ export interface SessionStore {
   create(token: string, payload: SessionPayload, ttlMs: number): Promise<void>;
   get(token: string): Promise<SessionPayload | null>;
   revoke(token: string): Promise<void>;
-  /** Revoga todas as sessoes de um usuario. Usado ao trocar a senha. */
   revokeAllForUser?(userId: string): Promise<void>;
   close?(): Promise<void>;
 }
@@ -79,7 +78,6 @@ export class RedisSessionStore implements SessionStore {
       JSON.stringify(payload),
     );
 
-    // Indice inverso usuario -> tokens, para revogacao em massa ao trocar a senha.
     const indexKey = `${this.userIndexPrefix}${payload.userId}`;
     await this.client.sadd(indexKey, token);
     await this.client.expire(indexKey, ttlSeconds);

@@ -4,64 +4,38 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { timingSafeEqual } from 'crypto';
+import { AdminSessionsService } from '../admin/admin-session-service';
 
 interface AdminGuardRequest {
-  headers: Record<string, string | string[] | undefined>;
+  cookies?: Record<string, string>;
+  admin?: { sub: string; username: string; email: string; roles: string[] };
 }
 
 @Injectable()
 export class AdminGuard implements CanActivate {
+  constructor(private readonly adminSessions: AdminSessionsService) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<AdminGuardRequest>();
+    const token = request.cookies?.[this.adminSessions.cookieName];
 
-    const expectedEmail = process.env.ADMIN_EMAIL;
-    const expectedPassword = process.env.ADMIN_PASSWORD;
-
-    if (!expectedEmail || !expectedPassword) {
-      throw new UnauthorizedException('Admin credentials are not configured.');
+    if (!token) {
+      throw new UnauthorizedException('Nao autenticado.');
     }
 
-    const headerValue = request.headers['authorization'];
-    const authorization = Array.isArray(headerValue)
-      ? headerValue[0]
-      : headerValue;
+    const session = await this.adminSessions.getSession(token);
 
-    if (!authorization || !authorization.startsWith('Basic ')) {
-      throw new UnauthorizedException('Invalid admin credentials.');
+    if (!session) {
+      throw new UnauthorizedException('Sessao expirada ou invalida.');
     }
 
-    const decoded = Buffer.from(
-      authorization.slice('Basic '.length),
-      'base64',
-    ).toString('utf8');
-    const separatorIndex = decoded.indexOf(':');
-
-    if (separatorIndex === -1) {
-      throw new UnauthorizedException('Invalid admin credentials.');
-    }
-
-    const email = decoded.slice(0, separatorIndex);
-    const password = decoded.slice(separatorIndex + 1);
-
-    if (
-      !this.safeEquals(email, expectedEmail) ||
-      !this.safeEquals(password, expectedPassword)
-    ) {
-      throw new UnauthorizedException('Invalid admin credentials.');
-    }
+    request.admin = {
+      sub: session.sub,
+      username: session.username,
+      email: session.email,
+      roles: session.roles,
+    };
 
     return true;
-  }
-
-  private safeEquals(a: string, b: string): boolean {
-    const aBuffer = Buffer.from(a);
-    const bBuffer = Buffer.from(b);
-
-    if (aBuffer.length !== bBuffer.length) {
-      return false;
-    }
-
-    return timingSafeEqual(aBuffer, bBuffer);
   }
 }

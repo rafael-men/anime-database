@@ -87,14 +87,7 @@ export class S3StorageProvider implements StorageProvider {
     return { url, key };
   }
 
-  /**
-   * URL publica do objeto. Com path-style o bucket faz parte do caminho, entao
-   * S3_PUBLIC_URL deve ser a origem (http://localhost:9000); sem o bucket a
-   * URL gerada devolve 403 no acesso anonimo.
-   *
-   * Aceita tambem a forma que ja inclui o bucket, para nao duplicar o segmento
-   * caso a variavel esteja configurada como http://localhost:9000/<bucket>.
-   */
+
   resolveUrl(key: string): string | null {
     if (!this.publicUrl) {
       return null;

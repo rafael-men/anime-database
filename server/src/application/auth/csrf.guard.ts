@@ -6,13 +6,12 @@ import {
 } from '@nestjs/common';
 import { timingSafeEqual } from 'crypto';
 import { SessionsService } from '../sessions/sessions.service';
+import { AdminSessionsService } from '../admin/admin-session-service';
 
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const CSRF_EXEMPT_PATHS = new Set([
   '/auth/login',
   '/auth/register',
-  // Recuperacao de senha: o usuario pode estar logado em outra aba e ainda
-  // assim precisa concluir o fluxo a partir do e-mail.
   '/auth/forgot-password',
   '/auth/reset-password',
 ]);
@@ -27,7 +26,7 @@ interface CsrfRequest {
 
 @Injectable()
 export class CsrfGuard implements CanActivate {
-  constructor(private readonly sessionsService: SessionsService) {}
+  constructor(private readonly sessionsService: SessionsService, private readonly adminSessions: AdminSessionsService,) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<CsrfRequest>();
