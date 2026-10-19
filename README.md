@@ -1,4 +1,6 @@
-<img width="161" height="161" alt="Logo" src="https://github.com/user-attachments/assets/bb28a98a-1b8d-41e4-9165-22be17601269" /># Anime Database
+<img width="161" height="161" alt="Logo" src="https://github.com/user-attachments/assets/bb28a98a-1b8d-41e4-9165-22be17601269" />
+
+# Anime Database
 
 Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com), para acompanhar animes. Os usuários podem navegar pelos animes da [API AniList](https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/getting-started), criar listas de acompanhamento, escrever avaliações, criar listas personalizadas, seguir outros usuários e gerenciar seus perfis. 
 
