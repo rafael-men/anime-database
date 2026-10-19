@@ -25,8 +25,7 @@ Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com
 
 </g>
 
-</svg>loading Logo.svg…]()
-
+</svg>
 
 ## Funcionalidades
 
