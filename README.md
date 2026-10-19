@@ -4,8 +4,6 @@
 
 Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com), para acompanhar animes. Os usuários podem navegar pelos animes da [API AniList](https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/getting-started), criar listas de acompanhamento, escrever avaliações, criar listas personalizadas, seguir outros usuários e gerenciar seus perfis. 
 
-![Up<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-
 <!-- Uploaded to: SVG Repo, www.svgrepo.com, Transformed by: SVG Repo Mixer Tools -->
 <svg width="161px" height="161px" viewBox="-56.32 -56.32 624.64 624.64" xmlns="http://www.w3.org/2000/svg" fill="#ffffff" stroke="#ffffff" stroke-width="1.536" transform="rotate(0)">
 
