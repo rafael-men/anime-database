@@ -72,19 +72,27 @@ export class AdminAuthController {
       idToken: identity.idToken,
     });
 
-    res.cookie(this.adminSessions.cookieName, token, this.adminSessions.getCookieOptions());
+    res.cookie(
+      this.adminSessions.cookieName,
+      token,
+      this.adminSessions.getCookieOptions(),
+    );
+    // O client le este cookie e envia em X-CSRF-Token nas mutacoes de /control.
+    res.cookie(
+      this.adminSessions.csrfCookieName,
+      csrfToken,
+      this.adminSessions.getCsrfCookieOptions(),
+    );
 
-    const frontend = this.config.get('ADMIN_FRONTEND_URL', 'http://localhost:4000');
+    const frontend = this.config.get(
+      'ADMIN_FRONTEND_URL',
+      'http://localhost:4000',
+    );
     res.redirect(302, `${frontend}/control?csrf=${csrfToken}`);
   }
 
-  /**
- * Logout federado. E GET de proposito: o client navega ate aqui e o backend
- * responde com redirect para o end_session_endpoint do Keycloak. Um POST via
- * XHR nao serviria, porque o redirect final precisa acontecer no navegador.
- */
-@Get('logout')
-async logout(
+  @Get('logout')
+  async logout(
     @Req() req: AdminAuthRequest,
     @Res() res: Response,
   ): Promise<void> {
@@ -107,10 +115,17 @@ async logout(
 
     res.clearCookie(
       this.adminSessions.cookieName,
-      this.adminSessions.getCookieOptions(),
+      this.adminSessions.getClearCookieOptions(),
+    );
+    res.clearCookie(
+      this.adminSessions.csrfCookieName,
+      this.adminSessions.getClearCookieOptions(),
     );
 
-    const frontend = this.config.get('ADMIN_FRONTEND_URL', 'http://localhost:4000');
+    const frontend = this.config.get(
+      'ADMIN_FRONTEND_URL',
+      'http://localhost:4000',
+    );
     res.redirect(302, logoutUrl ?? `${frontend}/login`);
   }
 
@@ -134,7 +149,9 @@ async logout(
 
   @Get('users')
   @UseGuards(AdminGuard)
-  @Throttle({ default: { limit: ADMIN_THROTTLE_LIMIT, ttl: ADMIN_THROTTLE_TTL_MS } })
+  @Throttle({
+    default: { limit: ADMIN_THROTTLE_LIMIT, ttl: ADMIN_THROTTLE_TTL_MS },
+  })
   async listAdultRequests(
     @Query(
       'limit',

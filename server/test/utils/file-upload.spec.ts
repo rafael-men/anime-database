@@ -1,4 +1,10 @@
-import { generateUploadFilename } from '../../src/utils/file-upload';
+import {
+  DEFAULT_MAX_AVATAR_SIZE_BYTES,
+  HARD_MAX_AVATAR_SIZE_BYTES,
+  avatarUploadOptions,
+  generateUploadFilename,
+  resolveMaxAvatarSizeBytes,
+} from '../../src/utils/file-upload';
 
 describe('generateUploadFilename', () => {
   it.each([
@@ -38,5 +44,45 @@ describe('generateUploadFilename', () => {
     expect(generateUploadFilename('text/html')).toBeNull();
     expect(generateUploadFilename('')).toBeNull();
     expect(generateUploadFilename('image/svg+xml')).toBeNull();
+  });
+});
+
+describe('limite de upload de avatar', () => {
+  const original = process.env.MAX_AVATAR_UPLOAD_BYTES;
+
+  afterEach(() => {
+    if (original === undefined) {
+      delete process.env.MAX_AVATAR_UPLOAD_BYTES;
+    } else {
+      process.env.MAX_AVATAR_UPLOAD_BYTES = original;
+    }
+  });
+
+  it('usa 2MB por padrão', () => {
+    expect(resolveMaxAvatarSizeBytes(undefined)).toBe(
+      DEFAULT_MAX_AVATAR_SIZE_BYTES,
+    );
+    expect(avatarUploadOptions().limits.fileSize).toBe(
+      DEFAULT_MAX_AVATAR_SIZE_BYTES,
+    );
+  });
+
+  it('respeita um limite configurado dentro da faixa', () => {
+    process.env.MAX_AVATAR_UPLOAD_BYTES = String(4 * 1024 * 1024);
+
+    expect(resolveMaxAvatarSizeBytes()).toBe(4 * 1024 * 1024);
+    expect(avatarUploadOptions().limits.fileSize).toBe(4 * 1024 * 1024);
+  });
+
+  it('nunca passa do teto absoluto', () => {
+    expect(resolveMaxAvatarSizeBytes(String(500 * 1024 * 1024))).toBe(
+      HARD_MAX_AVATAR_SIZE_BYTES,
+    );
+  });
+
+  it.each(['abc', '0', '-10', ''])('ignora valor inválido (%s)', (value) => {
+    expect(resolveMaxAvatarSizeBytes(value)).toBe(
+      DEFAULT_MAX_AVATAR_SIZE_BYTES,
+    );
   });
 });

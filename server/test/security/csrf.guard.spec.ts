@@ -7,6 +7,7 @@ import {
   Post,
 } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { CsrfGuard } from '../../src/application/auth/csrf.guard';
@@ -36,10 +37,15 @@ describe('CsrfGuard on /control (security active on all endpoints)', () => {
       providers: [
         { provide: SessionsService, useValue: sessionsServiceMock },
         {
-          // O CsrfGuard tambem injeta o servico de sessao de admin para as
-          // rotas /control; sem stub o modulo de teste nao resolve.
           provide: AdminSessionsService,
           useValue: { cookieName: 'admin_sid', getSession: jest.fn() },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: (key: string, fallback?: unknown) =>
+              key === 'FRONTEND_URLS' ? 'http://localhost:4200' : fallback,
+          },
         },
         { provide: APP_GUARD, useClass: CsrfGuard },
       ],

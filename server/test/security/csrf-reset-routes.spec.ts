@@ -2,6 +2,7 @@ import { Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { ConfigService } from '@nestjs/config';
 import cookieParser from 'cookie-parser';
 import request from 'supertest';
 import { CsrfGuard } from '../../src/application/auth/csrf.guard';
@@ -29,11 +30,6 @@ class AuthTestController {
   }
 }
 
-/**
- * O reset de senha acontece a partir de um link por e-mail, muitas vezes com o
- * usuario logado em outra aba. As rotas precisam ser CSRF-exempt para nao
- * devolver 403, mas isso nao pode abrir portas para o resto de /auth.
- */
 describe('CsrfGuard nas rotas de recuperacao de senha', () => {
   let app: INestApplication;
 
@@ -47,7 +43,17 @@ describe('CsrfGuard nas rotas de recuperacao de senha', () => {
       controllers: [AuthTestController],
       providers: [
         { provide: SessionsService, useValue: sessionsServiceMock },
-        { provide: AdminSessionsService, useValue: { cookieName: 'admin_sid', getSession: jest.fn() } },
+        {
+          provide: AdminSessionsService,
+          useValue: { cookieName: 'admin_sid', getSession: jest.fn() },
+        },
+        {
+          provide: ConfigService,
+          useValue: {
+            get: (key: string, fallback?: unknown) =>
+              key === 'FRONTEND_URLS' ? 'http://localhost:4200' : fallback,
+          },
+        },
         { provide: APP_GUARD, useClass: CsrfGuard },
       ],
     }).compile();

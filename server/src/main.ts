@@ -6,9 +6,13 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { AppModule } from './app.module';
 import { resolveUploadsDir } from './utils/file-upload';
+import { applyBodyParsers } from './utils/body-limits';
+import { resolveAllowedOrigins } from './utils/origins';
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+  });
 
   app.use(
     helmet({
@@ -16,20 +20,18 @@ async function bootstrap() {
     }),
   );
   app.use(cookieParser());
+  applyBodyParsers(app);
   app.useStaticAssets(resolveUploadsDir(), {
     prefix: '/uploads/',
     index: false,
     dotfiles: 'ignore',
     fallthrough: false,
   });
-  const allowedOrigins = (
-    process.env.FRONTEND_URLS ??
-    process.env.FRONTEND_URL ??
-    'http://localhost:4200'
-  )
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean);
+  const allowedOrigins = resolveAllowedOrigins({
+    frontendUrls: process.env.FRONTEND_URLS,
+    frontendUrl: process.env.FRONTEND_URL,
+    adminFrontendUrl: process.env.ADMIN_FRONTEND_URL,
+  });
 
   app.enableCors({
     origin: (origin, callback) => {

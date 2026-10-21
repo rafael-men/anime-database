@@ -74,6 +74,9 @@ export const API_ROUTES = {
     base: `${API_BASE}/watchlist`,
     byAnimeId: (animeId: string) => `${API_BASE}/watchlist/${encodeURIComponent(animeId)}`,
   },
+  consent: {
+    base: `${API_BASE}/consent`,
+  },
   control: {
     users: `${API_BASE}/control/users`,
     userApprove: (id: string) => `${API_BASE}/control/users/${id}/approve`,

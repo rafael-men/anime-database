@@ -1,4 +1,3 @@
-import { INestApplication } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { Test, TestingModule } from '@nestjs/testing';
 import { mkdtempSync, rmSync, writeFileSync } from 'fs';
@@ -9,7 +8,7 @@ import request from 'supertest';
 const SECRET_MARKER = 'CONTEUDO_SENSAVEL_NAO_DEVE_VAZAR';
 
 describe('Static assets path traversal protection', () => {
-  let app: INestApplication;
+  let app: NestExpressApplication;
   let uploadsDir: string;
 
   beforeAll(() => {

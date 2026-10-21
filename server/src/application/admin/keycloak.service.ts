@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import {
+   BadRequestException,
+   Injectable,
+   Logger,
+   ServiceUnavailableException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHash, randomBytes } from 'crypto';
 import { createRemoteJWKSet, jwtVerify } from 'jose';
@@ -25,6 +30,8 @@ interface IdTokenClaims {
 
 const STATE_PREFIX = 'oidc-state:';
 const STATE_TTL_SECONDS = 600;
+/** Evita que uma indisponibilidade do Keycloak segure a requisicao indefinidamente. */
+const KEYCLOAK_HTTP_TIMEOUT_MS = 5000;
 
 @Injectable()
 export class KeycloakService {
@@ -58,10 +65,36 @@ export class KeycloakService {
       return value;
    }
 
+   /**
+    * `fetch` rejeita com TypeError/TimeoutError quando o Keycloak esta fora do
+    * ar ou o DNS nao resolve. Sem este mapeamento o erro sobe como 500 sem
+    * contexto; 503 deixa claro que a dependencia externa esta indisponivel.
+    */
+   private async fetchKeycloak(
+      url: string,
+      init?: RequestInit,
+   ): Promise<Response> {
+      try {
+         return await fetch(url, {
+            ...init,
+            signal: AbortSignal.timeout(KEYCLOAK_HTTP_TIMEOUT_MS),
+         });
+      } catch (error) {
+         this.logger.error(
+            `Keycloak inacessivel em ${url}: ${
+               error instanceof Error ? error.message : String(error)
+            }`,
+         );
+         throw new ServiceUnavailableException(
+            'Provedor de identidade indisponivel. Tente novamente em instantes.',
+         );
+      }
+   }
+
    private async getMetadata(): Promise<OidcMetadata> {
       if (!this.metadata) {
          const url = `${this.issuer}/.well-known/openid-configuration`;
-         const res = await fetch(url);
+         const res = await this.fetchKeycloak(url);
          if (!res.ok) {
             throw new BadRequestException(`Falha ao consultar o Keycloak: HTTP ${res.status}`);
          }
@@ -148,7 +181,7 @@ export class KeycloakService {
       const metadata = await this.getMetadata();
       const { codeVerifier } = await this.consumeState(state);
 
-      const res = await fetch(metadata.token_endpoint, {
+      const res = await this.fetchKeycloak(metadata.token_endpoint, {
          method: 'POST',
          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
          body: new URLSearchParams({
@@ -187,7 +220,7 @@ export class KeycloakService {
          email: claims.email ?? '',
          username: claims.preferred_username ?? claims.sub,
          roles,
-         // Necessario no logout federado (id_token_hint).
+         // Necessario no logout federado 
          idToken: tokens.id_token,
       };
    }

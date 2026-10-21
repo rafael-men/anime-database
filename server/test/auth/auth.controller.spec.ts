@@ -32,6 +32,11 @@ describe('AuthController', () => {
       path: '/',
       maxAge: 1000,
     })),
+    getClearCookieOptions: jest.fn(() => ({
+      httpOnly: true,
+      sameSite: 'lax',
+      path: '/',
+    })),
     getSession: jest.fn(),
     revoke: jest.fn(),
   };
