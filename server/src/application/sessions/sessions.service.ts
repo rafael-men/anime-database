@@ -9,6 +9,13 @@ import {
   SessionUser,
 } from '../../data/sessions';
 import type { SessionStore } from '../../data/sessions';
+import type { CookieOptions } from 'express';
+import {
+  CookieSecuritySettings,
+  buildClearCookieOptions,
+  buildCookieOptions,
+  resolveCookieSecurity,
+} from '../../utils/cookie-security';
 
 export interface CreatedSession {
   token: string;
@@ -18,31 +25,35 @@ export interface CreatedSession {
 @Injectable()
 export class SessionsService {
   private readonly ttlMs: number;
+  private readonly cookieSecurity: CookieSecuritySettings;
 
   constructor(
     @Inject(SESSION_STORE) private readonly store: SessionStore,
-    private readonly config: ConfigService,
+    config: ConfigService,
   ) {
     this.ttlMs = Math.max(
       1000,
       Number(config.get<number>('SESSION_TTL_MS', SESSION_TTL_MS_DEFAULT)) ||
         SESSION_TTL_MS_DEFAULT,
     );
+    this.cookieSecurity = resolveCookieSecurity(config);
   }
 
   get cookieName(): string {
     return SESSION_COOKIE_NAME;
   }
 
-  getCookieOptions(): Record<string, unknown> {
-    return {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure:
-        this.config.get<string>('NODE_ENV', 'development') === 'production',
-      path: '/',
-      maxAge: this.ttlMs,
-    };
+  get cookieSecuritySettings(): CookieSecuritySettings {
+    return this.cookieSecurity;
+  }
+
+  getCookieOptions(): CookieOptions {
+    return buildCookieOptions(this.cookieSecurity, this.ttlMs);
+  }
+
+  /** Opcoes de remocao: mesmo `domain`/`path`, sem `maxAge`. */
+  getClearCookieOptions(): CookieOptions {
+    return buildClearCookieOptions(this.cookieSecurity);
   }
 
   get ttlMilliseconds(): number {
@@ -75,10 +86,6 @@ export class SessionsService {
     await this.store.revoke(token);
   }
 
-  /**
-   * Revoga todas as sessoes do usuario. Chamado ao redefinir a senha, para que
-   * quem tenha acesso indevido a conta perca o acesso imediatamente.
-   */
   async revokeAllForUser(userId: string): Promise<void> {
     if (this.store.revokeAllForUser) {
       await this.store.revokeAllForUser(userId);

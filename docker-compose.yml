@@ -54,7 +54,13 @@ services:
       PORT: ${SERVER_INTERNAL_PORT:?defina SERVER_INTERNAL_PORT no .env}
       UPLOADS_DIR: ${UPLOADS_DIR:?defina UPLOADS_DIR no .env}
       FRONTEND_URLS: ${FRONTEND_URLS:?defina FRONTEND_URLS no .env}
-      STORAGE_DRIVER: ${STORAGE_DRIVER:?defina STORAGE_DRIVER no .env}
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-}
+      COOKIE_SECURE: ${COOKIE_SECURE:-}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
+      BODY_LIMIT_JSON: ${BODY_LIMIT_JSON:-}
+      BODY_LIMIT_URLENCODED: ${BODY_LIMIT_URLENCODED:-}
+      MAX_AVATAR_UPLOAD_BYTES: ${MAX_AVATAR_UPLOAD_BYTES:-}
+      STORAGE_DRIVER: ${STORAGE_DRIVER:-}
       S3_BUCKET: ${S3_BUCKET}
       S3_ENDPOINT: ${S3_ENDPOINT}
       S3_PUBLIC_URL: ${S3_PUBLIC_URL}
@@ -90,11 +96,14 @@ services:
       KC_HOSTNAME_STRICT: ${KC_HOSTNAME_STRICT:?defina KC_HOSTNAME_STRICT no .env}
       KC_PROXY: ${KC_PROXY:?defina KC_PROXY no .env}
     healthcheck:
-      test: ["CMD-SHELL", "exec3<>/dev/tcp/127.0.0.1/9000; echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3; cat <&3 | grep -q '\"status\": \"UP\"'"]
+      test:
+        - CMD-SHELL
+        - |-
+          exec 3<>/dev/tcp/127.0.0.1/9000; printf 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3; grep -q '"status": "UP"' <&3
       interval: 10s
       timeout: 5s
       retries: 30
-      start_period: 40s
+      start_period: 90s
     volumes:
       - ./keycloak/realm-anidb.json:/opt/keycloak/data/import/realm-anidb.json:ro
     ports:

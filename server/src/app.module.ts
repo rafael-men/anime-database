@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './application/auth/auth.module';
 import { CsrfGuard } from './application/auth/csrf.guard';
+import { ConsentController } from './application/consent/consent.controller';
 
 import { GroupController } from './application/controllers/group.controller';
 import { HealthController } from './application/controllers/health.controller';
@@ -67,6 +68,7 @@ import { AdminModule } from './application/admin/admin.module';
   ],
   controllers: [
     HealthController,
+    ConsentController,
     UserController,
     ReviewController,
     GroupController,
@@ -85,4 +87,4 @@ import { AdminModule } from './application/admin/admin.module';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

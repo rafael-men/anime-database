@@ -142,7 +142,7 @@ export class AuthController {
   async forgotPassword(@Body() body: ForgotPasswordDto) {
     await this.passwordResetService.requestReset(body.email);
 
-    // Resposta neutra: nao revela se o e-mail existe.
+    //  nao revela se o e-mail existe.
     return { message: 'Se o e-mail estiver cadastrado, enviaremos o link.' };
   }
 
@@ -169,7 +169,7 @@ export class AuthController {
 
     res.clearCookie(
       this.sessionsService.cookieName,
-      this.sessionsService.getCookieOptions(),
+      this.sessionsService.getClearCookieOptions(),
     );
   }
 }

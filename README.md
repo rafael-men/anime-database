@@ -31,8 +31,10 @@ Uma aplicação web full-stack, inspirada no [Letterboxd](https://letterboxd.com
 
 ### Autenticação e Segurança
 
-- Sessões no servidor via **Redis**, com cookies seguros e `httpOnly`.
-- Proteção **CSRF** em requisições que alteram dados.
+- Sessões no servidor via **Redis**, com cookies `httpOnly`, `Secure`, `SameSite` configurável e domínio explícito opcional.
+- Proteção **CSRF** em todas as requisições que alteram dados, incluindo logout, fluxos de autenticação e painel administrativo.
+- Banner de **consentimento de cookies** com registro no servidor (cookies essenciais seguem ativos sem aceite).
+- Limites explícitos para payloads JSON, `urlencoded` e upload de avatar.
 - Rate limiting global e por rota para login, cadastro e verificações de disponibilidade.
 - Headers de segurança com **Helmet** e CORS restrito às origens configuradas.
 - Validação de entrada com `class-validator` e `ValidationPipe` do NestJS.
@@ -390,6 +392,34 @@ docker compose down -v                   # Derrubar e apagar MySQL, Redis e uplo
 - **Health checks**: `server` consulta `/health` e `client` consulta a raiz renderizada pelo SSR. O `server` só inicia após MySQL e Redis ficarem saudáveis (`depends_on: service_healthy`).
 - **S3**: com `STORAGE_DRIVER=s3` as variáveis `S3_*`/`AWS_*` devem ser adicionadas ao `environment` do serviço `server` no `docker-compose.yml`, e o volume de uploads pode ser removido.
 
+### Cookies, consentimento e limites de payload
+
+Todas as variáveis abaixo são opcionais e já têm um padrão seguro; o `docker-compose.yml`
+repassa os valores do `.env` quando existirem.
+
+| Variável | Padrão | Efeito |
+| -------- | ------ | ------ |
+| `COOKIE_SAME_SITE` | `lax` | `lax`, `strict` ou `none` para os cookies de sessão, admin e consentimento |
+| `COOKIE_SECURE` | `true` em produção | Força `Secure` no cookie (obrigatório em HTTPS) |
+| `COOKIE_DOMAIN` | host-only | Domínio explícito do cookie (ex.: `.exemplo.com`) para compartilhar entre subdomínios |
+| `BODY_LIMIT_JSON` | `100kb` | Limite de payload JSON; valores acima de 2MB são cortados para 2MB |
+| `BODY_LIMIT_URLENCODED` | `50kb` | Limite de formulários `application/x-www-form-urlencoded` |
+| `MAX_AVATAR_UPLOAD_BYTES` | `2097152` (2MB) | Limite do upload de avatar, com teto absoluto de 10MB |
+
+`SameSite=None` força `Secure` automaticamente, porque o navegador rejeita a
+combinação contrária. Sem `COOKIE_DOMAIN`, o cookie é host-only (mais restritivo).
+
+O painel usa dois cookies: `admin_sid` (httpOnly, sessão) e `admin_csrf` (legível por
+JavaScript, enviado em `X-CSRF-Token`). Se o frontend e a API estiverem em hosts
+diferentes (ex.: `app.exemplo.com` e `api.exemplo.com`), defina
+`COOKIE_DOMAIN=.exemplo.com` para que o `admin_csrf` chegue ao frontend.
+
+O consentimento é gravado no cookie `cookie_consent` (httpOnly, 180 dias) pelas rotas
+`GET/POST /consent`. Cookies essenciais (sessão `sid` e CSRF) não dependem de aceite;
+as categorias `analytics` e `marketing` começam desligadas e só são ativadas com o
+aceite explícito do usuário. Um cookie corrompido ou de versão anterior faz o banner
+aparecer de novo.
+
 ## Testes
 
 ### Servidor
@@ -417,7 +447,7 @@ cd ../client && npm run test:ci && npm run build
 
 ## Referência da API
 
-A maioria dos endpoints exige um cookie de sessão ativo. As rotas de autenticação, verificações de disponibilidade e `/health` são públicas. Requisições que alteram dados exigem um header `X-CSRF-Token` válido.
+A maioria dos endpoints exige um cookie de sessão ativo. As rotas de autenticação, verificações de disponibilidade e `/health` são públicas. Requisições que alteram dados exigem um header `X-CSRF-Token` válido — a única exceção são as rotas isentas de CSRF (`/auth/login`, `/auth/register`, `/auth/forgot-password`, `/auth/reset-password` e `/consent`), que continuam sujeitas à validação de `Origin`.
 
 ### Autenticação
 
@@ -428,7 +458,14 @@ A maioria dos endpoints exige um cookie de sessão ativo. As rotas de autentica�
 | GET | `/auth/check-username?username=...` | Verificar disponibilidade do nome | 30/min |
 | GET | `/auth/check-email?email=...` | Verificar disponibilidade do email | 30/min |
 | GET | `/auth/session` | Obter sessão atual | - |
-| POST | `/auth/logout` | Encerrar sessão | - |
+| POST | `/auth/logout` | Encerrar sessão (exige `X-CSRF-Token`) | - |
+
+### Consentimento de cookies
+
+| Método | Endpoint | Descrição |
+| ------ | -------- | --------- |
+| GET | `/consent` | Consulta a decisão registrada (`decided`, `analytics`, `marketing`) |
+| POST | `/consent` | Registra `{ "analytics": boolean, "marketing": boolean }` |
 
 ### Usuários
 
@@ -526,7 +563,10 @@ array para manter compatibilidade durante a atualização dos serviços.
 - Execute migrations com `npm run migration:run` em vez de habilitar sincronização automática.
 - Mantenha `FRONTEND_URLS`, `API_BASE_URL` e `CSP_CONNECT_SRC` restritos aos domínios reais.
 - Não confie em `userId` vindo do frontend para operações privadas; derive o usuário da sessão.
-- Requisições mutáveis devem enviar `X-CSRF-Token`.
+- Requisições mutáveis devem enviar `X-CSRF-Token`; o `CsrfGuard` valida o token da sessão de usuário **e** da sessão administrativa.
+- O `CsrfGuard` também compara o header `Origin` com `FRONTEND_URLS`/`ADMIN_FRONTEND_URL`, bloqueando login/registro cross-site.
+- A lista de isenções de CSRF é explícita e comparada por caminho exato; mantenha-a curta.
+- Limites de payload (`BODY_LIMIT_JSON`, `BODY_LIMIT_URLENCODED`, `MAX_AVATAR_UPLOAD_BYTES`) não devem ser afrouxados sem revisão.
 
 ## Verificação local
 

@@ -9,7 +9,30 @@ import {
   ImageKind,
 } from './file-validation';
 
-const MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
+export const DEFAULT_MAX_AVATAR_SIZE_BYTES = 2 * 1024 * 1024;
+/** Teto absoluto para upload de avatar; acima disso so com revisao de produto. */
+export const HARD_MAX_AVATAR_SIZE_BYTES = 10 * 1024 * 1024;
+
+/**
+ * Limite de upload configuravel por `MAX_AVATAR_UPLOAD_BYTES`. Valores
+ * invalidos ou fora da faixa caem no default/teto, para que um erro de
+ * configuracao nunca libere uploads sem limite.
+ */
+export function resolveMaxAvatarSizeBytes(
+  raw: string | undefined = process.env.MAX_AVATAR_UPLOAD_BYTES,
+): number {
+  if (!raw || raw.trim() === '') {
+    return DEFAULT_MAX_AVATAR_SIZE_BYTES;
+  }
+
+  const bytes = Number(raw);
+
+  if (!Number.isFinite(bytes) || bytes < 1024) {
+    return DEFAULT_MAX_AVATAR_SIZE_BYTES;
+  }
+
+  return Math.min(Math.floor(bytes), HARD_MAX_AVATAR_SIZE_BYTES);
+}
 
 const ALLOWED_MIME_EXTENSIONS: Record<string, string> = {};
 for (const kind of Object.keys(IMAGE_MIME_TYPES) as ImageKind[]) {
@@ -53,7 +76,7 @@ export function avatarUploadOptions() {
       callback(null, true);
     },
     limits: {
-      fileSize: MAX_AVATAR_SIZE_BYTES,
+      fileSize: resolveMaxAvatarSizeBytes(),
       files: 1,
     },
   };

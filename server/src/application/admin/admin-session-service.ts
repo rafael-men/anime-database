@@ -3,8 +3,22 @@ import { ConfigService } from '@nestjs/config';
 import { randomBytes } from 'crypto';
 import { resolveRedisUrl } from '../../data/sessions';
 import Redis from 'ioredis';
+import type { CookieOptions } from 'express';
+import {
+  CookieSecuritySettings,
+  buildClearCookieOptions,
+  buildCookieOptions,
+  resolveCookieSecurity,
+} from '../../utils/cookie-security';
 
 export const ADMIN_SESSION_COOKIE = 'admin_sid';
+/**
+ * Token CSRF da sessao admin. Fica em cookie legivel por JavaScript de
+ * proposito (double-submit): o client o envia em `X-CSRF-Token` e o guard
+ * compara com o token gravado na sessao no servidor. O cookie de sessao
+ * continua httpOnly.
+ */
+export const ADMIN_CSRF_COOKIE = 'admin_csrf';
 
 export interface AdminSession {
   sub: string;
@@ -39,7 +53,11 @@ class RedisAdminSessionStore implements AdminSessionStore {
     return this.connectPromise;
   }
 
-  async save(token: string, session: AdminSession, ttlMs: number): Promise<void> {
+  async save(
+    token: string,
+    session: AdminSession,
+    ttlMs: number,
+  ): Promise<void> {
     await this.ensureConnected();
     await this.client.set(
       this.prefix + token,
@@ -72,7 +90,11 @@ class RedisAdminSessionStore implements AdminSessionStore {
 
 class MemoryAdminSessionStore implements AdminSessionStore {
   private readonly store = new Map<string, { s: AdminSession; exp: number }>();
-  async save(token: string, session: AdminSession, ttlMs: number): Promise<void> {
+  async save(
+    token: string,
+    session: AdminSession,
+    ttlMs: number,
+  ): Promise<void> {
     this.store.set(token, { s: session, exp: Date.now() + ttlMs });
   }
   async get(token: string): Promise<AdminSession | null> {
@@ -115,7 +137,7 @@ export const adminSessionStoreProvider = {
 @Injectable()
 export class AdminSessionsService {
   private readonly ttlMs: number;
-  private readonly isProduction: boolean;
+  private readonly cookieSecurity: CookieSecuritySettings;
 
   constructor(
     @Inject(ADMIN_SESSION_STORE) private readonly store: AdminSessionStore,
@@ -126,24 +148,38 @@ export class AdminSessionsService {
       Number(config.get('KEYCLOAK_SESSION_TTL_MS', 8 * 60 * 60 * 1000)) ||
         8 * 60 * 60 * 1000,
     );
-    this.isProduction = config.get<string>('NODE_ENV', 'development') === 'production';
+    this.cookieSecurity = resolveCookieSecurity(config);
   }
 
   get cookieName(): string {
     return ADMIN_SESSION_COOKIE;
   }
 
-  getCookieOptions(): Record<string, unknown> {
-    return {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: this.isProduction,
-      path: '/',
-      maxAge: this.ttlMs,
-    };
+  get cookieSecuritySettings(): CookieSecuritySettings {
+    return this.cookieSecurity;
   }
 
-  async create(session: Omit<AdminSession, 'csrfToken' | 'createdAt'>): Promise<{
+  getCookieOptions(): CookieOptions {
+    return buildCookieOptions(this.cookieSecurity, this.ttlMs);
+  }
+
+  getClearCookieOptions(): CookieOptions {
+    return buildClearCookieOptions(this.cookieSecurity);
+  }
+
+  get csrfCookieName(): string {
+    return ADMIN_CSRF_COOKIE;
+  }
+
+  getCsrfCookieOptions(): CookieOptions {
+    return buildCookieOptions(this.cookieSecurity, this.ttlMs, {
+      httpOnly: false,
+    });
+  }
+
+  async create(
+    session: Omit<AdminSession, 'csrfToken' | 'createdAt'>,
+  ): Promise<{
     token: string;
     csrfToken: string;
   }> {

@@ -1,0 +1,35 @@
+@if (consent.bannerVisible()) {
+  <section
+    class="cookie-banner"
+    role="dialog"
+    aria-labelledby="cookie-banner-title"
+    aria-describedby="cookie-banner-text"
+  >
+    <div class="cookie-banner-text">
+      <h2 id="cookie-banner-title">Cookies</h2>
+      <p id="cookie-banner-text">
+        Usamos cookies essenciais para manter você conectado e proteger formulários.
+        Cookies de análise e marketing só são ativados com o seu aceite.
+      </p>
+    </div>
+
+    <div class="cookie-banner-actions">
+      <button
+        type="button"
+        class="cookie-banner-secondary"
+        [disabled]="consent.saving()"
+        (click)="acceptEssentialOnly()"
+      >
+        Só os essenciais
+      </button>
+      <button
+        type="button"
+        class="cookie-banner-primary"
+        [disabled]="consent.saving()"
+        (click)="acceptAll()"
+      >
+        Aceitar todos
+      </button>
+    </div>
+  </section>
+}
